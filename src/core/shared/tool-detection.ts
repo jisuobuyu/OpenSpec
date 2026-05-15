@@ -23,6 +23,11 @@ export const SKILL_NAMES = [
   'openspec-verify-change',
   'openspec-onboard',
   'openspec-propose',
+  'openspec-review',
+  'openspec-simplify',
+  'openspec-abort-change',
+  'openspec-rewind-change',
+  'openspec-unarchive-change',
 ] as const;
 
 export type SkillName = (typeof SKILL_NAMES)[number];
@@ -42,6 +47,11 @@ export const COMMAND_IDS = [
   'verify',
   'onboard',
   'propose',
+  'review',
+  'simplify',
+  'abort',
+  'rewind',
+  'unarchive',
 ] as const;
 
 export type CommandId = (typeof COMMAND_IDS)[number];

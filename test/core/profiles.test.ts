@@ -20,14 +20,16 @@ describe('profiles', () => {
   });
 
   describe('ALL_WORKFLOWS', () => {
-    it('should contain all 11 workflows', () => {
-      expect(ALL_WORKFLOWS).toHaveLength(11);
+    it('should contain all 16 workflows', () => {
+      expect(ALL_WORKFLOWS).toHaveLength(16);
     });
 
     it('should contain expected workflow IDs', () => {
       const expected = [
-        'propose', 'explore', 'new', 'continue', 'apply',
-        'ff', 'sync', 'archive', 'bulk-archive', 'verify', 'onboard',
+        'propose', 'explore', 'apply', 'sync', 'archive',
+        'new', 'continue', 'ff', 'verify',
+        'review', 'simplify', 'abort', 'rewind', 'unarchive',
+        'bulk-archive', 'onboard',
       ];
       expect([...ALL_WORKFLOWS]).toEqual(expected);
     });
@@ -42,6 +44,23 @@ describe('profiles', () => {
     it('should return core workflows for core profile even if customWorkflows provided', () => {
       const result = getProfileWorkflows('core', ['new', 'apply']);
       expect(result).toEqual(CORE_WORKFLOWS);
+    });
+
+    it('should return core + enhanced workflows for enhanced profile', () => {
+      const result = getProfileWorkflows('enhanced');
+      expect(result).toContain('propose');
+      expect(result).toContain('review');
+      expect(result).toContain('simplify');
+      expect(result).toContain('abort');
+      expect(result).toContain('rewind');
+      expect(result).toContain('unarchive');
+      expect(result).toHaveLength(14);
+    });
+
+    it('should return same workflows for strict as enhanced', () => {
+      const enhanced = getProfileWorkflows('enhanced');
+      const strict = getProfileWorkflows('strict');
+      expect(strict).toEqual(enhanced);
     });
 
     it('should return custom workflows for custom profile', () => {

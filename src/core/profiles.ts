@@ -14,19 +14,27 @@ import type { Profile } from './global-config.js';
 export const CORE_WORKFLOWS = ['propose', 'explore', 'apply', 'sync', 'archive'] as const;
 
 /**
+ * Enhanced workflows added on top of core for 'enhanced' and 'strict' profiles.
+ */
+export const ENHANCED_WORKFLOWS = [
+  'new',
+  'continue',
+  'ff',
+  'verify',
+  'review',
+  'simplify',
+  'abort',
+  'rewind',
+  'unarchive',
+] as const;
+
+/**
  * All available workflows in the system.
  */
 export const ALL_WORKFLOWS = [
-  'propose',
-  'explore',
-  'new',
-  'continue',
-  'apply',
-  'ff',
-  'sync',
-  'archive',
+  ...CORE_WORKFLOWS,
+  ...ENHANCED_WORKFLOWS,
   'bulk-archive',
-  'verify',
   'onboard',
 ] as const;
 
@@ -37,12 +45,17 @@ export type CoreWorkflowId = (typeof CORE_WORKFLOWS)[number];
  * Resolves which workflows should be active for a given profile configuration.
  *
  * - 'core' profile always returns CORE_WORKFLOWS
+ * - 'enhanced' profile returns CORE_WORKFLOWS + ENHANCED_WORKFLOWS
+ * - 'strict' profile returns the same set as enhanced (discipline level enforces behavior)
  * - 'custom' profile returns the provided customWorkflows, or empty array if not provided
  */
 export function getProfileWorkflows(
   profile: Profile,
   customWorkflows?: string[]
 ): readonly string[] {
+  if (profile === 'enhanced' || profile === 'strict') {
+    return [...CORE_WORKFLOWS, ...ENHANCED_WORKFLOWS];
+  }
   if (profile === 'custom') {
     return customWorkflows ?? [];
   }

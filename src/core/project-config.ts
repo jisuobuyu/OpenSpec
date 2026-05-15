@@ -38,6 +38,65 @@ export const ProjectConfigSchema = z.object({
     )
     .optional()
     .describe('Per-artifact rules, keyed by artifact ID'),
+
+  // Optional: discipline configuration (superpowers schema)
+  discipline: z
+    .object({
+      level: z
+        .enum(['core', 'enhanced', 'strict'])
+        .optional()
+        .default('core')
+        .describe('Discipline level for engineering rigor'),
+      tdd: z
+        .object({
+          default: z
+            .enum(['full', 'lite', 'skip', 'adaptive'])
+            .optional()
+            .default('adaptive')
+            .describe('Default TDD level for tasks'),
+        })
+        .optional()
+        .default({ default: 'adaptive' }),
+      subagent: z
+        .object({
+          mode: z
+            .enum(['off', 'per-task', 'adaptive'])
+            .optional()
+            .default('adaptive')
+            .describe('Subagent execution mode'),
+        })
+        .optional()
+        .default({ mode: 'adaptive' }),
+      worktree: z
+        .object({
+          enabled: z
+            .boolean()
+            .optional()
+            .default(true)
+            .describe('Use git worktrees for isolation'),
+        })
+        .optional()
+        .default({ enabled: true }),
+      exploration: z
+        .object({
+          search_history: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe('Track exploration search history'),
+        })
+        .optional()
+        .default({ search_history: false }),
+    })
+    .optional()
+    .default({
+      level: 'core',
+      tdd: { default: 'adaptive' },
+      subagent: { mode: 'adaptive' },
+      worktree: { enabled: true },
+      exploration: { search_history: false },
+    })
+    .describe('Discipline settings for engineering rigor'),
 });
 
 export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
@@ -149,6 +208,16 @@ export function readProjectConfig(projectRoot: string): ProjectConfig | null {
         }
       } else {
         console.warn(`Invalid 'rules' field in config (must be object)`);
+      }
+    }
+
+    // Parse discipline field using Zod (safeParse for resilience)
+    if (raw.discipline !== undefined) {
+      const disciplineResult = ProjectConfigSchema.shape.discipline.safeParse(raw.discipline);
+      if (disciplineResult.success) {
+        config.discipline = disciplineResult.data;
+      } else {
+        console.warn(`Invalid 'discipline' field in config, using defaults`);
       }
     }
 

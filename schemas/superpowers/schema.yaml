@@ -1,0 +1,223 @@
+name: superpowers
+version: 1
+description: OpenSpec x Superpowers fusion - engineering discipline orchestrated by AI skills
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Initial proposal document outlining the change
+    template: proposal.md
+    instruction: |
+      Create the proposal document that establishes WHY this change is needed.
+
+      If `exploration.md` exists in the change directory, read it first — it may contain
+      key insights, options considered, and recommendations that inform the proposal.
+
+      Sections:
+      - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
+      - **What Changes**: Bullet list of changes. Be specific about new capabilities, modifications, or removals. Mark breaking changes with **BREAKING**.
+      - **Capabilities**: Identify which specs will be created or modified:
+        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names.
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Each needs a delta spec file. Check `openspec/specs/` for existing spec names.
+      - **Impact**: Affected code, APIs, dependencies, or systems.
+
+      Keep it concise (1-2 pages). Focus on the "why" not the "how".
+    requires: []
+
+  - id: exploration
+    generates: exploration.md
+    description: Exploration notes capturing investigation and decision rationale (optional)
+    template: exploration.md
+    instruction: |
+      Create exploration notes capturing the investigation process and decision rationale.
+
+      This is an OPTIONAL artifact. Use it when you need to:
+      - Compare multiple approaches with trade-offs
+      - Document research findings
+      - Surface risks and unknowns that need further investigation
+
+      Flexible format — any of these sections may be included as needed:
+      - **Key Insights**: What you learned during investigation
+      - **Options**: Alternatives considered with pros/cons
+      - **Recommendation**: Preferred approach and why
+      - **Open Questions**: What still needs resolution
+
+      The exploration feeds into proposal and design. It does not need to be exhaustive —
+      capture what matters for decision-making.
+    requires: []
+
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Detailed specifications for the change
+    template: specs.md
+    instruction: |
+      Create specification files that define WHAT the system should do.
+
+      Create one spec file per capability listed in the proposal's Capabilities section.
+      - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
+      - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec.
+
+      Delta operations (use ## headers):
+      - **ADDED Requirements**: New capabilities
+      - **MODIFIED Requirements**: Changed behavior - MUST include full updated content
+      - **REMOVED Requirements**: Deprecated features - MUST include **Reason** and **Migration**
+      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+
+      Format requirements:
+      - Each requirement: `### Requirement: <name>` followed by description
+      - Use SHALL/MUST for normative requirements
+      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`).
+      - Every requirement MUST have at least one scenario.
+
+      Specs should be testable — each scenario is a potential test case.
+    requires:
+      - proposal
+
+  - id: design
+    generates: design.md
+    description: Technical design document with implementation details
+    template: design.md
+    instruction: |
+      Create the design document that explains HOW to implement the change.
+
+      When to include design.md (create only if any apply):
+      - Cross-cutting change (multiple services/modules) or new architectural pattern
+      - New external dependency or significant data model changes
+      - Security, performance, or migration complexity
+      - Ambiguity that benefits from technical decisions before coding
+
+      Plan granularity is adaptive based on change complexity:
+      - **Simple** (1-3 files, single concern): Compact format — key decisions only
+      - **Medium** (4-10 files, 2+ modules): Standard format with full sections
+      - **Complex** (10+ files, cross-domain, architectural): Full format with detailed alternatives
+
+      Sections:
+      - **Context**: Background, current state, constraints, stakeholders
+      - **Goals / Non-Goals**: What this design achieves and explicitly excludes
+      - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered.
+      - **Risks / Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
+      - **Migration Plan**: Steps to deploy, rollback strategy (if applicable)
+      - **Open Questions**: Outstanding decisions or unknowns to resolve
+
+      Focus on architecture and approach, not line-by-line implementation.
+    requires:
+      - proposal
+
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist with TDD levels and spec references
+    template: tasks.md
+    instruction: |
+      Create the task list that breaks down the implementation work.
+
+      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
+
+      ## TDD Level Annotations
+
+      Each task may specify a TDD level:
+      - `[TDD: Full]` — Full RED→GREEN→REFACTOR cycle with verification after each step
+      - `[TDD: Lite]` — Write tests first, then implement (skip refactor step; pure renames skip tests)
+      - `[TDD: Skip]` — Direct implementation without test-first ordering
+
+      ## Spec Reference Annotations
+
+      Each task may reference a spec requirement:
+      - `[Spec: REQ-xxx]` — Link task to a specific requirement for precise context injection during apply
+
+      Guidelines:
+      - Group related tasks under ## numbered headings
+      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
+      - Tasks should be small enough to complete in one session
+      - Order tasks by dependency (what must be done first?)
+
+      Reference specs for what needs to be built, design for how to build it.
+      Each task should be verifiable — you know when it's done.
+    requires:
+      - specs
+      - design
+
+  - id: review
+    generates: review.md
+    description: Code review record capturing findings and decisions (optional)
+    template: review.md
+    instruction: |
+      Create the review document capturing code review findings.
+
+      This is an OPTIONAL artifact generated during the `/opsx:review` workflow.
+
+      Review format is adaptive based on change complexity:
+      - **Simple** (< 5 files, < 200 lines): Skip formal review — self-audit checklist only
+      - **Medium** (5-15 files): AI self-review (Form A) — structured checklist with issue severity
+      - **Complex** (15+ files, architectural changes): Two-phase review (Form B) — AI self-review + requesting-code-review skill
+
+      Sections:
+      - **Review Summary**: Complexity level, files reviewed, overall assessment
+      - **Findings**: Issues grouped by severity (CRITICAL / WARNING / SUGGESTION)
+      - **Spec Compliance**: Requirements coverage check
+      - **Design Adherence**: Architecture decisions vs implementation
+      - **Action Items**: Concrete changes needed before archive
+    requires:
+      - tasks
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    You are the OpenSpec apply outer-loop controller. Process tasks one at a time.
+
+    Before each task:
+    1. Read the task's TDD level annotation
+    2. Read the task's Spec reference annotation (if any)
+    3. Extract the corresponding requirement block for precise context injection
+
+    During each task:
+    - `[TDD: Full]` → Invoke `Skill({skill: "test-driven-development"})`
+    - `[TDD: Lite]` → Invoke skill with "skip refactor step" exception
+    - `[TDD: Skip]` → Direct implementation
+
+    After each task (post-checkpoint):
+    - Update the task checkbox in tasks.md
+    - Invoke `Skill({skill: "simplify"})` on changed files
+    - Read the next task and continue
+
+    Snapshot config.yaml discipline settings at apply start and use consistently
+    for the entire change (prevents hot-config drift).
+
+    When all tasks are complete, return here for final status. Do NOT autonomously
+    decide to proceed to the next task without returning to this controller.
+
+verify:
+  requires: [tasks]
+  instruction: |
+    Two-layer verification.
+
+    **Layer 1 — Execution Verification:**
+    Invoke `Skill({skill: "verification-before-completion"})` to run test suites
+    and collect coverage statistics.
+
+    **Layer 2 — Consistency Audit:**
+    Run the 6-dimension consistency audit:
+    1. Spec Coverage — every requirement traced to code
+    2. Scenario Completeness — every Given/When/Then has a code path
+    3. Task Alignment — checkboxes match actual code changes
+    4. Design Consistency — architecture decisions match implementation
+    5. Scope Boundary — detect scope creep (unannounced changes)
+    6. Implicit Change — detect modified behavior not declared in delta specs
+
+    If the change has `depends_on` declarations, cross-verify that dependent
+    changes' specs are consistent with this change's implementation.
+
+    Output a dual-panel report: Layer 1 test results + Layer 2 audit with
+    Pass/Warning/Critical severity for each dimension.
+
+archive:
+  requires: [tasks]
+  instruction: |
+    Finalize the change.
+
+    1. If verify has not been run, run it first
+    2. Merge delta specs into main specs
+    3. Clean up worktree (if applicable)
+    4. Run conflict detection for parallel changes
+    5. Move change directory to archive/

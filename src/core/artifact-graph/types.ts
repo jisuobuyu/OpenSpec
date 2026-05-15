@@ -10,15 +10,19 @@ export const ArtifactSchema = z.object({
   requires: z.array(z.string()).default([]),
 });
 
-// Apply phase configuration for schema-aware apply instructions
-export const ApplyPhaseSchema = z.object({
-  // Artifact IDs that must exist before apply is available
+// Base phase configuration reused by apply, verify, and archive phases
+export const PhaseSchema = z.object({
+  // Artifact IDs that must exist before this phase is available
   requires: z.array(z.string()).min(1, { error: 'At least one required artifact' }),
   // Path to file with checkboxes for progress (relative to change dir), or null if no tracking
   tracks: z.string().nullable().optional(),
-  // Custom guidance for the apply phase
+  // Custom guidance for this phase
   instruction: z.string().optional(),
 });
+
+// Apply phase configuration for schema-aware apply instructions
+// Kept as alias for backward compatibility
+export const ApplyPhaseSchema = PhaseSchema;
 
 // Full schema YAML structure
 export const SchemaYamlSchema = z.object({
@@ -28,6 +32,10 @@ export const SchemaYamlSchema = z.object({
   artifacts: z.array(ArtifactSchema).min(1, { error: 'At least one artifact required' }),
   // Optional apply phase configuration (for schema-aware apply instructions)
   apply: ApplyPhaseSchema.optional(),
+  // Optional verify phase configuration (superpowers schema)
+  verify: PhaseSchema.optional(),
+  // Optional archive phase configuration (superpowers schema)
+  archive: PhaseSchema.optional(),
 });
 
 // Derived TypeScript types
@@ -49,6 +57,18 @@ export const ChangeMetadataSchema = z.object({
       message: 'created must be YYYY-MM-DD format',
     })
     .optional(),
+
+  // Optional: changes this change depends on (must be archived before apply)
+  depends_on: z
+    .array(z.string().min(1))
+    .optional()
+    .describe('Names of changes this change depends on'),
+
+  // Optional: last checkpoint identifier for session recovery
+  last_checkpoint: z
+    .string()
+    .optional()
+    .describe('Last completed task checkpoint for session recovery'),
 });
 
 export type ChangeMetadata = z.infer<typeof ChangeMetadataSchema>;

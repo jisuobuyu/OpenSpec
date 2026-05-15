@@ -182,11 +182,12 @@ export class InitCommand {
       return undefined;
     }
 
-    if (this.profileOverride === 'core' || this.profileOverride === 'custom') {
-      return this.profileOverride;
+    const validProfiles: Profile[] = ['core', 'enhanced', 'strict', 'custom'];
+    if (validProfiles.includes(this.profileOverride as Profile)) {
+      return this.profileOverride as Profile;
     }
 
-    throw new Error(`Invalid profile "${this.profileOverride}". Available profiles: core, custom`);
+    throw new Error(`Invalid profile "${this.profileOverride}". Available profiles: ${validProfiles.join(', ')}`);
   }
 
   // ═══════════════════════════════════════════════════════════
