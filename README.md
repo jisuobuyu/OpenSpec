@@ -96,7 +96,33 @@ openspec init
 
 Now tell your AI: `/opsx:propose <what-you-want-to-build>`
 
-If you want the expanded workflow (`/opsx:new`, `/opsx:continue`, `/opsx:ff`, `/opsx:verify`, `/opsx:bulk-archive`, `/opsx:onboard`), select it with `openspec config profile` and apply with `openspec update`.
+### Superpowers Profile
+
+For the full engineering discipline experience with Superpowers skill orchestration:
+
+```bash
+openspec init --profile enhanced
+```
+
+This enables 14 workflows including:
+
+- **TDD-driven apply** — automatic test-driven-development skill calls per task
+- **Two-layer verify** — test execution (L1) + 6-dimension consistency audit (L2)
+- **Adaptive review** — complexity-based depth (self-audit / AI review / two-phase review)
+- **Simplify integration** — post-task code refinement with dedicated commits
+- **Lifecycle management** — non-destructive abort, task-level rewind, unarchive with spec rollback
+- **Parallel safety** — conflict detection, circular dependency checking, time-window race protection
+- **Metrics** — engineering discipline tracking (coverage, flow efficiency, defect escape rate, etc.)
+
+Configure discipline level in `openspec/config.yaml`:
+
+```yaml
+schema: superpowers
+discipline:
+  level: enhanced  # core | enhanced | strict
+  tdd:
+    default: adaptive  # full | lite | skip | adaptive
+```
 
 > [!NOTE]
 > Not sure if your tool is supported? [View the full list](docs/supported-tools.md) – we support 25+ tools and growing.
