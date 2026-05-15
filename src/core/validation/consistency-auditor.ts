@@ -412,6 +412,102 @@ export function consistencyAudit(input: AuditInput): ConsistencyAuditReport {
   };
 }
 
+// ── Incremental Re-verify (Time-Window Race Protection) ────────────
+
+/**
+ * Check if a re-verify is needed due to time-window races.
+ *
+ * Compares the last verify timestamp of a change against archive timestamps
+ * of other changes that modified the same specs. If another change archived
+ * after the last verify, a re-verify is recommended.
+ *
+ * @param changeName - The change being verified/archived
+ * @param lastVerifyTime - ISO timestamp of the last verify (or null if never verified)
+ * @param projectRoot - Project root directory
+ * @returns Whether re-verify is recommended and the reason
+ */
+export async function checkReVerifyNeeded(
+  changeName: string,
+  lastVerifyTime: string | null,
+  projectRoot: string
+): Promise<{ needed: boolean; reason: string }> {
+  if (!lastVerifyTime) {
+    return {
+      needed: false,
+      reason: 'No prior verification found — this is the first verify.',
+    };
+  }
+
+  const { promises: fs } = await import('fs');
+  const path = await import('path');
+  const changesDir = path.join(projectRoot, 'openspec', 'changes');
+  const archiveDir = path.join(changesDir, 'archive');
+
+  const verifyTime = new Date(lastVerifyTime).getTime();
+  if (isNaN(verifyTime)) {
+    return { needed: false, reason: 'Invalid last verify timestamp.' };
+  }
+
+  // Get specs referenced by this change
+  const thisSpecsDir = path.join(changesDir, changeName, 'specs');
+  const thisSpecs = new Set<string>();
+  try {
+    const entries = await fs.readdir(thisSpecsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) thisSpecs.add(entry.name);
+    }
+  } catch {
+    // No delta specs — nothing to re-verify against
+    return { needed: false, reason: 'No delta specs in this change.' };
+  }
+
+  if (thisSpecs.size === 0) {
+    return { needed: false, reason: 'No delta specs in this change.' };
+  }
+
+  // Check archived changes for same specs archived after last verify
+  const laterArchives: string[] = [];
+  try {
+    const archiveEntries = await fs.readdir(archiveDir, { withFileTypes: true });
+    for (const entry of archiveEntries) {
+      if (!entry.isDirectory()) continue;
+
+      const archivePath = path.join(archiveDir, entry.name);
+      const archiveStat = await fs.stat(archivePath);
+
+      if (archiveStat.mtimeMs > verifyTime) {
+        // Check if archived change has overlapping specs
+        const archivedSpecsDir = path.join(archivePath, 'specs');
+        try {
+          const specEntries = await fs.readdir(archivedSpecsDir, { withFileTypes: true });
+          for (const specEntry of specEntries) {
+            if (specEntry.isDirectory() && thisSpecs.has(specEntry.name)) {
+              laterArchives.push(entry.name);
+              break;
+            }
+          }
+        } catch {
+          // No specs in archived change
+        }
+      }
+    }
+  } catch {
+    // No archive directory — ok
+  }
+
+  if (laterArchives.length > 0) {
+    return {
+      needed: true,
+      reason: `${laterArchives.length} change(s) modified the same specs after last verify: ${laterArchives.join(', ')}. Re-verify recommended.`,
+    };
+  }
+
+  return {
+    needed: false,
+    reason: `No conflicting archives detected since last verify at ${lastVerifyTime}.`,
+  };
+}
+
 /**
  * Parse tasks.md content into structured task objects.
  */

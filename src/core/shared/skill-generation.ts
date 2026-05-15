@@ -18,6 +18,9 @@ import {
   getOpsxProposeSkillTemplate,
   getSimplifySkillTemplate,
   getReviewSkillTemplate,
+  getAbortChangeSkillTemplate,
+  getRewindChangeSkillTemplate,
+  getUnarchiveChangeSkillTemplate,
   getOpsxExploreCommandTemplate,
   getOpsxNewCommandTemplate,
   getOpsxContinueCommandTemplate,
@@ -31,6 +34,9 @@ import {
   getOpsxProposeCommandTemplate,
   getOpsxSimplifyCommandTemplate,
   getOpsxReviewCommandTemplate,
+  getOpsxAbortCommandTemplate,
+  getOpsxRewindCommandTemplate,
+  getOpsxUnarchiveCommandTemplate,
   type SkillTemplate,
 } from '../templates/skill-templates.js';
 import type { CommandContent } from '../command-generation/index.js';
@@ -72,6 +78,9 @@ export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemp
     { template: getOpsxProposeSkillTemplate(), dirName: 'openspec-propose', workflowId: 'propose' },
     { template: getSimplifySkillTemplate(), dirName: 'openspec-simplify', workflowId: 'simplify' },
     { template: getReviewSkillTemplate(), dirName: 'openspec-review', workflowId: 'review' },
+    { template: getAbortChangeSkillTemplate(), dirName: 'openspec-abort-change', workflowId: 'abort' },
+    { template: getRewindChangeSkillTemplate(), dirName: 'openspec-rewind-change', workflowId: 'rewind' },
+    { template: getUnarchiveChangeSkillTemplate(), dirName: 'openspec-unarchive-change', workflowId: 'unarchive' },
   ];
 
   if (!workflowFilter) return all;
@@ -100,6 +109,9 @@ export function getCommandTemplates(workflowFilter?: readonly string[]): Command
     { template: getOpsxProposeCommandTemplate(), id: 'propose' },
     { template: getOpsxSimplifyCommandTemplate(), id: 'simplify' },
     { template: getOpsxReviewCommandTemplate(), id: 'review' },
+    { template: getOpsxAbortCommandTemplate(), id: 'abort' },
+    { template: getOpsxRewindCommandTemplate(), id: 'rewind' },
+    { template: getOpsxUnarchiveCommandTemplate(), id: 'unarchive' },
   ];
 
   if (!workflowFilter) return all;

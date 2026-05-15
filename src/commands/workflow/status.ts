@@ -18,6 +18,7 @@ import {
   getStatusIndicator,
   getStatusColor,
 } from './shared.js';
+import { detectCircularDeps, formatFullDepTree } from '../../core/conflict/circular-deps.js';
 
 // -----------------------------------------------------------------------------
 // Types
@@ -27,6 +28,7 @@ export interface StatusOptions {
   change?: string;
   schema?: string;
   json?: boolean;
+  deps?: boolean;
 }
 
 // -----------------------------------------------------------------------------
@@ -34,11 +36,36 @@ export interface StatusOptions {
 // -----------------------------------------------------------------------------
 
 export async function statusCommand(options: StatusOptions): Promise<void> {
+  const projectRoot = process.cwd();
+
+  // Handle --deps: show dependency tree instead of artifact status
+  if (options.deps) {
+    const report = await detectCircularDeps(projectRoot);
+
+    if (options.json) {
+      console.log(JSON.stringify({
+        hasCycles: report.hasCycles,
+        cycles: report.cycles,
+        depGraph: report.depGraph,
+        summary: report.summary,
+      }, null, 2));
+      return;
+    }
+
+    console.log(chalk.bold('\nDependency Tree:'));
+    console.log(formatFullDepTree(report.depGraph));
+
+    if (report.hasCycles) {
+      console.log(chalk.red(`\n⚠ ${report.summary}`));
+    } else {
+      console.log(chalk.green(`\n${report.summary}`));
+    }
+    return;
+  }
+
   const spinner = options.json ? undefined : ora('Loading change status...').start();
 
   try {
-    const projectRoot = process.cwd();
-
     // Handle no-changes case gracefully — status is informational,
     // so "no changes" is a valid state, not an error.
     if (!options.change) {

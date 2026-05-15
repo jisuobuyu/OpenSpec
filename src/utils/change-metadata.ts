@@ -194,3 +194,98 @@ export function resolveSchemaForChange(
   // 4. Default
   return 'spec-driven';
 }
+
+/**
+ * Validates that all depends_on references are valid change names.
+ *
+ * Checks:
+ * 1. Each referenced change exists (in active changes or archive)
+ * 2. If checkArchived is true, each dependency must be archived before apply
+ *
+ * @param changeDir - The path to the change directory
+ * @param projectRoot - Project root directory
+ * @param checkArchived - If true, verify dependencies are archived (for pre-apply check)
+ * @returns Array of warning/error messages (empty = all valid)
+ */
+export async function validateDependsOn(
+  changeDir: string,
+  projectRoot: string,
+  checkArchived: boolean = false
+): Promise<{ valid: boolean; errors: string[]; warnings: string[] }> {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const metadata = readChangeMetadata(changeDir, projectRoot);
+  if (!metadata?.depends_on || metadata.depends_on.length === 0) {
+    return { valid: true, errors: [], warnings: [] };
+  }
+
+  const changesDir = path.join(projectRoot, 'openspec', 'changes');
+  const archiveDir = path.join(changesDir, 'archive');
+
+  // Get all known change names (active + archived)
+  const knownChanges = new Set<string>();
+
+  try {
+    const { promises: fs } = await import('fs');
+    const entries = await fs.readdir(changesDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name !== 'archive' && entry.name !== 'aborted' && !entry.name.startsWith('.')) {
+        knownChanges.add(entry.name);
+      }
+    }
+
+    // Also check archive
+    try {
+      const archiveEntries = await fs.readdir(archiveDir, { withFileTypes: true });
+      for (const entry of archiveEntries) {
+        if (entry.isDirectory()) {
+          // Strip date prefix: "2026-05-15-change-name" → "change-name"
+          const nameMatch = entry.name.match(/^\d{4}-\d{2}-\d{2}-(.+)$/);
+          const cleanName = nameMatch ? nameMatch[1] : entry.name;
+          knownChanges.add(cleanName);
+        }
+      }
+    } catch {
+      // No archive dir
+    }
+  } catch {
+    // Can't read changes dir
+  }
+
+  for (const dep of metadata.depends_on) {
+    if (!knownChanges.has(dep)) {
+      warnings.push(`Dependency "${dep}" not found in active or archived changes.`);
+    }
+
+    if (checkArchived) {
+      // Check if this dependency is archived
+      const isArchived = await (async () => {
+        try {
+          const { promises: fs } = await import('fs');
+          const archiveEntries = await fs.readdir(archiveDir, { withFileTypes: true });
+          for (const entry of archiveEntries) {
+            if (entry.isDirectory()) {
+              const nameMatch = entry.name.match(/^\d{4}-\d{2}-\d{2}-(.+)$/);
+              const cleanName = nameMatch ? nameMatch[1] : entry.name;
+              if (cleanName === dep) return true;
+            }
+          }
+        } catch {}
+        return false;
+      })();
+
+      if (!isArchived) {
+        errors.push(
+          `Dependency "${dep}" is not yet archived. Archive it before applying this change.`
+        );
+      }
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}

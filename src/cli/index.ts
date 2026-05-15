@@ -426,6 +426,7 @@ program
   .command('status')
   .description('Display artifact completion status for a change')
   .option('--change <id>', 'Change name to show status for')
+  .option('--deps', 'Show dependency tree for all active changes')
   .option('--schema <name>', 'Schema override (auto-detected from config.yaml)')
   .option('--json', 'Output as JSON')
   .action(async (options: StatusOptions) => {

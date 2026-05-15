@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { getTaskProgressForChange, formatTaskStatus } from '../utils/task-progress.js';
 import { Validator } from './validation/validator.js';
+import { detectConflicts } from './conflict/detector.js';
 import chalk from 'chalk';
 import {
   findSpecUpdates,
@@ -175,6 +176,28 @@ export class ArchiveCommand {
     const progress = await getTaskProgressForChange(changesDir, changeName);
     const status = formatTaskStatus(progress);
     console.log(`Task status: ${status}`);
+
+    // Check for conflicts with other active changes
+    const conflictReport = await detectConflicts(targetPath, [changeName]);
+    if (conflictReport.hasConflicts) {
+      console.log(chalk.yellow('\n⚠ Parallel change conflicts detected:'));
+      for (const conflict of conflictReport.conflicts) {
+        const otherChange = conflict.changeA === changeName ? conflict.changeB : conflict.changeA;
+        console.log(chalk.yellow(`  - Conflict with "${otherChange}": ${conflict.type} — ${conflict.detail}`));
+      }
+      console.log(chalk.yellow('\nReview these conflicts before archiving.\n'));
+      if (!options.yes) {
+        const { confirm } = await import('@inquirer/prompts');
+        const proceed = await confirm({
+          message: 'Conflicts detected. Continue with archive anyway?',
+          default: false,
+        });
+        if (!proceed) {
+          console.log('Archive cancelled.');
+          return;
+        }
+      }
+    }
 
     const incompleteTasks = Math.max(progress.total - progress.completed, 0);
     if (incompleteTasks > 0) {

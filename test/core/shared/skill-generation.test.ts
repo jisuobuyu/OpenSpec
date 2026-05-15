@@ -8,9 +8,9 @@ import {
 
 describe('skill-generation', () => {
   describe('getSkillTemplates', () => {
-    it('should return all 13 skill templates', () => {
+    it('should return all 16 skill templates', () => {
       const templates = getSkillTemplates();
-      expect(templates).toHaveLength(13);
+      expect(templates).toHaveLength(16);
     });
 
     it('should have unique directory names', () => {
@@ -37,6 +37,9 @@ describe('skill-generation', () => {
       expect(dirNames).toContain('openspec-propose');
       expect(dirNames).toContain('openspec-simplify');
       expect(dirNames).toContain('openspec-review');
+      expect(dirNames).toContain('openspec-abort-change');
+      expect(dirNames).toContain('openspec-rewind-change');
+      expect(dirNames).toContain('openspec-unarchive-change');
     });
 
     it('should have valid template structure', () => {
@@ -90,9 +93,9 @@ describe('skill-generation', () => {
   });
 
   describe('getCommandTemplates', () => {
-    it('should return all 13 command templates', () => {
+    it('should return all 16 command templates', () => {
       const templates = getCommandTemplates();
-      expect(templates).toHaveLength(13);
+      expect(templates).toHaveLength(16);
     });
 
     it('should have unique IDs', () => {
@@ -119,6 +122,9 @@ describe('skill-generation', () => {
       expect(ids).toContain('propose');
       expect(ids).toContain('simplify');
       expect(ids).toContain('review');
+      expect(ids).toContain('abort');
+      expect(ids).toContain('rewind');
+      expect(ids).toContain('unarchive');
     });
 
     it('should filter by workflow IDs when provided', () => {
@@ -146,9 +152,9 @@ describe('skill-generation', () => {
   });
 
   describe('getCommandContents', () => {
-    it('should return all 13 command contents', () => {
+    it('should return all 16 command contents', () => {
       const contents = getCommandContents();
-      expect(contents).toHaveLength(13);
+      expect(contents).toHaveLength(16);
     });
 
     it('should have valid content structure', () => {

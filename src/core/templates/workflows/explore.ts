@@ -50,6 +50,7 @@ Depending on what the user brings, you might:
 - Build comparison tables
 - Sketch tradeoffs
 - Recommend a path (if asked)
+- **When you detect multi-option trade-offs** (3+ alternatives, significant architectural impact, or conflicting constraints), **propose** (do NOT auto-invoke) calling \`Skill({skill: "brainstorming"})\` to explore the trade-off space systematically. Say: "This has multiple viable approaches with real trade-offs. Want me to use the brainstorming skill to explore them more systematically?" The user decides — brainstorming is optional.
 
 **Visualize**
 \`\`\`
@@ -346,6 +347,7 @@ Depending on what the user brings, you might:
 - Build comparison tables
 - Sketch tradeoffs
 - Recommend a path (if asked)
+- **When you detect multi-option trade-offs** (3+ alternatives, significant architectural impact, or conflicting constraints), **propose** (do NOT auto-invoke) calling \`Skill({skill: "brainstorming"})\` to explore the trade-off space systematically. Say: "This has multiple viable approaches with real trade-offs. Want me to use the brainstorming skill to explore them more systematically?" The user decides — brainstorming is optional.
 
 **Visualize**
 \`\`\`
@@ -452,6 +454,8 @@ There's no required ending. Discovery might:
 - **Continue later**: "We can pick this up anytime"
 
 When things crystallize, you might offer a summary - but it's optional. Sometimes the thinking IS the value.
+
+If the exploration yielded substantive insights (key decisions, trade-offs analyzed, open questions identified), offer to capture them: "This exploration surfaced useful insights. Want me to create an exploration.md to capture the key findings, options considered, and open questions?" The user decides — do NOT auto-generate.
 
 ---
 

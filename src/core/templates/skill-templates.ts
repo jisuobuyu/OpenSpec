@@ -19,4 +19,7 @@ export { getOnboardSkillTemplate, getOpsxOnboardCommandTemplate } from './workfl
 export { getOpsxProposeSkillTemplate, getOpsxProposeCommandTemplate } from './workflows/propose.js';
 export { getSimplifySkillTemplate, getOpsxSimplifyCommandTemplate } from './workflows/simplify.js';
 export { getReviewSkillTemplate, getOpsxReviewCommandTemplate } from './workflows/review.js';
+export { getAbortChangeSkillTemplate, getOpsxAbortCommandTemplate } from './workflows/abort-change.js';
+export { getRewindChangeSkillTemplate, getOpsxRewindCommandTemplate } from './workflows/rewind-change.js';
+export { getUnarchiveChangeSkillTemplate, getOpsxUnarchiveCommandTemplate } from './workflows/unarchive-change.js';
 export { getFeedbackSkillTemplate } from './workflows/feedback.js';
