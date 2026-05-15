@@ -16,6 +16,7 @@ import { CompletionCommand } from '../commands/completion.js';
 import { FeedbackCommand } from '../commands/feedback.js';
 import { registerConfigCommand } from '../commands/config.js';
 import { registerSchemaCommand } from '../commands/schema.js';
+import { metricsCommand, type MetricsOptions } from '../commands/metrics.js';
 import { registerWorkspaceCommand } from '../commands/workspace.js';
 import {
   statusCommand,
@@ -285,6 +286,21 @@ program
 
 registerSpecCommand(program);
 registerConfigCommand(program);
+// Metrics command
+program
+  .command('metrics')
+  .description('Display engineering discipline metrics')
+  .option('--json', 'Output as JSON')
+  .action(async (options: MetricsOptions) => {
+    try {
+      await metricsCommand(options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
 registerSchemaCommand(program);
 registerWorkspaceCommand(program);
 

@@ -41,7 +41,15 @@ export function getVerifyChangeSkillTemplate(): SkillTemplate {
 
 ## Layer 1 — Execution Verification
 
-Invoke \`Skill({skill: "verification-before-completion"})\`.
+**Skill availability check (before invoking):**
+
+Check if \`verification-before-completion\` skill exists at \`~/.claude/skills/verification-before-completion/SKILL.md\` or equivalent:
+- **enhanced discipline**: If missing, degrade gracefully — run test suite manually (npm test / pytest / etc.) and collect coverage. Note: "[Skill check] verification-before-completion ✗ (降级为手动测试验证)"
+- **strict discipline**: If missing, error: "[Skill check] verification-before-completion ✗ — 请安装后重试"
+- **core discipline**: Run tests manually (no skill dependency)
+
+If skill is available or degradation is accepted, invoke:
+\`Skill({skill: "verification-before-completion"})\`.
 
 **Purpose**: Run the test suite, collect coverage statistics, and confirm all tests pass.
 
