@@ -17,6 +17,7 @@ import {
   getOnboardSkillTemplate,
   getOpsxProposeSkillTemplate,
   getSimplifySkillTemplate,
+  getReviewSkillTemplate,
   getOpsxExploreCommandTemplate,
   getOpsxNewCommandTemplate,
   getOpsxContinueCommandTemplate,
@@ -29,6 +30,7 @@ import {
   getOpsxOnboardCommandTemplate,
   getOpsxProposeCommandTemplate,
   getOpsxSimplifyCommandTemplate,
+  getOpsxReviewCommandTemplate,
   type SkillTemplate,
 } from '../templates/skill-templates.js';
 import type { CommandContent } from '../command-generation/index.js';
@@ -69,6 +71,7 @@ export function getSkillTemplates(workflowFilter?: readonly string[]): SkillTemp
     { template: getOnboardSkillTemplate(), dirName: 'openspec-onboard', workflowId: 'onboard' },
     { template: getOpsxProposeSkillTemplate(), dirName: 'openspec-propose', workflowId: 'propose' },
     { template: getSimplifySkillTemplate(), dirName: 'openspec-simplify', workflowId: 'simplify' },
+    { template: getReviewSkillTemplate(), dirName: 'openspec-review', workflowId: 'review' },
   ];
 
   if (!workflowFilter) return all;
@@ -96,6 +99,7 @@ export function getCommandTemplates(workflowFilter?: readonly string[]): Command
     { template: getOpsxOnboardCommandTemplate(), id: 'onboard' },
     { template: getOpsxProposeCommandTemplate(), id: 'propose' },
     { template: getOpsxSimplifyCommandTemplate(), id: 'simplify' },
+    { template: getOpsxReviewCommandTemplate(), id: 'review' },
   ];
 
   if (!workflowFilter) return all;

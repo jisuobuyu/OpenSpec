@@ -28,6 +28,8 @@ import {
   getVerifyChangeSkillTemplate,
   getSimplifySkillTemplate,
   getOpsxSimplifyCommandTemplate,
+  getReviewSkillTemplate,
+  getOpsxReviewCommandTemplate,
 } from '../../../src/core/templates/skill-templates.js';
 import { generateSkillContent } from '../../../src/core/shared/skill-generation.js';
 
@@ -44,19 +46,21 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxContinueCommandTemplate: '8bbaedcc95287f9e822572608137df4f49ad54cedfb08d3342d0d1c4e9716caa',
   getOpsxApplyCommandTemplate: '2b97876085b15f23be99405b0c2c86388cc4b507127f9714134011bf6c3729c8',
   getOpsxFfCommandTemplate: '161598fa457941919b42c30baf93b538c85dc62cb301f4f451ffe878b22eb64c',
-  getArchiveChangeSkillTemplate: '6f8ca383fdb5a4eb9872aca81e07bf0ba7f25e4de8617d7a047ca914ca7f14b9',
+  getArchiveChangeSkillTemplate: '83f088bc6c95febd01b9d7cba91aa1c4532978c63e28e90132ab3ff21b53e4e7',
   getBulkArchiveChangeSkillTemplate: '8049897ce1ddb2ff6c0d4b72e22636f9ecfd083b5f2c2a30cf3bb1cb828a2f93',
   getOpsxSyncCommandTemplate: '378d035fe7cc30be3e027b66dcc4b8afc78ef1c8369c39479c9b05a582fb5ccf',
-  getVerifyChangeSkillTemplate: '40dde29051a0ba204295b74e49e87b6e9ff30c8b89ff0e791b4f955b4595de59',
-  getOpsxArchiveCommandTemplate: 'b44cc9748109f61687f9f596604b037bc3ea803abc143b22f09a76aebd98b493',
+  getVerifyChangeSkillTemplate: '9d78ffec8a7b8fcfe9cdc1f10093968fe4f7ac321318daf2e62c29d564fa1135',
+  getOpsxArchiveCommandTemplate: '0b3a9bd2b84ca1391a930085a21777dcedbfdb238e64bacfe8a72948a9fc77f8',
   getOpsxOnboardCommandTemplate: 'fce531f952e939ee85a41848fc21e4cc720b0f3eb62737adc3a51ee6ad2dfc57',
   getOpsxBulkArchiveCommandTemplate: '0d77c82de43840a28c74f5181cb21e33b9a9d00454adf4bc92bdc9e69817d6f5',
-  getOpsxVerifyCommandTemplate: 'd7c0444863faabb16abb091bc40ee56d985ae4bfa9a4db1e622ca8ba03c32fed',
+  getOpsxVerifyCommandTemplate: 'd1ec69bd247442bfc15cb6d442f0160d72ca0153cbff31e1f80d2f082bb3f758',
   getOpsxProposeSkillTemplate: 'd67f937d44650e9c61d2158c865309fbab23cb3f50a3d4868a640a97776e3999',
   getOpsxProposeCommandTemplate: '41ad59b37eafd7a161bab5c6e41997a37368f9c90b194451295ede5cd42e4d46',
   getFeedbackSkillTemplate: 'd7d83c5f7fc2b92fe8f4588a5bf2d9cb315e4c73ec19bcd5ef28270906319a0d',
   getSimplifySkillTemplate: '30808310a8372608c6021ac422f5ba54cfd18bb160021108159c0a56f2f7985f',
   getOpsxSimplifyCommandTemplate: '1204ce4ad7e93874a7d12fa467a5a8936d9608f1cb89f481f64ac399c74ea954',
+  getReviewSkillTemplate: 'd29e287f8e0c5b23e1955d82694612eeb4127a91a3cd921086f167aa988057c3',
+  getOpsxReviewCommandTemplate: '4be104c0b8425292dc4ef0453f2be4204de8b9984ef5bbcb42ef0b4389a57a20',
 };
 
 const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
@@ -66,12 +70,13 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-apply-change': 'bc6b5e96f3d63a52319de7918e49f4e2acd52641e1849d8d243a953d99b75ac3',
   'openspec-ff-change': 'a57497fbd67e502f6c233808827124aed1df43b0805792a4ff825049fd65a44a',
   'openspec-sync-specs': 'b8859cf454379a19ca35dbf59eedca67306607f44a355327f9dc851114e50bde',
-  'openspec-archive-change': 'f83c85452bd47de0dee6b8efbcea6a62534f8a175480e9044f3043f887cebf0f',
+  'openspec-archive-change': '458b70104920d8599789bf68e682fbb337bfe37eb91b6bc1ebae28c85506258d',
   'openspec-bulk-archive-change': '10477399bb07c7ba67f78e315bd68fb1901af8866720545baf4c62a6a679493b',
-  'openspec-verify-change': 'b6dc1b87940be9d6125b834831c8619019aec9a9748995f72bf981b6f08b67f8',
+  'openspec-verify-change': 'c461fd62785401650e7c46916c3f95553da57190c9dd07a8c9641c9df27277c1',
   'openspec-onboard': 'c1444e026028210efd699110f7e9079bcb486d85ccf27f743213a81cb1084303',
   'openspec-propose': '20e36dabefb90e232bad0667292bd5007ec280f8fc4fc995dbc4282bf45a22e7',
   'openspec-simplify': '5e4c5ca99360bcf9b536cfaaf58f0be9e98bd345080d05033fc001230f5d333e',
+  'openspec-review': 'a7226a8700c81a272a4a3ba944fcb462bffc01c6165cf80117a7c0ee9b9f0a63',
 };
 
 function stableStringify(value: unknown): string {
@@ -122,6 +127,8 @@ describe('skill templates split parity', () => {
       getFeedbackSkillTemplate,
       getSimplifySkillTemplate,
       getOpsxSimplifyCommandTemplate,
+      getReviewSkillTemplate,
+      getOpsxReviewCommandTemplate,
     };
 
     const actualHashes = Object.fromEntries(
@@ -147,6 +154,7 @@ describe('skill templates split parity', () => {
       ['openspec-onboard', getOnboardSkillTemplate],
       ['openspec-propose', getOpsxProposeSkillTemplate],
       ['openspec-simplify', getSimplifySkillTemplate],
+      ['openspec-review', getReviewSkillTemplate],
     ];
 
     const actualHashes = Object.fromEntries(
