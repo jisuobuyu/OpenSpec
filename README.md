@@ -132,6 +132,7 @@ discipline:
 ## Docs
 
 → **[Getting Started](docs/getting-started.md)**: first steps<br>
+→ **[Superpowers Guide](docs/openspec-superpowers-usage-guide.md)**: 14-workflow enhanced profile, installation, and full command reference<br>
 → **[Workflows](docs/workflows.md)**: combos and patterns<br>
 → **[Commands](docs/commands.md)**: slash commands & skills<br>
 → **[CLI](docs/cli.md)**: terminal reference<br>
