@@ -48,8 +48,9 @@ Check if \`verification-before-completion\` skill exists at \`~/.claude/skills/v
 - **strict discipline**: If missing, error: "[Skill check] verification-before-completion ✗ — 请安装后重试"
 - **core discipline**: Run tests manually (no skill dependency)
 
-If skill is available or degradation is accepted, invoke:
-\`Skill({skill: "verification-before-completion"})\`.
+If skill is available or degradation is accepted:
+- Announce: \`[Skill] verification-before-completion → running test suite + coverage\`
+- Invoke: \`Skill({skill: "verification-before-completion"})\`.
 
 **Purpose**: Run the test suite, collect coverage statistics, and confirm all tests pass.
 

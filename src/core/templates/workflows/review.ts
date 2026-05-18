@@ -100,7 +100,7 @@ export function getReviewSkillTemplate(): SkillTemplate {
    Two-phase review (Form B):
 
    **Phase 1**: AI self-review (same as Medium)
-   **Phase 2**: Invoke \`Skill({skill: "requesting-code-review"})\` for an independent review
+   **Phase 2**: Announce \`[Skill] requesting-code-review → independent review of <change-name>\`, then invoke \`Skill({skill: "requesting-code-review"})\` for an independent review
 
    After Phase 2, integrate both reviews into \`review.md\` with a "Convergence" section
    that compares AI findings vs skill findings and flags discrepancies.

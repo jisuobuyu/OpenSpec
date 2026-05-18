@@ -54,7 +54,7 @@ export function getFfChangeSkillTemplate(): SkillTemplate {
 
    - **Simple**: Compact plan — key decisions only, skip full design.md if not needed
    - **Medium**: Standard plan — full design.md with decisions, risks, migration notes
-   - **Complex**: Full plan — invoke \`Skill({skill: "writing-plans"})\` for structured approach, then write design.md with detailed alternatives analysis
+   - **Complex**: Full plan — announce \`[Skill] writing-plans → generating structured design\`, then invoke \`Skill({skill: "writing-plans"})\` for structured approach, then write design.md with detailed alternatives analysis
 
    Announce the detected complexity level before proceeding.
 
@@ -77,7 +77,7 @@ export function getFfChangeSkillTemplate(): SkillTemplate {
         - \`outputPath\`: Where to write the artifact
         - \`dependencies\`: Completed artifacts to read for context
       - Read any completed dependency files for context
-      - **For design.md at Complex level**: invoke \`Skill({skill: "writing-plans"})\` to generate a structured plan, then adapt the output into the design.md template
+      - **For design.md at Complex level**: announce \`[Skill] writing-plans → generating structured design\`, then invoke \`Skill({skill: "writing-plans"})\` to generate a structured plan, then adapt the output into the design.md template
       - **For design.md at Medium/Simple level**: create directly using the template as structure
       - Apply \`context\` and \`rules\` as constraints - but do NOT copy them into the file
       - Show brief progress: "✓ Created <artifact-id>"
@@ -175,7 +175,7 @@ export function getOpsxFfCommandTemplate(): CommandTemplate {
    For each ready artifact:
    - Run \`openspec instructions <artifact-id> --change "<name>" --json\` for guidance
    - Read completed dependency files for context
-   - **For design.md at Complex level**: invoke \`Skill({skill: "writing-plans"})\`
+   - **For design.md at Complex level**: announce \`[Skill] writing-plans → generating structured design\`, then invoke \`Skill({skill: "writing-plans"})\`
    - **For design.md at Medium/Simple level**: create directly
    - Create the artifact file using the template as structure
    - Apply context and rules as constraints — do NOT copy them into the file

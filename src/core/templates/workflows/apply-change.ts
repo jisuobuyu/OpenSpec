@@ -126,19 +126,29 @@ Check \`discipline.subagent.mode\` from the config snapshot:
 
 ### Phase B: Skill Execution
 
+**CRITICAL — you MUST announce every skill invocation before calling it.**
+Use this exact format so the user can see what is happening:
+
+\`\`\`
+[Skill] test-driven-development → Full TDD (RED → Verify RED → GREEN → Verify GREEN → REFACTOR)
+[Skill] simplify → refining files: src/auth/login.ts, src/auth/login.test.ts
+[Skill] subagent-driven-development → isolating complex task (7 files, cross-module)
+\`\`\`
+
 Based on the parsed TDD level and discipline level:
 
 **B1. If discipline.level is \`core\`:**
+- Announce: \`[No Skill] core mode — implementing directly\`
 - Implement directly (no skill calls)
 - Follow TDD level conventions manually
 
 **B2. If discipline.level is \`enhanced\` or \`strict\`:**
 
-| TDD Level | Action |
-|-----------|--------|
-| \`Full\` | \`Skill({skill: "test-driven-development"})\` |
-| \`Lite\` | \`Skill({skill: "test-driven-development"})\` with hint: "skip REFACTOR step; pure renames may skip tests" |
-| \`Skip\` | Implement directly — do NOT call TDD skill |
+| TDD Level | Action | Announce |
+|-----------|--------|----------|
+| \`Full\` | \`Skill({skill: "test-driven-development"})\` | \`[Skill] test-driven-development → Full TDD (RED→GREEN→REFACTOR)\` |
+| \`Lite\` | \`Skill({skill: "test-driven-development"})\` with hint: "skip REFACTOR step" | \`[Skill] test-driven-development → Lite TDD (RED→GREEN, skip REFACTOR)\` |
+| \`Skip\` | Implement directly | \`[No Skill] TDD: Skip — implementing directly\` |
 
 **B3. Skill availability check (before calling any skill):**
 
@@ -158,8 +168,9 @@ In \`tasks.md\`, change \`- [ ]\` to \`- [x]\` for the completed task.
 
 **C2. Trigger simplify**
 
-If the discipline level is \`enhanced\` or \`strict\`, invoke:
-\`Skill({skill: "simplify"})\`
+If the discipline level is \`enhanced\` or \`strict\`:
+- Announce: \`[Skill] simplify → refining files: <file-list>\`
+- Invoke: \`Skill({skill: "simplify"})\`
 
 Pass the file whitelist (only files changed in this task) and create a dedicated commit:
 \`\`\`
@@ -260,15 +271,17 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 - **Subagent mode**: check \`discipline.subagent.mode\` — \`per-task\` always, \`adaptive\` for complex tasks, \`off\` never
 
 ### Skill Execution
-- \`discipline.level: core\` → implement directly
+- **Announce before every skill**: \`[Skill] <skill-name> → <what it does>\`
+- \`discipline.level: core\` → announce \`[No Skill] core mode\`, implement directly
 - \`discipline.level: enhanced\` / \`strict\`:
-  - \`[TDD: Full]\` → \`Skill({skill: "test-driven-development"})\`
-  - \`[TDD: Lite]\` → skill + skip-refactor hint
-  - \`[TDD: Skip]\` → direct implementation
+  - \`[TDD: Full]\` → announce + \`Skill({skill: "test-driven-development"})\`
+  - \`[TDD: Lite]\` → announce + skill + skip-refactor hint
+  - \`[TDD: Skip]\` → announce \`[No Skill] TDD: Skip\`, direct implementation
 - **Skill check**: enhanced → degrade gracefully if missing; strict → error
 
 ### Post-checkpoint
 - Update \`tasks.md\` checkbox: \`- [ ]\` → \`- [x]\`
+- Announce: \`[Skill] simplify → refining files: <list>\`
 - Trigger \`Skill({skill: "simplify"})\` on changed files, commit as \`simplify(<task-id>)\`
 - Update \`.openspec.yaml\` → \`last_checkpoint: "<task-id>"\`
 - Read next task, return to outer loop

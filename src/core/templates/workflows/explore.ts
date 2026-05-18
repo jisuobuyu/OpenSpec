@@ -50,7 +50,7 @@ Depending on what the user brings, you might:
 - Build comparison tables
 - Sketch tradeoffs
 - Recommend a path (if asked)
-- **When you detect multi-option trade-offs** (3+ alternatives, significant architectural impact, or conflicting constraints), **propose** (do NOT auto-invoke) calling \`Skill({skill: "brainstorming"})\` to explore the trade-off space systematically. Say: "This has multiple viable approaches with real trade-offs. Want me to use the brainstorming skill to explore them more systematically?" The user decides — brainstorming is optional.
+- **When you detect multi-option trade-offs** (3+ alternatives, significant architectural impact, or conflicting constraints), **propose** (do NOT auto-invoke) calling \`Skill({skill: "brainstorming"})\` to explore the trade-off space systematically. Say: "This has multiple viable approaches with real trade-offs. Want me to use the brainstorming skill to explore them more systematically?" The user decides — brainstorming is optional. If user says yes, announce \`[Skill] brainstorming → exploring trade-off space\` before calling.
 
 **Visualize**
 \`\`\`
@@ -347,7 +347,7 @@ Depending on what the user brings, you might:
 - Build comparison tables
 - Sketch tradeoffs
 - Recommend a path (if asked)
-- **When you detect multi-option trade-offs** (3+ alternatives, significant architectural impact, or conflicting constraints), **propose** (do NOT auto-invoke) calling \`Skill({skill: "brainstorming"})\` to explore the trade-off space systematically. Say: "This has multiple viable approaches with real trade-offs. Want me to use the brainstorming skill to explore them more systematically?" The user decides — brainstorming is optional.
+- **When you detect multi-option trade-offs** (3+ alternatives, significant architectural impact, or conflicting constraints), **propose** (do NOT auto-invoke) calling \`Skill({skill: "brainstorming"})\` to explore the trade-off space systematically. Say: "This has multiple viable approaches with real trade-offs. Want me to use the brainstorming skill to explore them more systematically?" The user decides — brainstorming is optional. If user says yes, announce \`[Skill] brainstorming → exploring trade-off space\` before calling.
 
 **Visualize**
 \`\`\`

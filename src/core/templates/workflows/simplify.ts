@@ -22,6 +22,7 @@ export function getSimplifySkillTemplate(): SkillTemplate {
 
 2. **Invoke the simplify skill**
 
+   Announce: \`[Skill] simplify → refining files: <file-list>\`
    Call \`Skill({skill: "simplify"})\` with the file whitelist from step 1.
 
    The simplify skill will:
@@ -80,8 +81,8 @@ export function getOpsxSimplifyCommandTemplate(): CommandTemplate {
 
 2. **Invoke the simplify skill**
 
+   Announce: \`[Skill] simplify → refining files: <file-list>\`
    Call \`Skill({skill: "simplify"})\` with the file whitelist.
-   The skill reviews changed code for reuse, duplication, naming, and dead code.
 
 3. **Commit the simplification**
 
