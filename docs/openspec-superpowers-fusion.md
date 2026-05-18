@@ -1,5 +1,11 @@
 # OpenSpec × Superpowers 融合方案
 
+> **状态：已实施完成** | 全部 6 个 Phase（31 tasks）已在 dev 分支实现完毕。
+> 
+> 使用手册：[openspec-superpowers-usage-guide.md](./openspec-superpowers-usage-guide.md)  
+> 安装指南：[openspec-superpowers-installation.md](./openspec-superpowers-installation.md)  
+> 实施方案：[openspec-superpowers-implementation-plan.md](./openspec-superpowers-implementation-plan.md)
+
 ## 1. 融合概述
 
 OpenSpec 和 Superpowers 分别代表了 AI 辅助开发的两大支柱：
