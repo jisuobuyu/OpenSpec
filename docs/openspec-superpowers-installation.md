@@ -5,12 +5,13 @@
 - [1. 环境要求](#1-环境要求)
 - [2. 安装 OpenSpec CLI](#2-安装-openspec-cli)
 - [3. 安装 Superpowers 技能](#3-安装-superpowers-技能)
-- [4. 初始化项目](#4-初始化项目)
-- [5. 验证安装](#5-验证安装)
-- [6. 多工具配置](#6-多工具配置)
-- [7. 升级](#7-升级)
-- [8. 卸载](#8-卸载)
-- [9. 常见问题](#9-常见问题)
+- [4. 离线安装](#4-离线安装)
+- [5. 初始化项目](#5-初始化项目)
+- [6. 验证安装](#6-验证安装)
+- [7. 多工具配置](#7-多工具配置)
+- [8. 升级](#8-升级)
+- [9. 卸载](#9-卸载)
+- [10. 常见问题](#10-常见问题)
 
 ---
 
@@ -126,9 +127,107 @@ git clone https://github.com/anthropic/superpowers-test-driven-development.git t
 
 ---
 
-## 4. 初始化项目
+## 4. 离线安装
 
-### 4.1 基础初始化（Core profile）
+适用于无法访问互联网的内网开发环境。
+
+### 4.1 准备离线包
+
+在联网机器上准备：
+
+```bash
+# 1. 克隆 OpenSpec 源码
+git clone https://github.com/jisuobuyu/OpenSpec.git
+cd OpenSpec
+git checkout dev
+
+# 2. 安装依赖并构建
+npm install
+npm run build
+
+# 3. 打包 OpenSpec（包含构建产物）
+cd ..
+tar -czf openspec-offline.tar.gz OpenSpec/
+
+# 4. 打包 Superpowers 技能
+cd ~/.claude/skills/
+tar -czf superpowers-skills.tar.gz \
+  test-driven-development \
+  verification-before-completion \
+  simplify \
+  brainstorming \
+  writing-plans \
+  requesting-code-review \
+  subagent-driven-development
+```
+
+将 `openspec-offline.tar.gz` 和 `superpowers-skills.tar.gz` 复制到离线机器。
+
+### 4.2 离线安装 OpenSpec CLI
+
+在离线机器上：
+
+```bash
+# 1. 解压
+tar -xzf openspec-offline.tar.gz
+
+# 2. 从本地目录全局安装（不需要网络）
+cd OpenSpec
+npm install -g .
+
+# 3. 验证
+openspec --version
+```
+
+> **原理**：`npm install -g .` 从当前目录安装，不访问 npm registry。所有依赖已在联网机器上通过 `npm install` 预装。
+
+### 4.3 离线安装 Superpowers 技能
+
+```bash
+# 解压到 Claude Code 技能目录
+mkdir -p ~/.claude/skills/
+tar -xzf superpowers-skills.tar.gz -C ~/.claude/skills/
+```
+
+验证技能是否正确安装：
+
+```bash
+ls ~/.claude/skills/
+# 应看到：test-driven-development  verification-before-completion  simplify  brainstorming  writing-plans  requesting-code-review  subagent-driven-development
+
+ls ~/.claude/skills/test-driven-development/SKILL.md
+# 应存在
+```
+
+### 4.4 离线环境初始化项目
+
+```bash
+cd your-project
+openspec init --profile enhanced --tools claude
+```
+
+`openspec init` 是纯本地操作——读取内置模板、生成 `.md` 文件到 `.claude/` 目录，不需要网络。
+
+### 4.5 离线环境下各命令的依赖情况
+
+| 操作 | 需要网络？ | 说明 |
+|------|-----------|------|
+| `openspec init` | 否 | 纯本地模板生成 |
+| `openspec update` | 否 | 重新生成指令文件 |
+| `/opsx:apply` | 否 | 所有 Skill 调用为本地文件读取 |
+| `/opsx:verify` | 否 | L1 测试本地运行，L2 审计本地文件 |
+| `/opsx:review` | 否 | AI 自审或调用本地 skill |
+| `openspec status` | 否 | 纯本地制品扫描 |
+| `openspec archive` | 否 | 本地文件移动和 spec 合并 |
+| `npm test`（TDD 技能内） | 否 | 本地测试运行 |
+
+> **完全离线可用**：OpenSpec + Superpowers 融合方案的所有功能均可在离线环境下正常工作。唯一需要网络的是初次 `git clone` 和 `npm install`（已在联网机器上完成）。
+
+---
+
+## 5. 初始化项目
+
+### 5.1 基础初始化（Core profile）
 
 ```bash
 cd your-project
@@ -137,7 +236,7 @@ openspec init
 
 生成 `core` profile——5 个基础命令：`propose` `explore` `apply` `sync` `archive`。
 
-### 4.2 增强初始化（推荐）
+### 5.2 增强初始化（推荐）
 
 ```bash
 cd your-project
@@ -161,7 +260,7 @@ amazon-q, antigravity, auggie, bob, cline, costrict, crush,
 iflow, junie, kilocode, kiro, opencode, pi, qoder, lingma
 ```
 
-### 4.3 Strict profile（受监管环境）
+### 5.3 Strict profile（受监管环境）
 
 ```bash
 cd your-project
@@ -170,7 +269,7 @@ openspec init --profile strict --tools claude
 
 与 enhanced 生成相同数量文件，但运行时行为更严格（技能缺失报错，不降级）。
 
-### 4.4 配置 discipline
+### 5.4 配置 discipline
 
 初始化后，编辑 `openspec/config.yaml`：
 
@@ -188,7 +287,7 @@ discipline:
     search_history: false
 ```
 
-### 4.5 仅生成特定交付物
+### 5.5 仅生成特定交付物
 
 ```bash
 # 仅生成技能文件
@@ -198,7 +297,7 @@ openspec init --profile enhanced --delivery skills --tools claude
 openspec init --profile enhanced --delivery commands --tools claude
 ```
 
-### 4.6 已有项目更新
+### 5.6 已有项目更新
 
 如果是已有 OpenSpec 项目，升级到 Superpowers：
 
@@ -212,9 +311,9 @@ openspec update
 
 ---
 
-## 5. 验证安装
+## 6. 验证安装
 
-### 5.1 检查生成文件
+### 6.1 检查生成文件
 
 ```bash
 # 检查命令文件数量
@@ -226,7 +325,7 @@ ls .claude/skills/ | grep openspec | wc -l
 # core: 5, enhanced/strict: 14
 ```
 
-### 5.2 检查 schema 可用
+### 6.2 检查 schema 可用
 
 ```bash
 openspec schemas
@@ -244,7 +343,7 @@ Available schemas:
     Artifacts: proposal → exploration → specs → design → tasks → review
 ```
 
-### 5.3 测试创建一个变更
+### 6.3 测试创建一个变更
 
 ```bash
 # 创建变更目录
@@ -257,7 +356,7 @@ openspec status --change test-feature
 openspec templates --schema superpowers
 ```
 
-### 5.4 测试 slash 命令
+### 6.4 测试 slash 命令
 
 在 AI 工具中输入以下命令验证：
 ```
@@ -268,7 +367,7 @@ AI 应进入探索模式，并可以读取你的项目上下文。
 
 ---
 
-## 6. 多工具配置
+## 7. 多工具配置
 
 如果同时使用多个 AI 工具（如 Claude Code + Cursor）：
 
@@ -291,15 +390,15 @@ openspec init --profile enhanced --tools claude,cursor
 
 ---
 
-## 7. 升级
+## 8. 升级
 
-### 7.1 升级 OpenSpec CLI
+### 8.1 升级 OpenSpec CLI
 
 ```bash
 npm install -g @fission-ai/openspec@latest
 ```
 
-### 7.2 升级项目指令文件
+### 8.2 升级项目指令文件
 
 ```bash
 cd your-project
@@ -312,7 +411,7 @@ openspec update
 - 保留 `openspec/config.yaml` 不变
 - 检测版本漂移并提示
 
-### 7.3 升级 Superpowers 技能
+### 8.3 升级 Superpowers 技能
 
 ```bash
 # Claude Code
@@ -321,7 +420,7 @@ cd ~/.claude/skills/verification-before-completion && git pull
 # ... 其他技能类似
 ```
 
-### 7.4 切换 profile
+### 8.4 切换 profile
 
 ```bash
 # 从 core 升级到 enhanced
@@ -335,9 +434,9 @@ openspec update    # 会提示清理多余文件
 
 ---
 
-## 8. 卸载
+## 9. 卸载
 
-### 8.1 从项目中移除 OpenSpec
+### 9.1 从项目中移除 OpenSpec
 
 ```bash
 # 删除 OpenSpec 目录和所有制品
@@ -348,13 +447,13 @@ rm -rf .claude/commands/opsx/
 rm -rf .claude/skills/openspec-*/
 ```
 
-### 8.2 卸载全局 CLI
+### 9.2 卸载全局 CLI
 
 ```bash
 npm uninstall -g @fission-ai/openspec
 ```
 
-### 8.3 清理全局配置（可选）
+### 9.3 清理全局配置（可选）
 
 ```bash
 # macOS / Linux
@@ -366,7 +465,7 @@ rmdir /s %APPDATA%\openspec
 rmdir /s %LOCALAPPDATA%\openspec
 ```
 
-### 8.4 移除 Superpowers 技能（可选）
+### 9.4 移除 Superpowers 技能（可选）
 
 ```bash
 # 如果不再需要其他项目使用
@@ -377,7 +476,7 @@ rm -rf ~/.claude/skills/verification-before-completion
 
 ---
 
-## 9. 常见问题
+## 10. 常见问题
 
 ### Q1: `openspec init` 报错 "command not found"
 
