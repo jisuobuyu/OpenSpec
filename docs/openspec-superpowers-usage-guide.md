@@ -813,9 +813,45 @@ openspec metrics --json
 
 ## 8. 配置参考
 
-### 8.1 `openspec/config.yaml` 完整示例
+### 8.1 默认值清单
+
+所有配置项都有默认值，不配置即可直接使用。以下列出全部配置项及其默认行为。
+
+#### 项目级配置（`openspec/config.yaml`）
+
+| 配置项 | 默认值 | 可选值 | 说明 |
+|--------|--------|--------|------|
+| `schema` | `spec-driven` | `spec-driven` / `superpowers` | 工作流 schema，设为 `superpowers` 启用增强工作流 |
+| `context` | （空） | 任意文本 | 注入到所有制品创建指令中的项目背景 |
+| `rules.<artifact>` | （空） | 字符串数组 | 按制品 ID 指定的规则，如 `rules.tasks: ["每个 task 2h 内"]` |
+| `discipline.level` | `core` | `core` / `enhanced` / `strict` | 工程纪律级别：core 不调用技能，enhanced 调用+降级，strict 调用+报错 |
+| `discipline.tdd.default` | `adaptive` | `full` / `lite` / `skip` / `adaptive` | 默认 TDD 级别，task 无 `[TDD: ...]` 标注时生效 |
+| `discipline.subagent.mode` | `adaptive` | `off` / `per-task` / `adaptive` | subagent 模式：off 永不调用，per-task 每个 task 调用，adaptive 仅复杂 task |
+| `discipline.worktree.enabled` | `true` | `true` / `false` | 是否使用 git worktree 隔离开发环境 |
+| `discipline.exploration.search_history` | `false` | `true` / `false` | 是否追踪探索模式中的搜索历史 |
+
+#### 全局配置（`~/.config/openspec/config.json`）
+
+| 配置项 | 默认值 | 可选值 | 说明 |
+|--------|--------|--------|------|
+| `profile` | `core` | `core` / `enhanced` / `strict` / `custom` | 全局默认 profile，`openspec init` 时生效 |
+| `delivery` | `both` | `both` / `skills` / `commands` | 生成文件类型：both 全部，skills 仅技能，commands 仅命令 |
+| `featureFlags` | `{}` | key: boolean | 特性开关，控制实验性功能 |
+
+#### 各默认值的含义
+
+| 配置项 = 默认值 | 实际行为 |
+|----------------|----------|
+| `discipline.level = core` | AI 直接按模板指令实现，不调用任何 Superpowers 技能 |
+| `discipline.tdd.default = adaptive` | AI 根据 task 内容复杂度自动判断：涉及接口/逻辑 → Full，纯配置/文档 → Skip |
+| `discipline.subagent.mode = adaptive` | 简单 task（≤5 文件、单模块）当前 AI 处理；复杂 task 派发 subagent 隔离执行 |
+| `discipline.worktree.enabled = true` | `openspec init` 时创建 git worktree；apply 时在 worktree 中隔离开发 |
+| `profile = core` | `openspec init` 生成 5 个基础命令，不依赖任何 Superpowers 技能 |
+
+### 8.2 完整配置示例
 
 ```yaml
+# openspec/config.yaml
 schema: superpowers
 
 context: |
@@ -834,7 +870,7 @@ discipline:
   level: enhanced
   tdd:
     default: adaptive
-  subagent: 
+  subagent:
     mode: adaptive
   worktree:
     enabled: true
@@ -842,7 +878,9 @@ discipline:
     search_history: false
 ```
 
-### 8.2 Profile 对比
+> **最小配置**：只需要 `schema: superpowers` 一行即可，其余全部使用默认值。
+
+### 8.3 Profile 对比
 
 | Profile | Workflows | 技能调用 | 适用场景 |
 |---------|-----------|----------|----------|
