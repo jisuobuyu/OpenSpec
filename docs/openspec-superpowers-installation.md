@@ -1,5 +1,11 @@
 # OpenSpec Superpowers 安装指南
 
+**文档导航**：  
+→ 想**了解设计思路**？阅读 [设计规格](./openspec-superpowers-fusion.md)  
+→ 想**安装部署**？你在看的正是安装指南  
+→ 想**学习使用**？阅读 [使用手册](./openspec-superpowers-usage-guide.md)  
+→ 想**了解实施过程**？阅读 [实施方案](./openspec-superpowers-implementation-plan.md)
+
 ## 目录
 
 - [1. 环境要求](#1-环境要求)

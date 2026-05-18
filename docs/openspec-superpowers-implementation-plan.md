@@ -2,7 +2,13 @@
 
 > 基于 [设计规格 vFinal](./openspec-superpowers-fusion.md)，`@fission-ai/openspec` v1.3.1。  
 > **核心架构**：OpenSpec **编排**已有 Superpowers 技能（`Skill({...})`），**非重新实现**工程纪律。  
-> **状态：全部实施完成** | [使用手册](./openspec-superpowers-usage-guide.md) | [安装指南](./openspec-superpowers-installation.md)
+> **状态：全部实施完成**
+
+**文档导航**：  
+→ 想**了解设计思路**？阅读 [设计规格](./openspec-superpowers-fusion.md)  
+→ 想**安装部署**？阅读 [安装指南](./openspec-superpowers-installation.md)  
+→ 想**学习使用**？阅读 [使用手册](./openspec-superpowers-usage-guide.md)  
+→ 想**了解实施过程**？你在看的正是实施方案
 
 ## 实施总览
 

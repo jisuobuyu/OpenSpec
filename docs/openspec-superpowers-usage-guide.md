@@ -2,6 +2,12 @@
 
 > 基于 OpenSpec v1.3.1 + Superpowers 融合方案，覆盖 P0-P6 全部功能。
 
+**文档导航**：  
+→ 想**了解设计思路**？阅读 [设计规格](./openspec-superpowers-fusion.md)  
+→ 想**安装部署**？阅读 [安装指南](./openspec-superpowers-installation.md)  
+→ 想**学习使用**？你在看的正是使用手册  
+→ 想**了解实施过程**？阅读 [实施方案](./openspec-superpowers-implementation-plan.md)
+
 ## 目录
 
 - [1. 项目初始化](#1-项目初始化)

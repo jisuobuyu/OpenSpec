@@ -1,10 +1,12 @@
 # OpenSpec × Superpowers 融合方案
 
 > **状态：已实施完成** | 全部 6 个 Phase（31 tasks）已在 dev 分支实现完毕。
-> 
-> 使用手册：[openspec-superpowers-usage-guide.md](./openspec-superpowers-usage-guide.md)  
-> 安装指南：[openspec-superpowers-installation.md](./openspec-superpowers-installation.md)  
-> 实施方案：[openspec-superpowers-implementation-plan.md](./openspec-superpowers-implementation-plan.md)
+
+**文档导航**：  
+→ 想**了解设计思路**？你在看的正是设计规格  
+→ 想**安装部署**？阅读 [安装指南](./openspec-superpowers-installation.md)  
+→ 想**学习使用**？阅读 [使用手册](./openspec-superpowers-usage-guide.md)  
+→ 想**了解实施过程**？阅读 [实施方案](./openspec-superpowers-implementation-plan.md)
 
 ## 1. 融合概述
 
