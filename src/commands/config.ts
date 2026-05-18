@@ -19,7 +19,7 @@ import {
   validateConfig,
   DEFAULT_CONFIG,
 } from '../core/config-schema.js';
-import { CORE_WORKFLOWS, ALL_WORKFLOWS, getProfileWorkflows } from '../core/profiles.js';
+import { CORE_WORKFLOWS, ENHANCED_WORKFLOWS, ALL_WORKFLOWS, getProfileWorkflows } from '../core/profiles.js';
 import { OPENSPEC_DIR_NAME } from '../core/config.js';
 import { hasProjectConfigDrift } from '../core/profile-sync-drift.js';
 
@@ -111,10 +111,21 @@ export function resolveCurrentProfileState(config: GlobalConfig): ProfileState {
  * Derive profile type from selected workflows.
  */
 export function deriveProfileFromWorkflowSelection(selectedWorkflows: string[]): Profile {
+  const sorted = [...selectedWorkflows].sort();
+  const coreSorted = [...CORE_WORKFLOWS].sort();
+  const enhancedSorted = [...CORE_WORKFLOWS, ...ENHANCED_WORKFLOWS].sort();
+
   const isCoreMatch =
-    selectedWorkflows.length === CORE_WORKFLOWS.length &&
-    CORE_WORKFLOWS.every((w) => selectedWorkflows.includes(w));
-  return isCoreMatch ? 'core' : 'custom';
+    sorted.length === coreSorted.length &&
+    sorted.every((w, i) => w === coreSorted[i]);
+
+  const isEnhancedOrStrictMatch =
+    sorted.length === enhancedSorted.length &&
+    sorted.every((w, i) => w === enhancedSorted[i]);
+
+  if (isCoreMatch) return 'core';
+  if (isEnhancedOrStrictMatch) return 'enhanced';
+  return 'custom';
 }
 
 /**
@@ -259,6 +270,9 @@ export function registerConfigCommand(program: Command): void {
         console.log(`  delivery: ${config.delivery} ${deliverySource}`);
         if (config.profile === 'core') {
           console.log(`  workflows: ${CORE_WORKFLOWS.join(', ')} (from core profile)`);
+        } else if (config.profile === 'enhanced' || config.profile === 'strict') {
+          const all = [...CORE_WORKFLOWS, ...ENHANCED_WORKFLOWS];
+          console.log(`  workflows: ${all.join(', ')} (from ${config.profile} profile)`);
         } else if (config.workflows && config.workflows.length > 0) {
           console.log(`  workflows: ${config.workflows.join(', ')} (explicit)`);
         } else {
@@ -454,19 +468,23 @@ export function registerConfigCommand(program: Command): void {
     .command('profile [preset]')
     .description('Configure workflow profile (interactive picker or preset shortcut)')
     .action(async (preset?: string) => {
-      // Preset shortcut: `openspec config profile core`
-      if (preset === 'core') {
+      // Preset shortcuts: `openspec config profile core|enhanced|strict`
+      if (preset === 'core' || preset === 'enhanced' || preset === 'strict') {
         const config = getGlobalConfig();
-        config.profile = 'core';
-        config.workflows = [...CORE_WORKFLOWS];
-        // Preserve delivery setting
+        config.profile = preset;
+        if (preset === 'core') {
+          config.workflows = [...CORE_WORKFLOWS];
+        } else {
+          // enhanced/strict share the same workflow set
+          config.workflows = [...CORE_WORKFLOWS, ...ENHANCED_WORKFLOWS];
+        }
         saveGlobalConfig(config);
-        console.log('Config updated. Run `openspec update` in your projects to apply.');
+        console.log(`Profile set to ${preset}. Run \`openspec update\` in your projects to apply.`);
         return;
       }
 
       if (preset) {
-        console.error(`Error: Unknown profile preset "${preset}". Available presets: core`);
+        console.error(`Error: Unknown profile preset "${preset}". Available presets: core, enhanced, strict`);
         process.exitCode = 1;
         return;
       }

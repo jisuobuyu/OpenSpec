@@ -54,7 +54,7 @@ export function getFfChangeSkillTemplate(): SkillTemplate {
 
    - **Simple**: Compact plan — key decisions only, skip full design.md if not needed
    - **Medium**: Standard plan — full design.md with decisions, risks, migration notes
-   - **Complex**: Full plan — announce \`[Skill] writing-plans → generating structured design\`, then invoke \`Skill({skill: "writing-plans"})\` for structured approach, then write design.md with detailed alternatives analysis
+   - **Complex**: Full plan — requires structured design with detailed alternatives analysis (see step 5a for writing-plans invocation)
 
    Announce the detected complexity level before proceeding.
 

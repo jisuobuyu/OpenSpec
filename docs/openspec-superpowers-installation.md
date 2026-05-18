@@ -418,7 +418,8 @@ openspec update
 `openspec update` 会：
 - 重新生成所有 `.claude/commands/opsx/*.md` 文件
 - 重新生成所有 `.claude/skills/openspec-*/SKILL.md` 文件
-- 保留 `openspec/config.yaml` 不变
+- 同步 `openspec/config.yaml` 的 `schema` 键（profile enhanced/strict → `superpowers`，core → `spec-driven`）
+- 检测 Superpowers 技能是否已安装（enhanced/strict 时），缺失时显示警告
 - 检测版本漂移并提示
 
 ### 8.3 升级 Superpowers 技能

@@ -71,8 +71,13 @@ export class ChangeCommand {
       const id = parsed.name;
       const deltas = parsed.deltas || [];
 
+      // Check for superpowers optional artifacts
+      const changeDir2 = path.join(changesPath, changeName);
+      const hasExploration = await fs.access(path.join(changeDir2, 'exploration.md')).then(() => true).catch(() => false);
+      const hasReview = await fs.access(path.join(changeDir2, 'review.md')).then(() => true).catch(() => false);
+
       if (options.requirementsOnly || options.deltasOnly) {
-        const output = { id, title, deltaCount: deltas.length, deltas };
+        const output = { id, title, deltaCount: deltas.length, deltas, hasExploration, hasReview };
         console.log(JSON.stringify(output, null, 2));
       } else {
         const output = {
@@ -80,12 +85,38 @@ export class ChangeCommand {
           title,
           deltaCount: deltas.length,
           deltas,
+          hasExploration,
+          hasReview,
         };
         console.log(JSON.stringify(output, null, 2));
       }
     } else {
       const content = await fs.readFile(proposalPath, 'utf-8');
       console.log(content);
+
+      // Show additional superpowers artifacts if they exist
+      const changeDir = path.join(changesPath, changeName);
+      const explorationPath = path.join(changeDir, 'exploration.md');
+      const reviewPath = path.join(changeDir, 'review.md');
+      const hasExploration = await fs.access(explorationPath).then(() => true).catch(() => false);
+      const hasReview = await fs.access(reviewPath).then(() => true).catch(() => false);
+
+      if (hasExploration || hasReview) {
+        console.log();
+        if (hasExploration) {
+          console.log('```exploration');
+          const explorationContent = await fs.readFile(explorationPath, 'utf-8');
+          console.log(explorationContent);
+          console.log('```');
+          console.log();
+        }
+        if (hasReview) {
+          console.log('```review');
+          const reviewContent = await fs.readFile(reviewPath, 'utf-8');
+          console.log(reviewContent);
+          console.log('```');
+        }
+      }
     }
   }
 

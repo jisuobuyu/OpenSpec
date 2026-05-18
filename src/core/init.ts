@@ -18,6 +18,7 @@ import {
   AIToolOption,
 } from './config.js';
 import { PALETTE } from './styles/palette.js';
+import { checkSuperpowersSkills, formatSkillCheckReport } from './skill-check.js';
 import { isInteractive } from '../utils/interactive.js';
 import { serializeConfig } from './config-prompts.js';
 import {
@@ -149,6 +150,9 @@ export class InitCommand {
 
     // Create config.yaml if needed
     const configStatus = await this.createConfig(openspecPath, extendMode);
+
+    // Check Superpowers skill prerequisites for enhanced/strict profiles
+    await this.checkSkillPrerequisites(projectPath);
 
     // Display success message
     this.displaySuccessMessage(projectPath, validatedTools, results, configStatus);
@@ -612,11 +616,54 @@ export class InitCommand {
     }
 
     try {
-      const yamlContent = serializeConfig({ schema: DEFAULT_SCHEMA });
+      const profile = this.resolveProfileOverride();
+      const schema = (profile === 'enhanced' || profile === 'strict') ? 'superpowers' : DEFAULT_SCHEMA;
+      const yamlContent = serializeConfig({ schema });
       await FileSystemUtils.writeFile(configPath, yamlContent);
       return 'created';
     } catch {
       return 'skipped';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // SKILL PREREQUISITES
+  // ═══════════════════════════════════════════════════════════
+
+  private async checkSkillPrerequisites(projectPath: string): Promise<void> {
+    const profile = this.resolveProfileOverride();
+    if (profile !== 'enhanced' && profile !== 'strict') return;
+
+    // Determine discipline level from the project config
+    let disciplineLevel = profile; // enhanced or strict
+    try {
+      const configPath = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');
+      const configYmlPath = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yml');
+      const actualConfigPath = fs.existsSync(configPath) ? configPath : fs.existsSync(configYmlPath) ? configYmlPath : null;
+      if (actualConfigPath) {
+        const { parse: parseYaml } = await import('yaml');
+        const config = parseYaml(fs.readFileSync(actualConfigPath, 'utf-8'));
+        if (config?.discipline?.level) {
+          disciplineLevel = config.discipline.level;
+        }
+      }
+    } catch { /* use profile as fallback */ }
+
+    const report = checkSuperpowersSkills(disciplineLevel);
+    if (!report.allInstalled) {
+      console.log();
+      console.log(chalk.yellow('⚠  Superpowers skill prerequisites not fully met:'));
+      console.log();
+      for (const skill of report.skills) {
+        if (skill.required && !skill.installed) {
+          console.log(chalk.red(`  ✗ ${skill.name} — NOT INSTALLED`));
+        }
+      }
+      console.log();
+      console.log(chalk.dim('  Install missing skills from https://github.com/obra/superpowers'));
+      console.log(chalk.dim('  or follow docs/openspec-superpowers-installation.md'));
+      console.log(chalk.dim(`  Run "openspec check --change <name>" to re-check skill status.`));
+      console.log();
     }
   }
 
@@ -686,7 +733,9 @@ export class InitCommand {
 
     // Config status
     if (configStatus === 'created') {
-      console.log(`Config: openspec/config.yaml (schema: ${DEFAULT_SCHEMA})`);
+      const profile = this.resolveProfileOverride();
+      const schemaLabel = (profile === 'enhanced' || profile === 'strict') ? 'superpowers' : DEFAULT_SCHEMA;
+      console.log(`Config: openspec/config.yaml (schema: ${schemaLabel})`);
     } else if (configStatus === 'exists') {
       // Show actual filename (config.yaml or config.yml)
       const configYaml = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');

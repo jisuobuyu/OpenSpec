@@ -13,6 +13,7 @@ import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { transformToHyphenCommands } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
+import { checkSuperpowersSkills, formatSkillCheckReport } from './skill-check.js';
 import {
   generateCommands,
   CommandAdapterRegistry,
@@ -266,7 +267,13 @@ export class UpdateCommand {
       console.log(chalk.dim(`Removed: ${removedDeselectedSkillCount} skill directories (deselected workflows)`));
     }
 
-    // 12. Show onboarding message for newly configured tools from legacy upgrade
+    // 12. Sync project config schema with profile (enhanced/strict → superpowers, core → spec-driven)
+    await this.syncConfigSchema(profile, resolvedProjectPath);
+
+    // 13. Check Superpowers skill prerequisites for enhanced/strict profiles
+    await this.checkSkillPrerequisites(profile, resolvedProjectPath);
+
+    // 13. Show onboarding message for newly configured tools from legacy upgrade
     if (newlyConfiguredTools.length > 0) {
       console.log();
       console.log(chalk.bold('Getting started:'));
@@ -294,6 +301,56 @@ export class UpdateCommand {
 
     console.log();
     console.log(chalk.dim('Restart your IDE for changes to take effect.'));
+  }
+
+  private async syncConfigSchema(profile: string, projectPath: string): Promise<void> {
+    const configPath = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');
+    const configYmlPath = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yml');
+    const actualPath = fs.existsSync(configPath) ? configPath : fs.existsSync(configYmlPath) ? configYmlPath : null;
+    if (!actualPath) return;
+
+    try {
+      const { parse, stringify } = await import('yaml');
+      const content = fs.readFileSync(actualPath, 'utf-8');
+      const config = parse(content) || {};
+      const expectedSchema = (profile === 'enhanced' || profile === 'strict') ? 'superpowers' : 'spec-driven';
+
+      if (config.schema !== expectedSchema) {
+        config.schema = expectedSchema;
+        fs.writeFileSync(actualPath, stringify(config));
+      }
+    } catch { /* non-critical — config.yaml may be missing or malformed */ }
+  }
+
+  private async checkSkillPrerequisites(profile: string, projectPath: string): Promise<void> {
+    if (profile !== 'enhanced' && profile !== 'strict') return;
+
+    let disciplineLevel = profile;
+    try {
+      const configPath = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yaml');
+      const configYmlPath = path.join(projectPath, OPENSPEC_DIR_NAME, 'config.yml');
+      const actualConfigPath = fs.existsSync(configPath) ? configPath : fs.existsSync(configYmlPath) ? configYmlPath : null;
+      if (actualConfigPath) {
+        const { parse } = await import('yaml');
+        const config = parse(fs.readFileSync(actualConfigPath, 'utf-8'));
+        if (config?.discipline?.level) {
+          disciplineLevel = config.discipline.level;
+        }
+      }
+    } catch { /* use profile as fallback */ }
+
+    const report = checkSuperpowersSkills(disciplineLevel);
+    if (!report.allInstalled) {
+      console.log();
+      console.log(chalk.yellow('⚠  Superpowers skill prerequisites not fully met:'));
+      for (const skill of report.skills) {
+        if (skill.required && !skill.installed) {
+          console.log(chalk.red(`  ✗ ${skill.name} — NOT INSTALLED`));
+        }
+      }
+      console.log(chalk.dim('  Install from https://github.com/obra/superpowers or see docs/openspec-superpowers-installation.md'));
+      console.log();
+    }
   }
 
   /**

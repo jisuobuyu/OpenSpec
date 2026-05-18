@@ -133,8 +133,8 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
   try {
     // Read discipline config
     const config = readProjectConfig(projectRoot);
-    const disciplineLevel = config?.discipline?.level ?? 'core';
-    const tddDefault = config?.discipline?.tdd?.default ?? 'adaptive';
+    const disciplineLevel = config?.discipline?.level || 'core';
+    const tddDefault = config?.discipline?.tdd?.default || 'adaptive';
 
     // Read tasks.md
     let tasksContent = '';

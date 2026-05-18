@@ -62,7 +62,8 @@ export async function metricsCommand(options: MetricsOptions): Promise<void> {
 
     if (store.snapshots.length === 0) {
       console.log(chalk.gray('No metrics collected yet.'));
-      console.log(chalk.gray('Metrics are automatically collected during archive and verify phases.'));
+      console.log(chalk.gray('Metrics are auto-collected by openspec verify --change (specCoverage).'));
+      console.log(chalk.gray('Other metrics require manual input via the recordMetrics API.'));
       return;
     }
 

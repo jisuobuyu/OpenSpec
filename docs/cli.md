@@ -92,7 +92,7 @@ openspec init [path] [options]
 |--------|-------------|
 | `--tools <list>` | Configure AI tools non-interactively. Use `all`, `none`, or comma-separated list |
 | `--force` | Auto-cleanup legacy files without prompting |
-| `--profile <profile>` | Override global profile for this init run (`core` or `custom`) |
+| `--profile <profile>` | Override global profile for this init run (`core`, `enhanced`, `strict`, `custom`) |
 
 `--profile custom` uses whatever workflows are currently selected in global config (`openspec config profile`).
 
@@ -138,7 +138,7 @@ openspec/
 
 ### `openspec update`
 
-Update OpenSpec instruction files after upgrading the CLI. Re-generates AI tool configuration files using your current global profile, selected workflows, and delivery mode.
+Update OpenSpec instruction files after upgrading the CLI. Re-generates AI tool configuration files using your current global profile, selected workflows, and delivery mode. Also syncs `openspec/config.yaml` schema when profile changes between core and enhanced/strict.
 
 ```
 openspec update [path] [options]
@@ -682,7 +682,7 @@ Based on 8 change(s), 12 snapshot(s)
 Latest: add-csv-export (2026-05-16T08:30:00.000Z)
 ```
 
-Data is stored in `openspec/.metrics.yaml` and auto-collected on each archive.
+Data is stored in `openspec/.metrics.yaml`. `specCoverage` is auto-collected by `openspec verify --change`; the other 5 metrics require manual input via the `recordMetrics` API.
 
 ---
 
@@ -1066,7 +1066,7 @@ openspec config <subcommand> [options]
 | `unset <key>` | Remove a key |
 | `reset` | Reset to defaults |
 | `edit` | Open in `$EDITOR` |
-| `profile [preset]` | Configure workflow profile interactively or via preset |
+| `profile [preset]` | Configure workflow profile interactively or via preset (`core`, `enhanced`, `strict`) |
 
 **Examples:**
 
@@ -1097,6 +1097,12 @@ openspec config edit
 
 # Configure profile with action-based wizard
 openspec config profile
+
+# Fast preset: switch workflows to enhanced (adds superpowers skills)
+openspec config profile enhanced
+
+# Fast preset: switch workflows to strict (same as enhanced, errors on missing skills)
+openspec config profile strict
 
 # Fast preset: switch workflows to core (keeps delivery mode)
 openspec config profile core

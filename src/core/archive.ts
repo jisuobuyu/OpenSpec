@@ -177,6 +177,37 @@ export class ArchiveCommand {
     const status = formatTaskStatus(progress);
     console.log(`Task status: ${status}`);
 
+    // Check for superpowers-specific artifacts (review.md, verification status)
+    const changeDir2 = path.join(changesDir, changeName);
+    let hasReviewMd = false;
+    try { await fs.access(path.join(changeDir2, 'review.md')); hasReviewMd = true; } catch { /* no review.md */ }
+    const metadataPath = path.join(changeDir2, '.openspec.yaml');
+    let lastCheckpoint: string | undefined;
+    try {
+      const metadataContent = await fs.readFile(metadataPath, 'utf-8');
+      const { parse } = await import('yaml');
+      const metadata = parse(metadataContent);
+      lastCheckpoint = metadata?.last_checkpoint;
+    } catch { /* no metadata or malformed */ }
+
+    // Determine schema from change metadata, fall back to project config
+    let schema = await this.getChangeSchema(changeDir2);
+    if (!schema) {
+      try {
+        const { readProjectConfig } = await import('./project-config.js');
+        const config = readProjectConfig(targetPath);
+        schema = config?.schema ?? 'spec-driven';
+      } catch { schema = 'spec-driven'; }
+    }
+    if (schema === 'superpowers' && !hasReviewMd) {
+      console.log(chalk.yellow('\n⚠  No review.md found for superpowers change.'));
+      console.log(chalk.dim('  Consider running /opsx:review before archiving.'));
+    }
+    if (schema === 'superpowers' && !lastCheckpoint) {
+      console.log(chalk.yellow('⚠  No verification checkpoint found — verify may not have run.'));
+      console.log(chalk.dim('  Consider running /opsx:verify before archiving.'));
+    }
+
     // Check for conflicts with other active changes
     const conflictReport = await detectConflicts(targetPath, [changeName]);
     if (conflictReport.hasConflicts) {
@@ -352,6 +383,15 @@ export class ArchiveCommand {
     } catch (error) {
       // User cancelled (Ctrl+C)
       return null;
+    }
+  }
+
+  private async getChangeSchema(changeDir: string): Promise<string | undefined> {
+    try {
+      const { readChangeMetadata } = await import('../utils/change-metadata.js');
+      return readChangeMetadata(changeDir)?.schema;
+    } catch {
+      return undefined;
     }
   }
 

@@ -15,6 +15,8 @@ export interface DimensionResult {
   severity: ConsistencySeverity;
   detail: string;
   recommendations: string[];
+  /** Numeric percentage (0-100) for Spec Coverage dimension; undefined for others */
+  coveragePercent?: number;
 }
 
 export interface ConsistencyAuditReport {
@@ -91,6 +93,7 @@ function auditSpecCoverage(input: AuditInput): DimensionResult {
       severity: 'Pass',
       detail: `All ${input.specRequirements.length} requirement(s) traced to changed files.`,
       recommendations: [],
+      coveragePercent: 100,
     };
   }
 
@@ -103,6 +106,7 @@ function auditSpecCoverage(input: AuditInput): DimensionResult {
       severity: 'Warning',
       detail: `${coverage}/${input.specRequirements.length} requirements covered (${pct}%). Missing: ${uncovered.join(', ')}`,
       recommendations: uncovered.map((id) => `Verify requirement ${id} has corresponding implementation`),
+      coveragePercent: pct,
     };
   }
 
@@ -111,6 +115,7 @@ function auditSpecCoverage(input: AuditInput): DimensionResult {
     severity: 'Critical',
     detail: `Only ${coverage}/${input.specRequirements.length} requirements covered (${pct}%). Missing: ${uncovered.join(', ')}`,
     recommendations: uncovered.map((id) => `Implement requirement ${id} before archiving`),
+    coveragePercent: pct,
   };
 }
 

@@ -83,7 +83,10 @@ async function saveStore(projectRoot: string, store: MetricsStore): Promise<void
 
 /**
  * Record a metrics snapshot for a change.
- * Called during archive or verify phases.
+ *
+ * Called automatically by `openspec verify --change` for specCoverage.
+ * Other indicators (flowEfficiency, defectEscapeRate, overEngineeringRatio,
+ * rollbackRate, userInterventions) require manual input via this API.
  *
  * Only non-zero values are meaningful — pass 0 for indicators
  * that haven't been measured yet.
@@ -160,9 +163,20 @@ export function computeAggregates(store: MetricsStore): {
     if (snapshots.length < 2) {
       trends[key] = 'stable';
     } else {
-      const firstHalf = snapshots.slice(0, mid).reduce((a, s) => a + s.indicators[key], 0) / mid;
-      const secondHalf = snapshots.slice(mid).reduce((a, s) => a + s.indicators[key], 0) / (snapshots.length - mid);
-      const diff = secondHalf - firstHalf;
+      const firstHalfValues = snapshots.slice(0, mid).map((s) => s.indicators[key]);
+      const secondHalfValues = snapshots.slice(mid).map((s) => s.indicators[key]);
+      const firstAvg = firstHalfValues.reduce((a, b) => a + b, 0) / mid;
+      const secondAvg = secondHalfValues.reduce((a, b) => a + b, 0) / (snapshots.length - mid);
+
+      // If first half is all zeros (uninitialized data before collection started),
+      // skip trend — avoid penalizing initial rollout where default 0 ≠ "perfect score"
+      const firstAllZero = firstHalfValues.every((v) => v === 0);
+      if (firstAllZero) {
+        trends[key] = 'stable';
+        continue;
+      }
+
+      const diff = secondAvg - firstAvg;
 
       // Lower is better for: defectEscapeRate, overEngineeringRatio, rollbackRate, userInterventions
       // Higher is better for: specCoverage, flowEfficiency

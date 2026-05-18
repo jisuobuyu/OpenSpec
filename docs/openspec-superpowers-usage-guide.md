@@ -873,7 +873,7 @@ openspec metrics --json
 ↑ improving   ↓ declining   → stable
 ```
 
-数据存储在 `openspec/.metrics.yaml`，每次 archive 自动采集。
+数据存储在 `openspec/.metrics.yaml`。`specCoverage` 由 `openspec verify --change` 自动采集，其余 5 项指标需手动调用 `recordMetrics` API 写入。
 
 ---
 

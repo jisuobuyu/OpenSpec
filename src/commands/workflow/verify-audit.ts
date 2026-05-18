@@ -17,6 +17,7 @@ import {
   type AuditInput,
   type ConsistencySeverity,
 } from '../../core/validation/consistency-auditor.js';
+import { recordMetrics } from '../../core/metrics/collector.js';
 
 export interface VerifyAuditOptions {
   change?: string;
@@ -130,6 +131,16 @@ export async function verifyAuditCommand(options: VerifyAuditOptions): Promise<v
 
     // Run audit
     const report = consistencyAudit(input);
+
+    // Record specCoverage metric from audit result (non-critical — failure must not block display)
+    try {
+      const specCoverageDim = report.dimensions.find((d) => d.dimension === 'Spec Coverage');
+      if (specCoverageDim?.coveragePercent !== undefined) {
+        await recordMetrics(projectRoot, options.change, {
+          specCoverage: specCoverageDim.coveragePercent,
+        });
+      }
+    } catch { /* metric recording is best-effort; audit results still display */ }
 
     spinner?.stop();
 

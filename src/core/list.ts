@@ -10,6 +10,7 @@ interface ChangeInfo {
   completedTasks: number;
   totalTasks: number;
   lastModified: Date;
+  schema?: string;
 }
 
 interface ListOptions {
@@ -110,11 +111,18 @@ export class ListCommand {
         const progress = await getTaskProgressForChange(changesDir, changeDir);
         const changePath = path.join(changesDir, changeDir);
         const lastModified = await getLastModified(changePath);
+        let schema: string | undefined;
+        try {
+          const { readChangeMetadata } = await import('../utils/change-metadata.js');
+          const metadata = readChangeMetadata(changePath);
+          schema = metadata?.schema;
+        } catch { /* use default */ }
         changes.push({
           name: changeDir,
           completedTasks: progress.completed,
           totalTasks: progress.total,
-          lastModified
+          lastModified,
+          schema,
         });
       }
 
@@ -127,12 +135,21 @@ export class ListCommand {
 
       // JSON output for programmatic use
       if (json) {
+        // Determine project schema fallback
+        let projectSchema = 'spec-driven';
+        try {
+          const { readProjectConfig } = await import('./project-config.js');
+          const config = readProjectConfig(targetPath);
+          if (config?.schema) projectSchema = config.schema;
+        } catch { /* use default */ }
+
         const jsonOutput = changes.map(c => ({
           name: c.name,
           completedTasks: c.completedTasks,
           totalTasks: c.totalTasks,
           lastModified: c.lastModified.toISOString(),
-          status: c.totalTasks === 0 ? 'no-tasks' : c.completedTasks === c.totalTasks ? 'complete' : 'in-progress'
+          status: c.totalTasks === 0 ? 'no-tasks' : c.completedTasks === c.totalTasks ? 'complete' : 'in-progress',
+          schema: c.schema ?? projectSchema,
         }));
         console.log(JSON.stringify({ changes: jsonOutput }, null, 2));
         return;

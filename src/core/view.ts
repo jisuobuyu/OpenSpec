@@ -3,11 +3,23 @@ import * as path from 'path';
 import chalk from 'chalk';
 import { getTaskProgressForChange, formatTaskStatus } from '../utils/task-progress.js';
 import { MarkdownParser } from './parsers/markdown-parser.js';
+import { readChangeMetadata } from '../utils/change-metadata.js';
+
+interface ChangeInfo {
+  name: string;
+  schema?: string;
+  hasExploration: boolean;
+  hasReview: boolean;
+}
+
+interface ActiveChangeInfo extends ChangeInfo {
+  progress: { total: number; completed: number };
+}
 
 export class ViewCommand {
   async execute(targetPath: string = '.'): Promise<void> {
     const openspecDir = path.join(targetPath, 'openspec');
-    
+
     if (!fs.existsSync(openspecDir)) {
       console.error(chalk.red('No openspec directory found'));
       process.exit(1);
@@ -28,7 +40,8 @@ export class ViewCommand {
       console.log(chalk.bold.gray('\nDraft Changes'));
       console.log('─'.repeat(60));
       changesData.draft.forEach((change) => {
-        console.log(`  ${chalk.gray('○')} ${change.name}`);
+        const tags = this.formatChangeTags(change);
+        console.log(`  ${chalk.gray('○')} ${change.name}${tags}`);
       });
     }
 
@@ -42,9 +55,10 @@ export class ViewCommand {
           change.progress.total > 0
             ? Math.round((change.progress.completed / change.progress.total) * 100)
             : 0;
+        const tags = this.formatChangeTags(change);
 
         console.log(
-          `  ${chalk.yellow('◉')} ${chalk.bold(change.name.padEnd(30))} ${progressBar} ${chalk.dim(`${percentage}%`)}`
+          `  ${chalk.yellow('◉')} ${chalk.bold(change.name.padEnd(28))} ${progressBar} ${chalk.dim(`${percentage}%`)}${tags}`
         );
       });
     }
@@ -54,7 +68,8 @@ export class ViewCommand {
       console.log(chalk.bold.green('\nCompleted Changes'));
       console.log('─'.repeat(60));
       changesData.completed.forEach((change) => {
-        console.log(`  ${chalk.green('✓')} ${change.name}`);
+        const tags = this.formatChangeTags(change);
+        console.log(`  ${chalk.green('✓')} ${change.name}${tags}`);
       });
     }
 
@@ -62,10 +77,10 @@ export class ViewCommand {
     if (specsData.length > 0) {
       console.log(chalk.bold.blue('\nSpecifications'));
       console.log('─'.repeat(60));
-      
+
       // Sort specs by requirement count (descending)
       specsData.sort((a, b) => b.requirementCount - a.requirementCount);
-      
+
       specsData.forEach(spec => {
         const reqLabel = spec.requirementCount === 1 ? 'requirement' : 'requirements';
         console.log(
@@ -78,10 +93,34 @@ export class ViewCommand {
     console.log(chalk.dim(`\nUse ${chalk.white('openspec list --changes')} or ${chalk.white('openspec list --specs')} for detailed views`));
   }
 
+  private formatChangeTags(change: ChangeInfo): string {
+    const tags: string[] = [];
+    if (change.schema === 'superpowers') {
+      tags.push(chalk.magenta('SP'));
+    }
+    if (change.hasExploration) {
+      tags.push(chalk.blue('探'));
+    }
+    if (change.hasReview) {
+      tags.push(chalk.green('审'));
+    }
+    if (tags.length === 0) return '';
+    return '  ' + tags.join(' ');
+  }
+
+  private getChangeSchema(changesDir: string, changeName: string): string | undefined {
+    try {
+      const metadata = readChangeMetadata(path.join(changesDir, changeName));
+      return metadata?.schema;
+    } catch {
+      return undefined;
+    }
+  }
+
   private async getChangesData(openspecDir: string): Promise<{
-    draft: Array<{ name: string }>;
-    active: Array<{ name: string; progress: { total: number; completed: number } }>;
-    completed: Array<{ name: string }>;
+    draft: Array<ChangeInfo>;
+    active: Array<ActiveChangeInfo>;
+    completed: Array<ChangeInfo>;
   }> {
     const changesDir = path.join(openspecDir, 'changes');
 
@@ -89,25 +128,28 @@ export class ViewCommand {
       return { draft: [], active: [], completed: [] };
     }
 
-    const draft: Array<{ name: string }> = [];
-    const active: Array<{ name: string; progress: { total: number; completed: number } }> = [];
-    const completed: Array<{ name: string }> = [];
+    const draft: ChangeInfo[] = [];
+    const active: ActiveChangeInfo[] = [];
+    const completed: ChangeInfo[] = [];
 
     const entries = fs.readdirSync(changesDir, { withFileTypes: true });
 
     for (const entry of entries) {
       if (entry.isDirectory() && entry.name !== 'archive') {
+        const changeDir = path.join(changesDir, entry.name);
         const progress = await getTaskProgressForChange(changesDir, entry.name);
+        const schema = this.getChangeSchema(changesDir, entry.name);
+        const hasExploration = fs.existsSync(path.join(changeDir, 'exploration.md'));
+        const hasReview = fs.existsSync(path.join(changeDir, 'review.md'));
+
+        const info: ChangeInfo = { name: entry.name, schema, hasExploration, hasReview };
 
         if (progress.total === 0) {
-          // No tasks defined yet - still in planning/draft phase
-          draft.push({ name: entry.name });
+          draft.push(info);
         } else if (progress.completed === progress.total) {
-          // All tasks complete
-          completed.push({ name: entry.name });
+          completed.push(info);
         } else {
-          // Has tasks but not all complete
-          active.push({ name: entry.name, progress });
+          active.push({ ...info, progress });
         }
       }
     }
