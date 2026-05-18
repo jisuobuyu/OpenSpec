@@ -8,6 +8,7 @@ import {
   readChangeMetadata,
   resolveSchemaForChange,
   validateSchemaName,
+  validateDependsOn,
   ChangeMetadataError,
 } from '../../src/utils/change-metadata.js';
 import { ChangeMetadataSchema } from '../../src/core/artifact-graph/types.js';
@@ -287,6 +288,114 @@ describe('resolveSchemaForChange', () => {
     expect(resolveSchemaForChange(changeDir)).toBe('spec-driven'); // Default wins
   });
 });
+
+  describe('ChangeMetadataSchema with depends_on and last_checkpoint', () => {
+    it('should accept depends_on as optional string array', () => {
+      const result = ChangeMetadataSchema.safeParse({
+        schema: 'superpowers',
+        depends_on: ['add-auth-service', 'add-rate-limit'],
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.depends_on).toEqual(['add-auth-service', 'add-rate-limit']);
+      }
+    });
+
+    it('should accept last_checkpoint as optional string', () => {
+      const result = ChangeMetadataSchema.safeParse({
+        schema: 'superpowers',
+        last_checkpoint: '2.3',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.last_checkpoint).toBe('2.3');
+      }
+    });
+
+    it('should accept both depends_on and last_checkpoint together', () => {
+      const result = ChangeMetadataSchema.safeParse({
+        schema: 'superpowers',
+        depends_on: ['other-change'],
+        last_checkpoint: '1.1',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept metadata without depends_on (backward compatible)', () => {
+      const result = ChangeMetadataSchema.safeParse({
+        schema: 'spec-driven',
+        created: '2025-01-05',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.depends_on).toBeUndefined();
+        expect(result.data.last_checkpoint).toBeUndefined();
+      }
+    });
+
+    it('should reject depends_on containing empty strings', () => {
+      const result = ChangeMetadataSchema.safeParse({
+        schema: 'superpowers',
+        depends_on: ['valid', ''],
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+describe('validateDependsOn', () => {
+    let testDir: string;
+    let changeDir: string;
+
+    beforeEach(async () => {
+      testDir = path.join(os.tmpdir(), `openspec-test-${randomUUID()}`);
+      await fs.mkdir(path.join(testDir, 'openspec', 'changes'), { recursive: true });
+      changeDir = path.join(testDir, 'openspec', 'changes', 'test-change');
+      await fs.mkdir(changeDir, { recursive: true });
+    });
+
+    afterEach(async () => {
+      await fs.rm(testDir, { recursive: true, force: true });
+    });
+
+    it('should return valid when no depends_on in metadata', async () => {
+      const result = await validateDependsOn(changeDir, testDir);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings).toEqual([]);
+    });
+
+    it('should return valid when no metadata file exists', async () => {
+      const result = await validateDependsOn(changeDir, testDir);
+      expect(result.valid).toBe(true);
+    });
+
+    it('should warn when dependency does not exist', async () => {
+      await fs.writeFile(
+        path.join(changeDir, '.openspec.yaml'),
+        'schema: superpowers\ndepends_on:\n  - non-existent-change\n',
+        'utf-8'
+      );
+
+      const result = await validateDependsOn(changeDir, testDir);
+      expect(result.warnings.length).toBeGreaterThan(0);
+      expect(result.warnings[0]).toContain('not found');
+    });
+
+    it('should error when checkArchived=true and dependency is not archived', async () => {
+      // Create a dependency that exists but is not archived
+      const depDir = path.join(testDir, 'openspec', 'changes', 'existing-dep');
+      await fs.mkdir(depDir, { recursive: true });
+      await fs.writeFile(
+        path.join(changeDir, '.openspec.yaml'),
+        'schema: superpowers\ndepends_on:\n  - existing-dep\n',
+        'utf-8'
+      );
+
+      const result = await validateDependsOn(changeDir, testDir, true);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('not yet archived');
+    });
+  });
 
 describe('validateSchemaName', () => {
   it('should accept valid schema name', () => {

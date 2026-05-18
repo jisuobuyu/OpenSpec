@@ -482,6 +482,107 @@ rules:
     });
   });
 
+    describe('discipline configuration parsing', () => {
+      it('should parse complete discipline config', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: superpowers
+discipline:
+  level: enhanced
+  tdd:
+    default: full
+  subagent:
+    mode: per-task
+  worktree:
+    enabled: false
+  exploration:
+    search_history: true
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.discipline).toEqual({
+          level: 'enhanced',
+          tdd: { default: 'full' },
+          subagent: { mode: 'per-task' },
+          worktree: { enabled: false },
+          exploration: { search_history: true },
+        });
+      });
+
+      it('should apply defaults for missing discipline fields', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: superpowers
+discipline:
+  level: strict
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(config?.discipline?.level).toBe('strict');
+        expect(config?.discipline?.tdd).toEqual({ default: 'adaptive' });
+        expect(config?.discipline?.subagent).toEqual({ mode: 'adaptive' });
+        expect(config?.discipline?.worktree).toEqual({ enabled: true });
+        expect(config?.discipline?.exploration).toEqual({ search_history: false });
+      });
+
+      it('should not include discipline when not in config', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          'schema: spec-driven\n'
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        // discipline not in raw config, so not in parsed result
+        expect(config?.discipline).toBeUndefined();
+      });
+
+      it('should warn when discipline is invalid and use defaults', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: superpowers
+discipline: "not an object"
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Invalid 'discipline' field")
+        );
+      });
+
+      it('should reject invalid discipline level enum value', () => {
+        const configDir = path.join(tempDir, 'openspec');
+        fs.mkdirSync(configDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(configDir, 'config.yaml'),
+          `schema: superpowers
+discipline:
+  level: invalid-level
+`
+        );
+
+        const config = readProjectConfig(tempDir);
+
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Invalid 'discipline' field")
+        );
+      });
+    });
+
   describe('validateConfigRules', () => {
     it('should return no warnings for valid artifact IDs', () => {
       const rules = {

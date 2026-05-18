@@ -1,9 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { promises as fs } from 'fs';
+import path from 'path';
+import os from 'os';
+import { randomUUID } from 'crypto';
 import {
   consistencyAudit,
   parseTasks,
   parseRequirements,
   parseDesignDecisions,
+  checkReVerifyNeeded,
   type AuditInput,
 } from '../../../src/core/validation/consistency-auditor.js';
 
@@ -197,6 +202,62 @@ The system SHALL allow users to end their session.
 
     it('should return empty for no decisions section', () => {
       expect(parseDesignDecisions('## Context\nNo decisions here.')).toEqual([]);
+    });
+  });
+
+  describe('checkReVerifyNeeded', () => {
+    let testDir: string;
+
+    beforeEach(async () => {
+      testDir = path.join(os.tmpdir(), `openspec-reverify-${randomUUID()}`);
+      await fs.mkdir(path.join(testDir, 'openspec', 'changes'), { recursive: true });
+      await fs.mkdir(path.join(testDir, 'openspec', 'changes', 'archive'), { recursive: true });
+    });
+
+    afterEach(async () => {
+      await fs.rm(testDir, { recursive: true, force: true });
+    });
+
+    it('should return not needed when no prior verification', async () => {
+      const result = await checkReVerifyNeeded('test-change', null, testDir);
+      expect(result.needed).toBe(false);
+      expect(result.reason).toContain('No prior verification');
+    });
+
+    it('should return not needed when no delta specs in change', async () => {
+      const result = await checkReVerifyNeeded('test-change', '2026-05-15T10:00:00Z', testDir);
+      expect(result.needed).toBe(false);
+      expect(result.reason).toContain('No delta specs');
+    });
+
+    it('should return not needed when no conflicting archives exist', async () => {
+      // Create a change with delta specs
+      const changeDir = path.join(testDir, 'openspec', 'changes', 'test-change');
+      await fs.mkdir(path.join(changeDir, 'specs', 'auth'), { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'specs', 'auth', 'spec.md'), '### Requirement: Login');
+
+      const result = await checkReVerifyNeeded('test-change', '2026-05-15T10:00:00Z', testDir);
+      expect(result.needed).toBe(false);
+    });
+
+    it('should detect re-verify needed when archive modified same spec after verify', async () => {
+      // Create a change with delta specs
+      const changeDir = path.join(testDir, 'openspec', 'changes', 'test-change');
+      await fs.mkdir(path.join(changeDir, 'specs', 'auth'), { recursive: true });
+      await fs.writeFile(path.join(changeDir, 'specs', 'auth', 'spec.md'), '### Requirement: Login');
+
+      // Create an archived change with same spec, archived after verify time
+      const archiveDir = path.join(testDir, 'openspec', 'changes', 'archive', '2026-05-16-other-change');
+      await fs.mkdir(path.join(archiveDir, 'specs', 'auth'), { recursive: true });
+      await fs.writeFile(path.join(archiveDir, 'specs', 'auth', 'spec.md'), '### Requirement: Login');
+
+      // Set archive mtime to be after verify time
+      const futureTime = new Date('2026-05-17T00:00:00Z');
+      await fs.utimes(archiveDir, futureTime, futureTime);
+
+      const result = await checkReVerifyNeeded('test-change', '2026-05-15T10:00:00Z', testDir);
+      expect(result.needed).toBe(true);
+      expect(result.reason).toContain('Re-verify recommended');
     });
   });
 });
