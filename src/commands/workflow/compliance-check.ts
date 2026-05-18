@@ -152,8 +152,10 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
       return;
     }
 
-    // Re-parse raw lines to get TDD annotations (parseTasks strips them)
-    const rawLines = tasksContent.split('\n').filter((l) => l.match(/^- \[[ x]\]/));
+    // Re-parse raw lines to get TDD annotations (parseTasks strips them).
+    // Must use the SAME regex as parseTasks to ensure index alignment.
+    const taskLineRegex = /^- \[([ x])\] (\d+\.\d+)\s*(.*)$/;
+    const rawLines = tasksContent.split('\n').filter((l) => taskLineRegex.test(l));
 
     const taskCompliances = analyzeTaskCompliance(tasks, rawLines, disciplineLevel, tddDefault);
 

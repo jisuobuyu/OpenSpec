@@ -178,10 +178,10 @@ export class ArchiveCommand {
     console.log(`Task status: ${status}`);
 
     // Check for superpowers-specific artifacts (review.md, verification status)
-    const changeDir2 = path.join(changesDir, changeName);
+    const changePath = path.join(changesDir, changeName);
     let hasReviewMd = false;
-    try { await fs.access(path.join(changeDir2, 'review.md')); hasReviewMd = true; } catch { /* no review.md */ }
-    const metadataPath = path.join(changeDir2, '.openspec.yaml');
+    try { await fs.access(path.join(changePath, 'review.md')); hasReviewMd = true; } catch { /* no review.md */ }
+    const metadataPath = path.join(changePath, '.openspec.yaml');
     let lastCheckpoint: string | undefined;
     try {
       const metadataContent = await fs.readFile(metadataPath, 'utf-8');
@@ -191,7 +191,7 @@ export class ArchiveCommand {
     } catch { /* no metadata or malformed */ }
 
     // Determine schema from change metadata, fall back to project config
-    let schema = await this.getChangeSchema(changeDir2);
+    let schema = await this.getChangeSchema(changePath);
     if (!schema) {
       try {
         const { readProjectConfig } = await import('./project-config.js');

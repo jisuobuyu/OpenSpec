@@ -68,7 +68,7 @@ const ALL_SUPERPOWERS_SKILLS = [
 
 // ── Core check logic ───────────────────────────────────────────────
 
-function getSkillPaths(skillName: string, toolSkillsDir: string): string {
+function getSkillPath(skillName: string, toolSkillsDir: string): string {
   return path.join(homedir(), toolSkillsDir, 'skills', skillName, 'SKILL.md');
 }
 
@@ -112,7 +112,7 @@ export function checkSuperpowersSkills(
     let foundAt: string | undefined;
 
     for (const tool of tools) {
-      const skillPath = getSkillPaths(skillName, tool.skillsDir!);
+      const skillPath = getSkillPath(skillName, tool.skillsDir!);
       checkedPaths.push(skillPath);
       if (existsSync(skillPath)) {
         foundAt = skillPath;

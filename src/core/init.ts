@@ -18,7 +18,7 @@ import {
   AIToolOption,
 } from './config.js';
 import { PALETTE } from './styles/palette.js';
-import { checkSuperpowersSkills, formatSkillCheckReport } from './skill-check.js';
+import { checkSuperpowersSkills } from './skill-check.js';
 import { isInteractive } from '../utils/interactive.js';
 import { serializeConfig } from './config-prompts.js';
 import {
@@ -73,6 +73,11 @@ const WORKFLOW_TO_SKILL_DIR: Record<string, string> = {
   'verify': 'openspec-verify-change',
   'onboard': 'openspec-onboard',
   'propose': 'openspec-propose',
+  'review': 'openspec-review',
+  'simplify': 'openspec-simplify',
+  'abort': 'openspec-abort-change',
+  'rewind': 'openspec-rewind-change',
+  'unarchive': 'openspec-unarchive-change',
 };
 
 // -----------------------------------------------------------------------------
@@ -652,7 +657,13 @@ export class InitCommand {
     const report = checkSuperpowersSkills(disciplineLevel);
     if (!report.allInstalled) {
       console.log();
-      console.log(chalk.yellow('⚠  Superpowers skill prerequisites not fully met:'));
+      const isStrict = disciplineLevel === 'strict';
+
+      if (isStrict) {
+        console.log(chalk.red('✗  Strict mode requires Superpowers skills to be installed:'));
+      } else {
+        console.log(chalk.yellow('⚠  Superpowers skill prerequisites not fully met:'));
+      }
       console.log();
       for (const skill of report.skills) {
         if (skill.required && !skill.installed) {
@@ -662,7 +673,15 @@ export class InitCommand {
       console.log();
       console.log(chalk.dim('  Install missing skills from https://github.com/obra/superpowers'));
       console.log(chalk.dim('  or follow docs/openspec-superpowers-installation.md'));
-      console.log(chalk.dim(`  Run "openspec check --change <name>" to re-check skill status.`));
+
+      if (isStrict) {
+        console.log();
+        throw new Error(
+          'Strict discipline mode requires all Superpowers skills to be installed.\n' +
+          '  Install the missing skills and re-run, or switch to enhanced mode:\n' +
+          '  openspec config profile enhanced'
+        );
+      }
       console.log();
     }
   }

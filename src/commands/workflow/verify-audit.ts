@@ -48,13 +48,14 @@ export async function verifyAuditCommand(options: VerifyAuditOptions): Promise<v
     throw new Error('Missing required option --change. Use --change <name> to specify the change to audit.');
   }
 
-  const changeDir = path.join(changesDir, options.change);
+  const changeName = options.change;
+  const changeDir = path.join(changesDir, changeName);
 
   // Verify change exists
   try {
     await fs.access(changeDir);
   } catch {
-    throw new Error(`Change '${options.change}' not found at ${changeDir}`);
+    throw new Error(`Change '${changeName}' not found at ${changeDir}`);
   }
 
   const spinner = options.json ? undefined : ora('Running consistency audit...').start();
@@ -119,7 +120,7 @@ export async function verifyAuditCommand(options: VerifyAuditOptions): Promise<v
 
     // Build audit input
     const input: AuditInput = {
-      changeName: options.change,
+      changeName: changeName,
       tasks,
       specRequirements,
       designDecisions,
@@ -136,7 +137,7 @@ export async function verifyAuditCommand(options: VerifyAuditOptions): Promise<v
     try {
       const specCoverageDim = report.dimensions.find((d) => d.dimension === 'Spec Coverage');
       if (specCoverageDim?.coveragePercent !== undefined) {
-        await recordMetrics(projectRoot, options.change, {
+        await recordMetrics(projectRoot, changeName, {
           specCoverage: specCoverageDim.coveragePercent,
         });
       }
@@ -150,7 +151,7 @@ export async function verifyAuditCommand(options: VerifyAuditOptions): Promise<v
     }
 
     // Text output
-    console.log(chalk.bold(`\nConsistency Audit: ${options.change}\n`));
+    console.log(chalk.bold(`\nConsistency Audit: ${changeName}\n`));
 
     console.log(chalk.bold('  Dimension              Grade     Detail'));
     console.log('  ─────────────────────────────────────────────────────');

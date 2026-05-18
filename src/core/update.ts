@@ -13,7 +13,7 @@ import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { transformToHyphenCommands } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
-import { checkSuperpowersSkills, formatSkillCheckReport } from './skill-check.js';
+import { checkSuperpowersSkills } from './skill-check.js';
 import {
   generateCommands,
   CommandAdapterRegistry,
@@ -273,7 +273,7 @@ export class UpdateCommand {
     // 13. Check Superpowers skill prerequisites for enhanced/strict profiles
     await this.checkSkillPrerequisites(profile, resolvedProjectPath);
 
-    // 13. Show onboarding message for newly configured tools from legacy upgrade
+    // 14. Show onboarding message for newly configured tools from legacy upgrade
     if (newlyConfiguredTools.length > 0) {
       console.log();
       console.log(chalk.bold('Getting started:'));
@@ -286,14 +286,14 @@ export class UpdateCommand {
 
     const configuredAndNewTools = [...new Set([...configuredTools, ...newlyConfiguredTools])];
 
-    // 13. Detect new tool directories not currently configured
+    // 15. Detect new tool directories not currently configured
     this.detectNewTools(resolvedProjectPath, configuredAndNewTools);
 
-    // 14. Display note about extra workflows not in profile
+    // 16. Display note about extra workflows not in profile
     this.displayExtraWorkflowsNote(resolvedProjectPath, configuredAndNewTools, desiredWorkflows);
     this.displayOldCoreCustomProfileNote(profile, globalConfig.workflows);
 
-    // 15. List affected tools
+    // 17. List affected tools
     if (updatedTools.length > 0) {
       const toolDisplayNames = updatedTools;
       console.log(chalk.dim(`Tools: ${toolDisplayNames.join(', ')}`));
@@ -342,11 +342,19 @@ export class UpdateCommand {
     const report = checkSuperpowersSkills(disciplineLevel);
     if (!report.allInstalled) {
       console.log();
-      console.log(chalk.yellow('⚠  Superpowers skill prerequisites not fully met:'));
+      const isStrict = disciplineLevel === 'strict';
+      if (isStrict) {
+        console.log(chalk.red('✗  Strict mode requires Superpowers skills to be installed:'));
+      } else {
+        console.log(chalk.yellow('⚠  Superpowers skill prerequisites not fully met:'));
+      }
       for (const skill of report.skills) {
         if (skill.required && !skill.installed) {
           console.log(chalk.red(`  ✗ ${skill.name} — NOT INSTALLED`));
         }
+      }
+      if (isStrict) {
+        console.log(chalk.red('  Strict mode will error during apply without these skills.'));
       }
       console.log(chalk.dim('  Install from https://github.com/obra/superpowers or see docs/openspec-superpowers-installation.md'));
       console.log();
