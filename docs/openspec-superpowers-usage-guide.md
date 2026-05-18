@@ -230,7 +230,31 @@ Phase C: Post-checkpoint（OpenSpec 编排）
 | `/opsx:explore` | `brainstorming` | AI 提议，用户可选（不自动调用） |
 | `/opsx:simplify` | `simplify` | 手动调用或 apply Post-checkpoint 自动触发 |
 
-### 3.6 技能调用申告
+### 3.6 C0 技能合规自检
+
+Apply 模板在 Post-checkpoint 阶段的 C0 步骤会自动检查技能调用合规性——确保标注了 `[TDD: Full]` 或 `[TDD: Lite]` 的任务确实调用了 `test-driven-development` 技能。
+
+**检查机制**（在 Post-checkpoint C0 中执行）：
+
+| 检查规则 | 触发条件 | 行为 |
+|----------|----------|------|
+| `[TDD: Full]` 任务 → 是否调用了 `Skill({skill: "test-driven-development"})`？ | 任务完成时 | 未调用 → 提示 Retry/Explain/Override |
+| `[TDD: Lite]` 任务 → 是否调用了 `Skill({skill: "test-driven-development"})`？ | 任务完成时 | 未调用 → 提示 Retry/Explain/Override |
+| 每个 task 完成后 → 是否调用了 `Skill({skill: "simplify"})` | enhanced/strict | 未调用 → 提示 |
+
+**违规时的用户选项**：
+
+```
+⚠ Skill compliance failure:
+   Task 1.2 has [TDD: Full] but test-driven-development was not invoked.
+
+   Options:
+   [1] Retry — redo task with Skill({skill: "test-driven-development"})
+   [2] Explain — provide reason why skill was not needed
+   [3] Override — mark task done anyway (will be noted in review)
+```
+
+### 3.7 技能调用申告
 
 每次调用 Superpowers 技能时，AI 会输出明确标记，让用户看到正在使用哪个技能：
 
@@ -1070,7 +1094,8 @@ openspec status --deps
 |----------|------|
 | `openspec init --profile enhanced` | 初始化增强工作流 |
 | `openspec status --deps` | 查看依赖树+循环检测 |
-| `openspec verify --change <name> --audit` | 程序化 6 维度一致性审计（代码驱动，结果可复现） |
+| `openspec verify --change <name>` | 程序化 6 维度一致性审计（代码驱动，结果可复现） |
+| `openspec check --change <name>` | 静态合规检查：扫描 tasks.md TDD 标注，对照 discipline 配置验证 |
 | `openspec archive <name>` | 归档（含冲突检测） |
 | `openspec metrics` | 查看工程度量 |
 | `openspec metrics --json` | JSON 格式输出度量 |

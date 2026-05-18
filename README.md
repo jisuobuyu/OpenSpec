@@ -111,8 +111,7 @@ This enables 14 workflows including:
 - **Adaptive review** — complexity-based depth (self-audit / AI review / two-phase review)
 - **Simplify integration** — post-task code refinement with dedicated commits
 - **Lifecycle management** — non-destructive abort, task-level rewind, unarchive with spec rollback
-- **Parallel safety** — conflict detection, circular dependency checking, time-window race protection
-- **Metrics** — engineering discipline tracking (coverage, flow efficiency, defect escape rate, etc.)
+- **Programmatic audit** — `openspec verify --change`, `openspec check --change`, `openspec metrics` for CI/CD reproducibility
 
 Configure discipline level in `openspec/config.yaml`:
 

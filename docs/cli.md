@@ -11,6 +11,7 @@ The OpenSpec CLI (`openspec`) provides terminal commands for project setup, vali
 | **Browsing** | `list`, `view`, `show` | Explore changes and specs |
 | **Validation** | `validate` | Check changes and specs for issues |
 | **Lifecycle** | `archive` | Finalize completed changes |
+| **Audit** | `verify`, `check`, `metrics` | Consistency audit, compliance check, discipline metrics |
 | **Workflow** | `status`, `instructions`, `templates`, `schemas` | Artifact-driven workflow support |
 | **Schemas** | `schema init`, `schema fork`, `schema validate`, `schema which` | Create and manage custom workflows |
 | **Config** | `config` | View and modify settings |
@@ -539,6 +540,152 @@ openspec archive update-ci-config --skip-specs
 
 ---
 
+## Audit Commands
+
+These commands support the Superpowers profile (enhanced/strict): consistency audit, compliance check, and discipline metrics.
+
+### `openspec verify`
+
+Run a 6-dimension consistency audit on a change. This is a programmatic (code-driven) audit that produces reproducible results — unlike the AI template version (`/opsx:verify`), this runs the same audit logic in pure TypeScript.
+
+```
+openspec verify --change <id> [options]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--change <id>` | **Required.** Change name to audit |
+| `--json` | Output as JSON |
+
+**Examples:**
+
+```bash
+# Audit a change
+openspec verify --change add-user-auth
+
+# JSON output for scripts
+openspec verify --change add-user-auth --json
+```
+
+**Audit dimensions (6):**
+
+| # | Dimension | What it checks |
+|---|-----------|----------------|
+| 1 | Spec Coverage | Each requirement traced to implementation |
+| 2 | Scenario Completeness | Each Given/When/Then has a test path |
+| 3 | Task Alignment | Checkbox status matches code changes |
+| 4 | Design Consistency | Architecture decisions reflected in code |
+| 5 | Scope Boundary | No extra files or oversized scope |
+| 6 | Implicit Change | No unreported behavior modifications |
+
+---
+
+### `openspec check`
+
+Static compliance check: scans `tasks.md` TDD annotations against the discipline configuration and reports which tasks require skill invocations.
+
+```
+openspec check --change <id> [options]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--change <id>` | **Required.** Change name to check |
+| `--json` | Output as JSON |
+
+**Examples:**
+
+```bash
+# Check compliance
+openspec check --change add-user-auth
+
+# JSON output for scripts
+openspec check --change add-user-auth --json
+```
+
+**What it checks:**
+
+- Tasks marked `[TDD: Full]` or `[TDD: Lite]` should trigger `Skill("test-driven-development")`
+- Tasks with no `[TDD]` annotation fall back to `discipline.tdd.default`
+- In `core` mode, all skills are marked "not required"
+- In `enhanced`/`strict` mode, Full/Lite tasks get `warn` severity
+
+**Output (text):**
+
+```
+Compliance Check: add-user-auth
+Discipline: enhanced | TDD default: adaptive
+
+  ⚠ 1.1   [TDD: Full] → MUST call Skill("test-driven-development"). Verify it was invoked. [→ test-driven-development]
+  ⚠ 1.2   [TDD: Lite] → MUST call Skill("test-driven-development") with skip-refactor hint. [→ test-driven-development]
+  → 1.3   [TDD: Skip] → skill NOT required for this task.
+
+  Summary: 2 task(s) require skill, 2 need verification
+```
+
+---
+
+### `openspec metrics`
+
+Display engineering discipline metrics collected across all archived changes.
+
+```
+openspec metrics [options]
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Output as JSON |
+
+**Examples:**
+
+```bash
+# Show metrics
+openspec metrics
+
+# JSON output for scripts/CI
+openspec metrics --json
+```
+
+**6 tracked metrics:**
+
+| Metric | Description | Direction |
+|--------|-------------|-----------|
+| Spec Coverage | % of requirements with code traces | Higher is better |
+| Flow Efficiency | Active time / total cycle time | Higher is better |
+| Defect Escape Rate | Bugs found post-archive per change | Lower is better |
+| Over-engineering Ratio | Tasks flagged as unnecessary | Lower is better |
+| Rollback Rate | Rewinds per change | Lower is better |
+| User Intervention Count | Manual overrides per change | Lower is better |
+
+**Output (text):**
+
+```
+Engineering Discipline Metrics
+Based on 8 change(s), 12 snapshot(s)
+
+  Metric                  Avg       Trend
+  ─────────────────────────────────────────
+  Spec Coverage           87%        ↑
+  Flow Efficiency         72%        →
+  Defect Escape Rate      0.5/chg    ↓
+  Over-engineering Ratio   8%        ↓
+  Rollback Rate           0.2/chg    →
+  User Intervention Count  1.5/chg   →
+
+Latest: add-csv-export (2026-05-16T08:30:00.000Z)
+```
+
+Data is stored in `openspec/.metrics.yaml` and auto-collected on each archive.
+
+---
+
 ## Workflow Commands
 
 These commands support the artifact-driven OPSX workflow. They're useful for both humans checking progress and agents determining next steps.
@@ -556,6 +703,7 @@ openspec status [options]
 | Option | Description |
 |--------|-------------|
 | `--change <id>` | Change name (prompts if omitted) |
+| `--deps` | Show dependency tree for all active changes |
 | `--schema <name>` | Schema override (auto-detected from change's config) |
 | `--json` | Output as JSON |
 
@@ -567,6 +715,9 @@ openspec status
 
 # Status for specific change
 openspec status --change add-dark-mode
+
+# Show dependency tree
+openspec status --deps
 
 # JSON for agent use
 openspec status --change add-dark-mode --json

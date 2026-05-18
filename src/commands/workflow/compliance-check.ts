@@ -41,11 +41,75 @@ export interface ComplianceReport {
   };
 }
 
-function parseTddAnnotation(line: string): 'full' | 'lite' | 'skip' | 'none' {
+export function parseTddAnnotation(line: string): 'full' | 'lite' | 'skip' | 'none' {
   if (/\[TDD:\s*Full\]/i.test(line)) return 'full';
   if (/\[TDD:\s*Lite\]/i.test(line)) return 'lite';
   if (/\[TDD:\s*Skip\]/i.test(line)) return 'skip';
   return 'none';
+}
+
+/**
+ * Pure function: analyze task compliance by mapping TDD annotations to expected skills
+ * and severities based on the discipline configuration.
+ */
+export function analyzeTaskCompliance(
+  tasks: Array<{ id: string; description: string }>,
+  rawLines: string[],
+  disciplineLevel: string,
+  tddDefault: string,
+): TaskCompliance[] {
+  return tasks.map((task, i) => {
+    const rawLine = rawLines[i] || '';
+    const tddAnnotation = parseTddAnnotation(rawLine);
+
+    let expectedSkill: string | null = null;
+    let severity: 'pass' | 'warn' | 'skip' = 'pass';
+    let message = '';
+
+    if (disciplineLevel === 'core') {
+      if (tddAnnotation === 'full' || tddAnnotation === 'lite') {
+        expectedSkill = 'test-driven-development';
+        severity = 'skip';
+        message = `[TDD: ${tddAnnotation}] annotation found but discipline.level=core — skill NOT required`;
+      } else {
+        message = 'core mode — no skill required';
+      }
+    } else {
+      switch (tddAnnotation) {
+        case 'full':
+          expectedSkill = 'test-driven-development';
+          severity = 'warn';
+          message = `[TDD: Full] → MUST call Skill("test-driven-development"). Verify it was invoked.`;
+          break;
+        case 'lite':
+          expectedSkill = 'test-driven-development';
+          severity = 'warn';
+          message = `[TDD: Lite] → MUST call Skill("test-driven-development") with skip-refactor hint.`;
+          break;
+        case 'skip':
+          message = `[TDD: Skip] → skill NOT required for this task.`;
+          break;
+        case 'none':
+          if (tddDefault === 'full' || tddDefault === 'lite') {
+            expectedSkill = 'test-driven-development';
+            severity = 'warn';
+            message = `No [TDD] annotation → default=${tddDefault} → SHOULD call Skill("test-driven-development").`;
+          } else {
+            message = `No [TDD] annotation → default=${tddDefault} → skill optional.`;
+          }
+          break;
+      }
+    }
+
+    return {
+      taskId: task.id,
+      description: task.description,
+      tddAnnotation,
+      expectedSkill,
+      severity,
+      message,
+    };
+  });
 }
 
 export async function complianceCheckCommand(options: ComplianceCheckOptions): Promise<void> {
@@ -88,72 +152,10 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
       return;
     }
 
-    // Analyze each task
-    const taskCompliances: TaskCompliance[] = [];
-
     // Re-parse raw lines to get TDD annotations (parseTasks strips them)
     const rawLines = tasksContent.split('\n').filter((l) => l.match(/^- \[[ x]\]/));
 
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-      const rawLine = rawLines[i] || '';
-      const tddAnnotation = parseTddAnnotation(rawLine);
-
-      let expectedSkill: string | null = null;
-      let severity: 'pass' | 'warn' | 'skip' = 'pass';
-      let message = '';
-
-      // Determine expected behavior based on TDD annotation and discipline level
-      if (disciplineLevel === 'core') {
-        // Core mode: no skills expected, just inform
-        if (tddAnnotation === 'full' || tddAnnotation === 'lite') {
-          expectedSkill = 'test-driven-development';
-          severity = 'skip';
-          message = `[TDD: ${tddAnnotation}] annotation found but discipline.level=core — skill NOT required`;
-        } else {
-          message = 'core mode — no skill required';
-        }
-      } else {
-        // Enhanced or Strict mode
-        switch (tddAnnotation) {
-          case 'full':
-            expectedSkill = 'test-driven-development';
-            severity = 'warn';
-            message = `[TDD: Full] → MUST call Skill("test-driven-development"). Verify it was invoked.`;
-            break;
-          case 'lite':
-            expectedSkill = 'test-driven-development';
-            severity = 'warn';
-            message = `[TDD: Lite] → MUST call Skill("test-driven-development") with skip-refactor hint.`;
-            break;
-          case 'skip':
-            message = `[TDD: Skip] → skill NOT required for this task.`;
-            break;
-          case 'none':
-            if (tddDefault === 'full') {
-              expectedSkill = 'test-driven-development';
-              severity = 'warn';
-              message = `No [TDD] annotation → default=${tddDefault} → SHOULD call Skill("test-driven-development").`;
-            } else if (tddDefault === 'lite') {
-              expectedSkill = 'test-driven-development';
-              severity = 'warn';
-              message = `No [TDD] annotation → default=${tddDefault} → SHOULD call Skill("test-driven-development").`;
-            } else {
-              message = `No [TDD] annotation → default=${tddDefault} → skill optional.`;
-            }
-            break;
-        }
-      }
-
-      taskCompliances.push({
-        taskId: task.id,
-        description: task.description,
-        tddAnnotation,
-        expectedSkill,
-        severity,
-        message,
-      });
-    }
+    const taskCompliances = analyzeTaskCompliance(tasks, rawLines, disciplineLevel, tddDefault);
 
     const summary = {
       total: taskCompliances.length,

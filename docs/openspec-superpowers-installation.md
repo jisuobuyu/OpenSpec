@@ -226,6 +226,7 @@ openspec init --profile enhanced --tools claude
 | `openspec status` | 否 | 纯本地制品扫描 |
 | `openspec status --deps` | 否 | 依赖树分析，本地 `.openspec.yaml` 读取 |
 | `openspec verify --change <name>` | 否 | 6 维度审计，纯代码驱动 |
+| `openspec check --change <name>` | 否 | 静态 TDD 标注合规检查 |
 | `openspec archive` | 否 | 本地文件移动和 spec 合并 |
 | `openspec metrics` | 否 | 本地 `.metrics.yaml` 读取 |
 | `npm test`（TDD 技能内） | 否 | 本地测试运行 |

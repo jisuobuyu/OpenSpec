@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectCircularDeps, formatDependencyTree } from '../../../src/core/conflict/circular-deps.js';
+import { detectCircularDeps, formatDependencyTree, formatFullDepTree } from '../../../src/core/conflict/circular-deps.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
@@ -108,6 +108,44 @@ describe('circular-deps', () => {
       const graph = { 'lone-change': [] };
       const tree = formatDependencyTree(graph, 'lone-change');
       expect(tree).toContain('no dependencies');
+    });
+  });
+
+  describe('formatFullDepTree', () => {
+    it('formats a multi-root graph with all roots sorted', () => {
+      const graph = {
+        'change-b': ['change-c'],
+        'change-a': ['change-b', 'change-c'],
+        'change-c': [],
+      };
+      const result = formatFullDepTree(graph);
+      // Roots sorted alphabetically: change-a first, then change-b, then change-c
+      expect(result).toContain('change-a');
+      expect(result).toContain('change-b');
+      expect(result).toContain('change-c');
+      expect(result.indexOf('change-a')).toBeLessThan(result.indexOf('change-b'));
+      expect(result.indexOf('change-b')).toBeLessThan(result.indexOf('change-c'));
+    });
+
+    it('formats all roots with no dependencies', () => {
+      const graph = {
+        'z-change': [],
+        'a-change': [],
+      };
+      const result = formatFullDepTree(graph);
+      // Roots sorted alphabetically
+      expect(result).toContain('no dependencies');
+      expect(result.indexOf('a-change')).toBeLessThan(result.indexOf('z-change'));
+    });
+
+    it('returns empty string for empty graph', () => {
+      expect(formatFullDepTree({})).toBe('');
+    });
+
+    it('formats single root correctly', () => {
+      const graph = { 'lone-change': [] };
+      const result = formatFullDepTree(graph);
+      expect(result).toContain('no dependencies');
     });
   });
 });

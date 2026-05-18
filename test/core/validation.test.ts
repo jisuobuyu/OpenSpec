@@ -591,4 +591,20 @@ The system MUST support mixed case delta headers.
       expect(report.summary.info).toBe(0);
     });
   });
+
+  describe('Validator utility methods', () => {
+    describe('isValid', () => {
+      it('returns true when report.valid is true', () => {
+        const validator = new Validator(false);
+        const report = { valid: true } as any;
+        expect(validator.isValid(report)).toBe(true);
+      });
+
+      it('returns false when report.valid is false', () => {
+        const validator = new Validator(false);
+        const report = { valid: false } as any;
+        expect(validator.isValid(report)).toBe(false);
+      });
+    });
+  });
 });

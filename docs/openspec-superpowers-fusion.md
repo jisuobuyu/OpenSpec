@@ -146,7 +146,7 @@ Superpowers 技能在指令优先级上**天然高于调用者**（`using-superp
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### 2.6.1 六个防劫持机制
+### 2.6.1 七个防劫持机制
 
 | 机制 | 说明 | 实现方式 |
 |------|------|----------|
@@ -156,6 +156,7 @@ Superpowers 技能在指令优先级上**天然高于调用者**（`using-superp
 | **4. 技能边界限定** | OpenSpec 不以 "subagent" 方式调用技能（那样会丢失上下文），而是**内联调用**：在当前会话中加载技能内容，技能执行完毕后上下文自然回到 OpenSpec 模板 | 使用 `Skill({skill: "test-driven-development"})` 而非 `Agent({subagent_type: ...})` 来调用工程纪律技能 |
 | **5. 冲突技能互斥** | 确保不会同时运行两个都有"下一步"逻辑的技能。例如 `subagent-driven-development` 技能内部有 dispatch→review→next 的闭环，与 OpenSpec 的 task 迭代循环冲突。OpenSpec 只在 **Per-Task 模式**下调用一次 subagent-driven-dev，且调用后立即收回控制权 | apply 模板中：`调用 subagent-driven-development 技能的 implementer 部分用于当前 task 的代码实现，但 task 完成判定、下一 task 选择仍由 OpenSpec 控制` |
 | **6. Spec 上下文精确注入** | Pre-context 阶段注入的 spec 内容粒度直接影响 AI 实现质量——注入整个 spec.md 浪费 token 且分散注意力，注入太少则 AI 缺少约束 | 通过 tasks.md 中的可选 `spec-ref` 标注精确注入 |
+| **7. 技能合规自检** | 即使模板指令要求调用 Skill，AI 也可能遗漏（上下文过长、注意力漂移等原因） | Post-checkpoint 中 C0 步骤强制检查：`[TDD: Full/Lite]` → Skill 是否实际被调用；未调用则提示 Retry/Explain/Override |
 
 **Spec 上下文注入粒度设计：**
 
@@ -594,9 +595,9 @@ AI:  Running dual-layer verification...
 
 | 变更类型 | Review 要求 | 触发条件 |
 |----------|-------------|----------|
-| **简单**（文档/配置/单行修复） | **跳过 review** | 无 |
-| **中等**（新组件/功能，<5 文件） | **AI 自审**（自动生成 review.md，无独立 reviewer） | 自动 |
-| **复杂**（架构变更/多 domain/安全敏感） | **两阶段审查**（Spec Reviewer + Code Quality Reviewer） | AI 检测复杂度后提议 |
+| **简单**（<5 文件，<200 行） | **跳过 review**（self-audit checklist） | 无 |
+| **中等**（5-15 文件，200-800 行） | **AI 自审**（自动生成 review.md，无独立 reviewer） | 自动 |
+| **复杂**（15+ 文件，800+ 行，架构变更） | **两阶段审查**（Spec Reviewer + Code Quality Reviewer） | AI 检测复杂度后提议 |
 
 **review.md 的两种形式：**
 
@@ -925,8 +926,10 @@ archive:
 |------------------|----------|-----------|---------------------|
 | `/opsx:explore` | os + →skill | `brainstorming`（可选触发） | 自由探索姿态保持、exploration.md 生成与生命周期管理、propose 上下文传递 |
 | `/opsx:propose` | os | — | 创建 change 目录结构、消费 exploration.md、生成 proposal + specs artifacts |
+| `/opsx:new` | os | — | 创建 change 目录骨架（仅 `.openspec.yaml`），为后续 `/opsx:continue` 准备 |
+| `/opsx:continue` | os | — | 在已有 change 中继续创建下一个待完成制品（proposal→specs→design→tasks→review） |
 | `/opsx:ff`（propose 子步骤） | →skill | `writing-plans` | 复杂度自适应判断（Simple/Compact/Full）、plan 写入 design.md |
-| `/opsx:apply` | os + →skill | `test-driven-development`、`subagent-driven-development`、`simplify` | TDD 级别判断（Full/Lite/Skip）、执行模式选择（Inline/Batch/Per-Task）、tasks.md 状态追踪、spec 上下文注入 |
+| `/opsx:apply` | os + →skill | `test-driven-development`、`subagent-driven-development`、`simplify` | TDD 级别判断（Full/Lite/Skip）、执行模式选择（Inline/Batch/Per-Task）、tasks.md 状态追踪、spec 上下文注入、C0 技能合规自检 |
 | `/opsx:simplify` | →skill | `simplify` | 限制仅修改当前 session 文件、创建独立 git commit、提供 undo 路径 |
 | `/opsx:verify` | os + →skill | `verification-before-completion`（Layer 1） | Layer 2 一致性审计：Spec 覆盖度 / Scenario 完整性 / Task 对齐度 / Design 一致性 / 范围边界 / 隐式变更 |
 | `/opsx:review` | →skill | `requesting-code-review` | 变更复杂度判断（简单跳过/中等自审/复杂两阶段）、生成 review.md |
@@ -934,6 +937,11 @@ archive:
 | `/opsx:abort <change>` | os | — | Git branch 备份、worktree 清理、artifacts 移动到 aborted/ |
 | `/opsx:rewind <change>` | os | — | git revert 部分 commits、tasks.md checkbox 同步重置 |
 | `/opsx:unarchive <change>` | os | — | delta specs 从主 specs 回退、change 恢复到活跃状态 |
+
+| CLI 命令 | 类型 | 说明 |
+|----------|------|------|
+| `openspec verify --change <name>` | 程序化审计 | 6 维度一致性审计（代码驱动，结果可复现），与 `/opsx:verify` Layer 2 使用同一审计引擎 |
+| `openspec check --change <name>` | 静态合规检查 | 扫描 tasks.md 的 TDD 标注，对照 discipline 配置，检测应调用 Skill 但可能遗漏的 task |
 
 ### 5.1 回滚与中止流程
 
@@ -1118,16 +1126,17 @@ discipline:
   # strict: 全量 Superpowers 纪律（适合高风险项目）
 
   tdd:
-    default: adaptive    # adaptive | always | never
-    # adaptive: 按 task 类型自动选择 Full/Lite/Skip
-    # always: 所有 task 强制 Full TDD
-    # never: 跳过 TDD，直接实现
+    default: adaptive    # full | lite | skip | adaptive
+    # full: 未标注 task 默认走 Full TDD（RED→GREEN→REFACTOR）
+    # lite: 未标注 task 默认走 Lite TDD（RED→GREEN，跳过 REFACTOR）
+    # skip: 未标注 task 默认跳过 TDD
+    # adaptive: 按 task 类型自动选择 Full/Lite/Skip（推荐）
 
   subagent:
-    mode: adaptive       # adaptive | always | never
-    # adaptive: 按复杂度选择 Inline/Batch/Per-Task
-    # always: 每个 task 独立 subagent
-    # never: 全部内联执行
+    mode: adaptive       # off | per-task | adaptive
+    # off: 所有 task 内联执行，不调用 subagent
+    # per-task: 每个 task 独立 subagent + 两阶段审查
+    # adaptive: 按复杂度选择 Inline/Batch/Per-Task（推荐）
 
   worktree:
     enabled: true        # true | false
@@ -1144,8 +1153,8 @@ context: |
 
 | 维度 | core（最小侵入） | enhanced（自适应，推荐） | strict（全量纪律） |
 |------|------------------|-------------------------|-------------------|
-| **TDD 策略** | `tdd.default: never`，仅新增逻辑建议写测试 | `tdd.default: adaptive`，AI 按 task 类型自动选 Full/Lite/Skip | `tdd.default: always`，所有 task 强制 Full TDD |
-| **Subagent** | `subagent.mode: never`，全部 Inline 执行 | `subagent.mode: adaptive`，按复杂度选 Inline/Batch/Per-Task | `subagent.mode: always`，每个 task 独立 subagent + 两阶段审查 |
+| **TDD 策略** | `tdd.default: skip`，仅新增逻辑建议写测试 | `tdd.default: adaptive`，AI 按 task 类型自动选 Full/Lite/Skip | `tdd.default: full`，所有 task 强制 Full TDD |
+| **Subagent** | `subagent.mode: off`，全部 Inline 执行 | `subagent.mode: adaptive`，按复杂度选 Inline/Batch/Per-Task | `subagent.mode: per-task`，每个 task 独立 subagent + 两阶段审查 |
 | **Verify** | 仅 Layer 1（测试验证），跳过一致性审计 | 双层验证，Warning 级提示，用户可跳过 | 双层验证，Warning 升级为 Error 且要求确认才能 archive |
 | **Review** | 跳过，不生成 review.md | 中等+变更自动 AI 自审；复杂变更两阶段审查 | 所有变更强制两阶段审查，不通过无法 archive |
 | **Simplify** | 关闭，仅提示可手动执行 | 每次 task 完成后自动执行 | 每次 task 完成后自动执行 + 需用户确认才继续 |
