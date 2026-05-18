@@ -17,6 +17,7 @@ import { FeedbackCommand } from '../commands/feedback.js';
 import { registerConfigCommand } from '../commands/config.js';
 import { registerSchemaCommand } from '../commands/schema.js';
 import { metricsCommand, type MetricsOptions } from '../commands/metrics.js';
+import { verifyAuditCommand, type VerifyAuditOptions } from '../commands/workflow/verify-audit.js';
 import { registerWorkspaceCommand } from '../commands/workspace.js';
 import {
   statusCommand,
@@ -294,6 +295,22 @@ program
   .action(async (options: MetricsOptions) => {
     try {
       await metricsCommand(options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Verify command (programmatic consistency audit)
+program
+  .command('verify')
+  .description('Run programmatic 6-dimension consistency audit on a change')
+  .requiredOption('--change <id>', 'Change name to audit')
+  .option('--json', 'Output as JSON')
+  .action(async (options: VerifyAuditOptions) => {
+    try {
+      await verifyAuditCommand(options);
     } catch (error) {
       console.log();
       ora().fail(`Error: ${(error as Error).message}`);

@@ -532,6 +532,18 @@ Run /opsx:apply to start implementing.
 | 5 | Scope Boundary | 是否有多余文件或超大 scope |
 | 6 | Implicit Change | 是否有未声明的隐式行为修改 |
 
+**程序化审计（CLI）**：
+
+```bash
+# 代码驱动的审计，结果可复现 —— 不依赖 AI 判断
+openspec verify --change add-user-auth --audit
+
+# JSON 输出
+openspec verify --change add-user-auth --audit --json
+```
+
+> `/opsx:verify`（AI 模板）和 `openspec verify --audit`（代码）使用**相同的 6 维度审计逻辑**。前者由 AI 按模板指令执行，后者由 `consistencyAudit()` 纯函数执行。两者结果应一致——如果出现差异，说明 AI 未严格遵守模板指令。
+
 ---
 
 ### 4.5 `/opsx:review` — 代码审查
@@ -1040,6 +1052,7 @@ openspec status --deps
 |----------|------|
 | `openspec init --profile enhanced` | 初始化增强工作流 |
 | `openspec status --deps` | 查看依赖树+循环检测 |
+| `openspec verify --change <name> --audit` | 程序化 6 维度一致性审计（代码驱动，结果可复现） |
 | `openspec archive <name>` | 归档（含冲突检测） |
 | `openspec metrics` | 查看工程度量 |
 | `openspec metrics --json` | JSON 格式输出度量 |
