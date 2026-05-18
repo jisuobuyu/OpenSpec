@@ -828,7 +828,7 @@ discipline:
   level: enhanced
   tdd:
     default: adaptive
-  subagent:
+  subagent: 
     mode: adaptive
   worktree:
     enabled: true
