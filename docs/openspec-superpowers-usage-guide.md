@@ -394,13 +394,25 @@ openspec/changes/add-user-auth/
 **执行步骤**：
 
 ```
-1. 检查制品完成状态
-2. 检查任务完成状态
-3. ⚠ 冲突检测（并行 change 扫瞄）         ← P4 新增
-4. 若未验证 → 提示运行 /opsx:verify
-5. 同步 delta specs → 主 specs
-6. 移动 openspec/changes/<name> → archive/YYYY-MM-DD-<name>
-7. 清理 git worktree
+1. 选择 change（未指定时交互选择）
+2. 检查制品完成状态（未完成→警告+确认）
+3. 检查任务完成状态（有未完成任务→警告+确认）
+4. 验证检查（未运行 verify → 提示 /opsx:verify）    ← 可选运行
+5. 审查检查（无 review.md → 提示 /opsx:review）      ← 可选运行
+6. 冲突检测（扫描并行 change 的文件交集+spec 冲突）   ← 自动执行
+7. 同步 delta specs → 主 specs
+8. 归档：mv openspec/changes/<name> → archive/YYYY-MM-DD-<name>
+9. 清理 git worktree
+10. 显示摘要（spec 同步/审查/worktree/验证 状态）
+```
+
+**归档摘要示例**：
+```
+## Archive Complete
+
+**Change:** add-user-auth → openspec/changes/archive/2026-05-18-add-user-auth/
+**Specs:** ✓ Synced | **Review:** ✓ | **Worktree:** ✓
+All done.
 ```
 
 **CLI 等效命令**：
