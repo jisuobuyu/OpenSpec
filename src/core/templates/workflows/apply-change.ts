@@ -162,6 +162,34 @@ Check if the skill directory exists at \`~/.claude/skills/<skill-name>/SKILL.md\
 
 After the task implementation completes:
 
+**C0. SKILL COMPLIANCE CHECK** — run this BEFORE marking task complete.
+
+Verify that all required skills were actually invoked during Phase B:
+
+| Check | Rule |
+|-------|------|
+| Task has \`[TDD: Full]\` → was \`Skill({skill: "test-driven-development"})\` called? | Required |
+| Task has \`[TDD: Lite]\` → was \`Skill({skill: "test-driven-development"})\` called? | Required |
+| Task completed → was \`Skill({skill: "simplify"})\` called? | Required (enhanced/strict) |
+
+How to verify:
+- Scan the conversation messages from the current Phase B execution
+- Check for \`[Skill]\` announcement markers you output earlier
+- Check for actual Skill tool invocations
+
+If a required skill was NOT called:
+\`\`\`
+⚠ Skill compliance failure:
+   Task 1.2 has [TDD: Full] but test-driven-development was not invoked.
+
+   Options:
+   [1] Retry — redo task with Skill({skill: "test-driven-development"})
+   [2] Explain — provide reason why skill was not needed
+   [3] Override — mark task done anyway (will be noted in review)
+\`\`\`
+
+If user selects [1], go back to Phase B with the skill. If [2] or [3], note the exception and continue.
+
 **C1. Update task checkbox**
 
 In \`tasks.md\`, change \`- [ ]\` to \`- [x]\` for the completed task.
@@ -280,6 +308,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 - **Skill check**: enhanced → degrade gracefully if missing; strict → error
 
 ### Post-checkpoint
+- **C0 Skill compliance check**: verify [TDD: Full/Lite] → Skill was actually called; if not → alert user (Retry/Explain/Override)
 - Update \`tasks.md\` checkbox: \`- [ ]\` → \`- [x]\`
 - Announce: \`[Skill] simplify → refining files: <list>\`
 - Trigger \`Skill({skill: "simplify"})\` on changed files, commit as \`simplify(<task-id>)\`

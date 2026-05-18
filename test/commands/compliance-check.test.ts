@@ -1,0 +1,133 @@
+/**
+ * Tests for openspec check --compliance command.
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { promises as fs } from 'fs';
+import path from 'path';
+import os from 'os';
+import { randomUUID } from 'crypto';
+import { execSync } from 'child_process';
+
+const CLI = path.resolve(process.cwd(), 'dist/cli/index.js');
+
+describe('CLI check --change', () => {
+  let testDir: string;
+
+  beforeEach(async () => {
+    testDir = path.join(os.tmpdir(), `openspec-compliance-${randomUUID()}`);
+    await fs.mkdir(path.join(testDir, 'openspec', 'changes', 'test-change'), { recursive: true });
+  });
+
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it('should detect [TDD: Full] tasks requiring skill', async () => {
+    // Config with discipline level enhanced
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      `schema: superpowers\ndiscipline:\n  level: enhanced\n  tdd:\n    default: adaptive\n`
+    );
+
+    // Tasks with [TDD: Full] and [TDD: Skip]
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
+      `## 1. Core
+- [x] 1.1 [TDD: Full] Implement login endpoint
+- [ ] 1.2 [TDD: Skip] Update README
+- [ ] 1.3 Implement dashboard
+`
+    );
+
+    const output = execSync(
+      `node "${CLI}" check --change test-change`,
+      { cwd: testDir, encoding: 'utf-8' }
+    );
+
+    expect(output).toContain('Compliance Check: test-change');
+    expect(output).toContain('Discipline: enhanced');
+    expect(output).toContain('[TDD: Full]');
+    expect(output).toContain('test-driven-development');
+    expect(output).toContain('[TDD: Skip]');
+    expect(output).toContain('skill NOT required');
+  });
+
+  it('should show all-optional in core mode', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      'schema: superpowers\n'
+    );
+
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
+      `## 1. Core
+- [ ] 1.1 [TDD: Full] Implement login
+`
+    );
+
+    const output = execSync(
+      `node "${CLI}" check --change test-change`,
+      { cwd: testDir, encoding: 'utf-8' }
+    );
+
+    expect(output).toContain('Discipline: core');
+    expect(output).toContain('skill NOT required');
+  });
+
+  it('should output valid JSON', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      `schema: superpowers\ndiscipline:\n  level: enhanced\n  tdd:\n    default: adaptive\n`
+    );
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
+      `## 1. Core
+- [ ] 1.1 [TDD: Full] Implement login
+- [ ] 1.2 [TDD: Lite] Add tests
+- [ ] 1.3 [TDD: Skip] Update docs
+`
+    );
+
+    const output = execSync(
+      `node "${CLI}" check --change test-change --json`,
+      { cwd: testDir, encoding: 'utf-8' }
+    );
+
+    const report = JSON.parse(output);
+    expect(report.changeName).toBe('test-change');
+    expect(report.tasks).toHaveLength(3);
+    expect(report.summary.requireSkill).toBeGreaterThan(0);
+    expect(report.summary.total).toBe(3);
+
+    // Full and Lite tasks should have expectedSkill
+    const fullTask = report.tasks.find((t: any) => t.tddAnnotation === 'full');
+    expect(fullTask.expectedSkill).toBe('test-driven-development');
+    expect(fullTask.severity).toBe('warn');
+
+    const skipTask = report.tasks.find((t: any) => t.tddAnnotation === 'skip');
+    expect(skipTask.expectedSkill).toBeNull();
+    expect(skipTask.severity).toBe('pass');
+  });
+
+  it('should error when --change is missing', () => {
+    expect(() => {
+      execSync(`node "${CLI}" check`, {
+        cwd: testDir, encoding: 'utf-8', stdio: 'pipe',
+      });
+    }).toThrow();
+  });
+
+  it('should show helpful message when no tasks.md', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      'schema: superpowers\n'
+    );
+
+    expect(() => {
+      execSync(`node "${CLI}" check --change test-change`, {
+        cwd: testDir, encoding: 'utf-8', stdio: 'pipe',
+      });
+    }).toThrow(/No tasks\.md/);
+  });
+});

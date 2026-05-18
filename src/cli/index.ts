@@ -18,6 +18,7 @@ import { registerConfigCommand } from '../commands/config.js';
 import { registerSchemaCommand } from '../commands/schema.js';
 import { metricsCommand, type MetricsOptions } from '../commands/metrics.js';
 import { verifyAuditCommand, type VerifyAuditOptions } from '../commands/workflow/verify-audit.js';
+import { complianceCheckCommand, type ComplianceCheckOptions } from '../commands/workflow/compliance-check.js';
 import { registerWorkspaceCommand } from '../commands/workspace.js';
 import {
   statusCommand,
@@ -311,6 +312,22 @@ program
   .action(async (options: VerifyAuditOptions) => {
     try {
       await verifyAuditCommand(options);
+    } catch (error) {
+      console.log();
+      ora().fail(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// Compliance check command
+program
+  .command('check')
+  .description('Check skill compliance — verify task TDD annotations against discipline config')
+  .requiredOption('--change <id>', 'Change name to check')
+  .option('--json', 'Output as JSON')
+  .action(async (options: ComplianceCheckOptions) => {
+    try {
+      await complianceCheckCommand(options);
     } catch (error) {
       console.log();
       ora().fail(`Error: ${(error as Error).message}`);
