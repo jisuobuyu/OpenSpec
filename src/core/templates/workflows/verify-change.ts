@@ -144,11 +144,23 @@ If the change's \`.openspec.yaml\` has \`depends_on\` declarations:
 - No changed files → skip Scope Boundary and Implicit Change
 - Always note which dimensions were skipped and why
 
+**Next Step: Review**
+
+After verification passes (no Critical issues), suggest running code review:
+
+> "Verification complete. Would you like to run \`/opsx:review <name>\` to review the implementation code?"
+
+The review adapts to change complexity:
+- Simple changes (< 5 files): quick self-audit checklist
+- Medium changes (5-15 files): AI self-review → generates review.md
+- Complex changes (15+ files): two-phase review with requesting-code-review skill
+
 **Guardrails**
 - Run Layer 1 (skill) FIRST, then Layer 2 (audit)
 - Layer 2 grades must be evidence-based, not speculative
 - When uncertain, prefer Warning over Critical
-- Every Warning/Critical must have an actionable recommendation`,
+- Every Warning/Critical must have an actionable recommendation
+- Always suggest running review after successful verification`,
     license: 'MIT',
     compatibility: 'Requires openspec CLI.',
     metadata: { author: 'openspec', version: '1.0' },

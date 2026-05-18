@@ -48,14 +48,28 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    If user chooses option 1, invoke \`/opsx:verify <name>\` (or equivalent verification steps) before continuing.
 
-5. **Check for parallel change conflicts**
+5. **Pre-archive review (if not already done)**
+
+   Check if code review has been performed — look for \`review.md\` in the change directory.
+
+   **If \`review.md\` does NOT exist**, assess change complexity and prompt:
+   - **Simple** (< 5 files changed): note that self-audit is sufficient, no review.md needed
+   - **Medium/Complex**: prompt the user:
+   > "Code review has not been run for this change. Run review before archiving?"
+   >
+   > [1] Run review and then archive (Recommended)
+   > [2] Skip review and archive now
+
+   If user chooses option 1, invoke \`/opsx:review <name>\` before continuing.
+
+6. **Check for parallel change conflicts**
 
    If other active changes exist, check for conflicts:
    - Scan other active changes' delta specs for overlapping requirements
    - Check for file-level conflicts (same files referenced)
    - If conflicts detected, warn and ask for confirmation
 
-6. **Sync delta specs to main specs**
+7. **Sync delta specs to main specs**
 
    Check for delta specs at \`openspec/changes/<name>/specs/\`.
 
@@ -68,7 +82,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    If user chooses sync, invoke \`/opsx:sync <name>\` or perform the spec merge directly.
 
-7. **Perform the archive**
+8. **Perform the archive**
 
    \`\`\`bash
    mkdir -p openspec/changes/archive
@@ -84,7 +98,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    \`\`\`
 
-8. **Clean up worktree (if applicable)**
+9. **Clean up worktree (if applicable)**
 
    If a git worktree was used for this change:
    \`\`\`bash
@@ -93,7 +107,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    Delete the associated branch if it was created for this change.
 
-9. **Display summary**
+10. **Display summary**
 
    \`\`\`
    ## Archive Complete
@@ -101,6 +115,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    **Change:** <change-name>
    **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
    **Specs:** ✓ Synced (or "No delta specs" or "Sync skipped")
+   **Review:** ✓ Completed (or "Skipped" or "N/A - simple change")
    **Worktree:** Cleaned up (or "N/A")
    **Verification:** ✓ Environment preserved (or "Skipped")
 
@@ -114,7 +129,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 ## Archive Complete
 
 **Change:** <name> → openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced | **Worktree:** ✓ Cleaned up
+**Specs:** ✓ Synced | **Review:** ✓ | **Worktree:** ✓
 All done.
 \`\`\`
 
@@ -126,6 +141,7 @@ All done.
 - Archived with 2 incomplete artifacts
 - Delta spec sync was skipped
 - Verification was skipped
+- Review was skipped
 
 Review the archive if this was not intentional.
 \`\`\`
@@ -173,18 +189,21 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 3. **Pre-archive verify** — if verification hasn't been run, offer to run \`/opsx:verify\` before archiving
 
-4. **Check parallel conflicts** — scan other active changes for overlapping specs/files
+4. **Pre-archive review** — if \`review.md\` doesn't exist and change is not simple, offer to run \`/opsx:review\` before archiving
 
-5. **Sync delta specs** — merge delta specs into main specs, or skip with warning
+5. **Check parallel conflicts** — scan other active changes for overlapping specs/files
 
-6. **Archive** — \`mkdir -p openspec/changes/archive\` → \`mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>\`
+6. **Sync delta specs** — merge delta specs into main specs, or skip with warning
 
-7. **Clean up worktree** — \`git worktree remove\` if applicable
+7. **Archive** — \`mkdir -p openspec/changes/archive\` → \`mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>\`
 
-8. **Display summary** — archive location, spec sync status, worktree cleanup, warnings
+8. **Clean up worktree** — \`git worktree remove\` if applicable
+
+9. **Display summary** — archive location, spec sync status, review status, worktree cleanup, warnings
 
 **Guardrails**
 - Offer verify before archiving (don't skip silently)
+- Offer review before archiving (simple changes exempt)
 - Warn on incomplete tasks/artifacts but don't block
 - Sync delta specs as part of archive flow
 - Clean up worktree resources`,
