@@ -122,6 +122,95 @@ describe('consistency-auditor', () => {
       const scope = report.dimensions.find((d) => d.dimension === 'Scope Boundary');
       expect(scope?.severity).toBe('Warning');
     });
+
+    it('should return Critical when no design decisions verified in code', () => {
+      const input: AuditInput = {
+        ...baseInput,
+        hasDesign: true,
+        designDecisions: ['Use gRPC for service communication', 'Implement event sourcing'],
+        changedFiles: ['src/http/rest.ts'],
+        changedFileContents: {
+          'src/http/rest.ts': 'export function handleRequest() { /* REST handler */ }',
+        },
+      };
+
+      const report = consistencyAudit(input);
+      const design = report.dimensions.find((d) => d.dimension === 'Design Consistency');
+      expect(design?.severity).toBe('Critical');
+      expect(design?.detail).toContain('None of the 2 design decisions could be verified');
+    });
+
+    it('should return Warning when some but not all design decisions verified', () => {
+      const input: AuditInput = {
+        ...baseInput,
+        hasDesign: true,
+        designDecisions: ['Use gRPC for service communication', 'Use Redis for caching'],
+        changedFiles: ['src/rpc/grpc-server.ts'],
+        changedFileContents: {
+          'src/rpc/grpc-server.ts': '// gRPC server implementation',
+        },
+      };
+
+      const report = consistencyAudit(input);
+      const design = report.dimensions.find((d) => d.dimension === 'Design Consistency');
+      expect(design?.severity).toBe('Warning');
+      expect(design?.recommendations.length).toBeGreaterThan(0);
+    });
+
+    it('should return Warning for implicit changes (>5 unaccounted symbols)', () => {
+      const input: AuditInput = {
+        ...baseInput,
+        hasSpecs: true,
+        specRequirements: [{ id: 'REQ-login', name: 'User can login', scenarioCount: 1 }],
+        changedFiles: ['src/misc.ts'],
+        changedFileContents: {
+          'src/misc.ts': `
+            export function exportCSV() {}
+            export function sendEmail() {}
+            export function generatePDF() {}
+            export function parseXML() {}
+            export function uploadFile() {}
+            export function downloadAsset() {}
+            export function syncCalendar() {}
+          `,
+        },
+      };
+
+      const report = consistencyAudit(input);
+      const implicit = report.dimensions.find((d) => d.dimension === 'Implicit Change');
+      expect(implicit?.severity).toBe('Warning');
+      expect(implicit?.detail).toContain('potential implicit changes');
+    });
+
+    it('should return Warning when completed tasks have no code changes', () => {
+      const input: AuditInput = {
+        ...baseInput,
+        tasks: [
+          { id: '1.1', description: 'Add login', completed: true },
+          { id: '1.2', description: 'Add dashboard', completed: true },
+        ],
+        changedFiles: [], // No code changed
+      };
+
+      const report = consistencyAudit(input);
+      const alignment = report.dimensions.find((d) => d.dimension === 'Task Alignment');
+      expect(alignment?.severity).toBe('Warning');
+      expect(alignment?.detail).toContain('marked complete but no changed files');
+    });
+
+    it('should return Warning when no scenarios defined in specs', () => {
+      const input: AuditInput = {
+        ...baseInput,
+        hasSpecs: true,
+        specRequirements: [{ id: 'REQ-1', name: 'User can login', scenarioCount: 0 }],
+        tasks: [{ id: '1.1', description: 'Implement login', completed: true }],
+      };
+
+      const report = consistencyAudit(input);
+      const scenario = report.dimensions.find((d) => d.dimension === 'Scenario Completeness');
+      expect(scenario?.severity).toBe('Warning');
+      expect(scenario?.detail).toContain('No scenarios defined');
+    });
   });
 
   describe('parseTasks', () => {

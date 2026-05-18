@@ -536,8 +536,7 @@ Run /opsx:apply to start implementing.
 
 ```bash
 # 代码驱动的审计，结果可复现 —— 不依赖 AI 判断
-openspec verify --change add-user-auth --audit
-
+openspec verify --change add-user-auth
 # JSON 输出
 openspec verify --change add-user-auth --audit --json
 ```

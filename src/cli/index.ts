@@ -305,7 +305,7 @@ program
 // Verify command (programmatic consistency audit)
 program
   .command('verify')
-  .description('Run programmatic 6-dimension consistency audit on a change')
+  .description('Run 6-dimension consistency audit on a change (code-driven, results reproducible)')
   .requiredOption('--change <id>', 'Change name to audit')
   .option('--json', 'Output as JSON')
   .action(async (options: VerifyAuditOptions) => {

@@ -161,17 +161,6 @@ function auditScenarioCompleteness(input: AuditInput): DimensionResult {
 // ── 3. Task Alignment ──────────────────────────────────────────────
 
 function auditTaskAlignment(input: AuditInput): DimensionResult {
-  const incomplete = input.tasks.filter((t) => !t.completed);
-
-  if (incomplete.length === 0 && input.tasks.length > 0) {
-    return {
-      dimension: 'Task Alignment',
-      severity: 'Pass',
-      detail: `All ${input.tasks.length} task(s) marked complete.`,
-      recommendations: [],
-    };
-  }
-
   if (input.tasks.length === 0) {
     return {
       dimension: 'Task Alignment',
@@ -181,20 +170,29 @@ function auditTaskAlignment(input: AuditInput): DimensionResult {
     };
   }
 
+  const incomplete = input.tasks.filter((t) => !t.completed);
+
   // Check for completed tasks with no corresponding code changes
-  const completedButNoCode: string[] = [];
-  for (const task of input.tasks) {
-    if (task.completed && input.changedFiles.length === 0) {
-      completedButNoCode.push(task.id);
+  // Must check BEFORE "all complete → Pass" — completed checkboxes
+  // with no code changes is suspicious
+  if (input.changedFiles.length === 0) {
+    const completedButNoCode = input.tasks.filter((t) => t.completed).map((t) => t.id);
+    if (completedButNoCode.length > 0) {
+      return {
+        dimension: 'Task Alignment',
+        severity: 'Warning',
+        detail: `${completedButNoCode.length} task(s) marked complete but no changed files detected: ${completedButNoCode.join(', ')}`,
+        recommendations: ['Verify the completed tasks actually modified code', 'If tasks were done out-of-band, note this in the change'],
+      };
     }
   }
 
-  if (completedButNoCode.length > 0) {
+  if (incomplete.length === 0) {
     return {
       dimension: 'Task Alignment',
-      severity: 'Warning',
-      detail: `${completedButNoCode.length} task(s) marked complete but no changed files detected: ${completedButNoCode.join(', ')}`,
-      recommendations: ['Verify the completed tasks actually modified code', 'If tasks were done out-of-band, note this in the change'],
+      severity: 'Pass',
+      detail: `All ${input.tasks.length} task(s) marked complete.`,
+      recommendations: [],
     };
   }
 
