@@ -224,7 +224,10 @@ openspec init --profile enhanced --tools claude
 | `/opsx:verify` | 否 | L1 测试本地运行，L2 审计本地文件 |
 | `/opsx:review` | 否 | AI 自审或调用本地 skill |
 | `openspec status` | 否 | 纯本地制品扫描 |
+| `openspec status --deps` | 否 | 依赖树分析，本地 `.openspec.yaml` 读取 |
+| `openspec verify --change <name>` | 否 | 6 维度审计，纯代码驱动 |
 | `openspec archive` | 否 | 本地文件移动和 spec 合并 |
+| `openspec metrics` | 否 | 本地 `.metrics.yaml` 读取 |
 | `npm test`（TDD 技能内） | 否 | 本地测试运行 |
 
 > **完全离线可用**：OpenSpec + Superpowers 融合方案的所有功能均可在离线环境下正常工作。唯一需要网络的是初次 `git clone` 和 `npm install`（已在联网机器上完成）。

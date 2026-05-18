@@ -230,7 +230,25 @@ Phase C: Post-checkpoint（OpenSpec 编排）
 | `/opsx:explore` | `brainstorming` | AI 提议，用户可选（不自动调用） |
 | `/opsx:simplify` | `simplify` | 手动调用或 apply Post-checkpoint 自动触发 |
 
-### 3.6 模板是桥接点
+### 3.6 技能调用申告
+
+每次调用 Superpowers 技能时，AI 会输出明确标记，让用户看到正在使用哪个技能：
+
+```
+[Skill] test-driven-development → Full TDD (RED→GREEN→REFACTOR)
+[Skill] simplify → refining files: src/auth/login.ts, src/auth/login.test.ts
+[Skill] verification-before-completion → running test suite + coverage
+[Skill] requesting-code-review → independent review of add-user-auth
+[Skill] writing-plans → generating structured design
+[Skill] brainstorming → exploring trade-off space
+
+[No Skill] TDD: Skip — implementing directly
+[No Skill] core mode — implementing directly
+```
+
+> 如果对话中没有出现 `[Skill]` 标记，说明当前 task 未触发技能调用（TDD: Skip 或 core mode）。
+
+### 3.7 模板是桥接点
 
 每个命令对应一个 TypeScript 模板函数，构建时生成 `.md` 文件供 AI 读取：
 
@@ -537,11 +555,12 @@ Run /opsx:apply to start implementing.
 ```bash
 # 代码驱动的审计，结果可复现 —— 不依赖 AI 判断
 openspec verify --change add-user-auth
+
 # JSON 输出
-openspec verify --change add-user-auth --audit --json
+openspec verify --change add-user-auth --json
 ```
 
-> `/opsx:verify`（AI 模板）和 `openspec verify --audit`（代码）使用**相同的 6 维度审计逻辑**。前者由 AI 按模板指令执行，后者由 `consistencyAudit()` 纯函数执行。两者结果应一致——如果出现差异，说明 AI 未严格遵守模板指令。
+> `/opsx:verify`（AI 模板）和 `openspec verify`（CLI 代码）使用**相同的 6 维度审计逻辑**。前者由 AI 按模板指令执行，后者由 `consistencyAudit()` 纯函数执行。两者结果应一致——如果出现差异，说明 AI 未严格遵守模板指令。
 
 ---
 
