@@ -137,7 +137,7 @@ describe('instruction-loader', () => {
 
     it('should include artifact metadata', () => {
       const context = loadChangeContext(tempDir, 'my-change');
-      const instructions = generateInstructions(context, 'proposal');
+      const instructions = generateInstructions(context, 'explore');
 
       expect(instructions.changeName).toBe('my-change');
       expect(instructions.artifactId).toBe('proposal');
@@ -147,7 +147,7 @@ describe('instruction-loader', () => {
 
     it('should include template content', () => {
       const context = loadChangeContext(tempDir, 'my-change');
-      const instructions = generateInstructions(context, 'proposal');
+      const instructions = generateInstructions(context, 'explore');
 
       expect(instructions.template).toContain('## Why');
     });
@@ -175,7 +175,7 @@ describe('instruction-loader', () => {
 
     it('should list artifacts unlocked by this one', () => {
       const context = loadChangeContext(tempDir, 'my-change');
-      const instructions = generateInstructions(context, 'proposal');
+      const instructions = generateInstructions(context, 'explore');
 
       // proposal unlocks specs and design
       expect(instructions.unlocks).toContain('specs');
@@ -184,7 +184,7 @@ describe('instruction-loader', () => {
 
     it('should have empty dependencies for root artifact', () => {
       const context = loadChangeContext(tempDir, 'my-change');
-      const instructions = generateInstructions(context, 'proposal');
+      const instructions = generateInstructions(context, 'explore');
 
       expect(instructions.dependencies).toHaveLength(0);
     });
@@ -405,7 +405,7 @@ rules:
 
       it('should work without project root parameter', () => {
         const context = loadChangeContext(tempDir, 'my-change');
-        const instructions = generateInstructions(context, 'proposal'); // No projectRoot
+        const instructions = generateInstructions(context, 'explore'); // No projectRoot
 
         expect(instructions.context).toBeUndefined();
         expect(instructions.rules).toBeUndefined();

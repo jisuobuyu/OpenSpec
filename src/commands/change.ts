@@ -73,11 +73,11 @@ export class ChangeCommand {
 
       // Check for superpowers optional artifacts
       const changeDir2 = path.join(changesPath, changeName);
-      const hasExploration = await fs.access(path.join(changeDir2, 'exploration.md')).then(() => true).catch(() => false);
+      const hasExplore = await fs.access(path.join(changeDir2, 'explore.md')).then(() => true).catch(() => false);
       const hasReview = await fs.access(path.join(changeDir2, 'review.md')).then(() => true).catch(() => false);
 
       if (options.requirementsOnly || options.deltasOnly) {
-        const output = { id, title, deltaCount: deltas.length, deltas, hasExploration, hasReview };
+        const output = { id, title, deltaCount: deltas.length, deltas, hasExplore, hasReview };
         console.log(JSON.stringify(output, null, 2));
       } else {
         const output = {
@@ -85,7 +85,7 @@ export class ChangeCommand {
           title,
           deltaCount: deltas.length,
           deltas,
-          hasExploration,
+          hasExplore,
           hasReview,
         };
         console.log(JSON.stringify(output, null, 2));
@@ -96,17 +96,17 @@ export class ChangeCommand {
 
       // Show additional superpowers artifacts if they exist
       const changeDir = path.join(changesPath, changeName);
-      const explorationPath = path.join(changeDir, 'exploration.md');
+      const explorePath = path.join(changeDir, 'explore.md');
       const reviewPath = path.join(changeDir, 'review.md');
-      const hasExploration = await fs.access(explorationPath).then(() => true).catch(() => false);
+      const hasExplore = await fs.access(explorePath).then(() => true).catch(() => false);
       const hasReview = await fs.access(reviewPath).then(() => true).catch(() => false);
 
-      if (hasExploration || hasReview) {
+      if (hasExplore || hasReview) {
         console.log();
-        if (hasExploration) {
-          console.log('```exploration');
-          const explorationContent = await fs.readFile(explorationPath, 'utf-8');
-          console.log(explorationContent);
+        if (hasExplore) {
+          console.log('```explore');
+          const exploreContent = await fs.readFile(explorePath, 'utf-8');
+          console.log(exploreContent);
           console.log('```');
           console.log();
         }

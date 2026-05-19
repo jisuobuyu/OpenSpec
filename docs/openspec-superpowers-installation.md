@@ -523,7 +523,7 @@ openspec update --force
 
 ### Q4: `/opsx:apply` 不调用 TDD 技能
 
-**原因**：技能未安装或 tasks.md 缺少 `[TDD: Full]` 标注。
+**原因**：技能未安装或 tasks.md 缺少 `[TDD]` 标注。
 
 **检查**：
 ```bash
@@ -535,7 +535,7 @@ ls ~/.claude/skills/test-driven-development/SKILL.md
 ```
 
 **解决**：
-- 确保 tasks.md 中每个 task 标注了 `[TDD: Full]`
+- 确保 tasks.md 中每个 task 标注了 `[TDD]`
 - 安装缺失的 Superpowers 技能（参见 [3. 安装 Superpowers 技能](#3-安装-superpowers-技能)）
 
 ### Q5: `openspec status --deps` 报告循环依赖

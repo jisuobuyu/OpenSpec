@@ -32,7 +32,7 @@ OPSX (fluid actions):
 
 ### Default Quick Path (`core` profile)
 
-New installs default to `core`, which provides:
+New installs default to `strict`, which provides 14 workflows:
 - `/opsx:propose`
 - `/opsx:explore`
 - `/opsx:apply`
@@ -434,7 +434,7 @@ For full command details and options, see [Commands](commands.md).
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/opsx:propose` | Create change + planning artifacts | Fast default path (`core` profile) |
+| `/opsx:propose` | Create change + planning artifacts | Default path (`strict` profile) |
 | `/opsx:explore` | Think through ideas | Unclear requirements, investigation |
 | `/opsx:new` | Start a change scaffold | Expanded mode, explicit artifact control |
 | `/opsx:continue` | Create next artifact | Expanded mode, step-by-step artifact creation |

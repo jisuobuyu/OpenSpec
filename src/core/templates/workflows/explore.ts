@@ -455,7 +455,7 @@ There's no required ending. Discovery might:
 
 When things crystallize, you might offer a summary - but it's optional. Sometimes the thinking IS the value.
 
-If the exploration yielded substantive insights (key decisions, trade-offs analyzed, open questions identified), offer to capture them: "This exploration surfaced useful insights. Want me to create an exploration.md to capture the key findings, options considered, and open questions?" The user decides — do NOT auto-generate.
+If the exploration yielded substantive insights (key decisions, trade-offs analyzed, open questions identified), offer to capture them: "This exploration surfaced useful insights. Want me to create an explore.md to capture the key findings, options considered, and open questions?" The user decides — do NOT auto-generate.
 
 ---
 

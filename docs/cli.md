@@ -609,9 +609,9 @@ openspec check --change add-user-auth --json
 
 **What it checks:**
 
-- Tasks marked `[TDD: Full]` or `[TDD: Lite]` should trigger `Skill("test-driven-development")`
-- Tasks without `[TDD: Full]` annotation are flagged as warnings — TDD is mandatory
-- Missing `[TDD: Full]` gets `warn` severity
+- All tasks must have `[TDD]` should trigger `Skill("test-driven-development")`
+- Tasks without `[TDD]` annotation are flagged as warnings — TDD is mandatory
+- Missing `[TDD]` gets `warn` severity
 - 
 
 **Output (text):**
@@ -620,7 +620,7 @@ openspec check --change add-user-auth --json
 Compliance Check: add-user-auth
 Discipline: enhanced | TDD: mandatory
 
-  ⚠ 1.1   [TDD: Full] → MUST call Skill("test-driven-development"). Verify it was invoked. [→ test-driven-development]
+  ⚠ 1.1   [TDD] → MUST call Skill("test-driven-development"). Verify it was invoked. [→ test-driven-development]
 
   Summary: 2 task(s) require skill, 2 need verification
 ```
@@ -725,7 +725,7 @@ openspec status --change add-dark-mode --json
 
 ```
 Change: add-dark-mode
-Schema: spec-driven
+Schema: specpower-driven
 Progress: 2/4 artifacts complete
 
 [x] proposal
@@ -739,7 +739,7 @@ Progress: 2/4 artifacts complete
 ```json
 {
   "changeName": "add-dark-mode",
-  "schemaName": "spec-driven",
+  "schemaName": "specpower-driven",
   "isComplete": false,
   "applyRequires": ["tasks"],
   "artifacts": [
@@ -814,7 +814,7 @@ openspec templates [options]
 
 | Option | Description |
 |--------|-------------|
-| `--schema <name>` | Schema to inspect (default: `spec-driven`) |
+| `--schema <name>` | Schema to inspect (default: `specpower-driven`) |
 | `--json` | Output as JSON |
 
 **Examples:**
@@ -833,13 +833,13 @@ openspec templates --json
 **Output (text):**
 
 ```
-Schema: spec-driven
+Schema: specpower-driven
 
 Templates:
-  proposal  → ~/.openspec/schemas/spec-driven/templates/proposal.md
-  specs     → ~/.openspec/schemas/spec-driven/templates/specs.md
-  design    → ~/.openspec/schemas/spec-driven/templates/design.md
-  tasks     → ~/.openspec/schemas/spec-driven/templates/tasks.md
+  proposal  → ~/.openspec/schemas/specpower-driven/templates/proposal.md
+  specs     → ~/.openspec/schemas/specpower-driven/templates/specs.md
+  design    → ~/.openspec/schemas/specpower-driven/templates/design.md
+  tasks     → ~/.openspec/schemas/specpower-driven/templates/tasks.md
 ```
 
 ---
@@ -869,8 +869,8 @@ openspec schemas
 ```
 Available schemas:
 
-  spec-driven (package)
-    The default spec-driven development workflow
+  specpower-driven (package)
+    The default specpower-driven development workflow
     Flow: proposal → specs → design → tasks
 
   my-custom (project)
@@ -961,8 +961,8 @@ openspec schema fork <source> [name] [options]
 **Example:**
 
 ```bash
-# Fork the built-in spec-driven schema
-openspec schema fork spec-driven my-workflow
+# Fork the built-in specpower-driven schema
+openspec schema fork specpower-driven my-workflow
 ```
 
 ---
@@ -1025,14 +1025,14 @@ openspec schema which [name] [options]
 
 ```bash
 # Check where a schema comes from
-openspec schema which spec-driven
+openspec schema which specpower-driven
 ```
 
 **Output:**
 
 ```
-spec-driven resolves from: package
-  Source: /usr/local/lib/node_modules/@fission-ai/openspec/schemas/spec-driven
+specpower-driven resolves from: package
+  Source: /usr/local/lib/node_modules/openspec/schemas/specpower-driven
 ```
 
 **Schema precedence:**

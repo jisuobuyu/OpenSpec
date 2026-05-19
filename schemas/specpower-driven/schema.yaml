@@ -2,14 +2,22 @@ name: specpower-driven
 version: 1
 description: OpenSpec x Superpowers fusion - engineering discipline orchestrated by AI skills
 artifacts:
+  - id: explore
+    generates: explore.md
+    description: Exploration and decision rationale — mandatory prerequisite for proposal
+    template: explore.md
+    instruction: |
+      Explore the problem space before writing the proposal. Use Skill({skill: "brainstorming"}) to systematically compare approaches. Document Key Insights, Options, Recommendation, and Open Questions. This artifact MUST be created before proposal.
+    requires: []
+
   - id: proposal
     generates: proposal.md
-    description: Initial proposal document outlining the change
+    description: Proposal informed by explore — defines WHY and WHAT
     template: proposal.md
     instruction: |
       Create the proposal document that establishes WHY this change is needed.
 
-      If `exploration.md` exists in the change directory, read it first — it may contain
+      If `explore.md` exists in the change directory, read it first — it may contain
       key insights, options considered, and recommendations that inform the proposal.
 
       Sections:
@@ -21,29 +29,8 @@ artifacts:
       - **Impact**: Affected code, APIs, dependencies, or systems.
 
       Keep it concise (1-2 pages). Focus on the "why" not the "how".
-    requires: []
-
-  - id: exploration
-    generates: exploration.md
-    description: Exploration notes capturing investigation and decision rationale (optional)
-    template: exploration.md
-    instruction: |
-      Create exploration notes capturing the investigation process and decision rationale.
-
-      This is an OPTIONAL artifact. Use it when you need to:
-      - Compare multiple approaches with trade-offs
-      - Document research findings
-      - Surface risks and unknowns that need further investigation
-
-      Flexible format — any of these sections may be included as needed:
-      - **Key Insights**: What you learned during investigation
-      - **Options**: Alternatives considered with pros/cons
-      - **Recommendation**: Preferred approach and why
-      - **Open Questions**: What still needs resolution
-
-      The exploration feeds into proposal and design. It does not need to be exhaustive —
-      capture what matters for decision-making.
-    requires: []
+    requires:
+      - explore
 
   - id: specs
     generates: "specs/**/*.md"
@@ -116,7 +103,7 @@ artifacts:
       ## TDD Level Annotations
 
       Each task may specify a TDD level:
-      - `[TDD: Full]` — Full RED→GREEN→REFACTOR cycle with verification after each step
+      - `[TDD]` — Full RED→GREEN→REFACTOR cycle with verification after each step
       - `[TDD: Lite]` — Write tests first, then implement (skip refactor step; pure renames skip tests)
       - `[TDD: Skip]` — Direct implementation without test-first ordering
 
@@ -172,7 +159,7 @@ apply:
     3. Extract the corresponding requirement block for precise context injection
 
     During each task:
-    - `[TDD: Full]` → Invoke `Skill({skill: "test-driven-development"})`
+    - `[TDD]` → Invoke `Skill({skill: "test-driven-development"})`
     - `[TDD: Lite]` → Invoke skill with "skip refactor step" exception
     - `[TDD: Skip]` → Direct implementation
 

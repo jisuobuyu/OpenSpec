@@ -6,7 +6,7 @@ This guide explains how OpenSpec works after you've installed and initialized it
 
 OpenSpec helps you and your AI coding assistant agree on what to build before any code is written.
 
-**Default quick path (core profile):**
+**Default quick path (strict profile):**
 
 ```text
 /opsx:propose ──► /opsx:apply ──► /opsx:sync ──► /opsx:archive
@@ -18,7 +18,7 @@ OpenSpec helps you and your AI coding assistant agree on what to build before an
 /opsx:new ──► /opsx:ff or /opsx:continue ──► /opsx:apply ──► /opsx:verify ──► /opsx:archive
 ```
 
-The default global profile is `core`, which includes `propose`, `explore`, `apply`, `sync`, and `archive`. You can enable the expanded workflow commands with `openspec config profile` and then `openspec update`.
+The default global profile is `strict` with 14 workflows. TDD and subagent are mandatory. Switch profiles with `openspec config profile` and `openspec update`.
 
 ## What OpenSpec Creates
 

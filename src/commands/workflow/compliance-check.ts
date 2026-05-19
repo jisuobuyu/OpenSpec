@@ -22,9 +22,9 @@ export interface ComplianceCheckOptions {
 interface TaskCompliance {
   taskId: string;
   description: string;
-  tddAnnotation: 'full' | 'lite' | 'skip' | 'none';
-  expectedSkill: string | null;
-  severity: 'pass' | 'warn' | 'skip';
+  hasTdd: boolean;
+  expectedSkill: string;
+  severity: 'pass' | 'warn';
   message: string;
 }
 
@@ -39,16 +39,13 @@ export interface ComplianceReport {
   };
 }
 
-export function parseTddAnnotation(line: string): 'full' | 'lite' | 'skip' | 'none' {
-  if (/\[TDD:\s*Full\]/i.test(line)) return 'full';
-  if (/\[TDD:\s*Lite\]/i.test(line)) return 'lite';
-  if (/\[TDD:\s*Skip\]/i.test(line)) return 'skip';
-  return 'none';
+export function hasTddAnnotation(line: string): boolean {
+  return /\[TDD\]/i.test(line);
 }
 
 /**
  * Pure function: analyze task compliance. TDD is mandatory — every task
- * must have [TDD: Full] annotation and call test-driven-development skill.
+ * must have [TDD] annotation and call test-driven-development skill.
  */
 export function analyzeTaskCompliance(
   tasks: Array<{ id: string; description: string }>,
@@ -56,19 +53,17 @@ export function analyzeTaskCompliance(
 ): TaskCompliance[] {
   return tasks.map((task, i) => {
     const rawLine = rawLines[i] || '';
-    const tddAnnotation = parseTddAnnotation(rawLine);
-
-    const isFull = tddAnnotation === 'full';
+    const hasTdd = hasTddAnnotation(rawLine);
     const expectedSkill = 'test-driven-development';
-    const severity: 'pass' | 'warn' | 'skip' = isFull ? 'pass' : 'warn';
-    const message = isFull
-      ? `[TDD: Full] → Skill("test-driven-development") expected.`
-      : `MISSING [TDD: Full] annotation → TDD is mandatory for all tasks. Add [TDD: Full] to this task.`;
+    const severity = hasTdd ? 'pass' : 'warn';
+    const message = hasTdd
+      ? `[TDD] → Skill("test-driven-development") expected.`
+      : `MISSING [TDD] annotation → TDD is mandatory for all tasks. Add [TDD] to this task.`;
 
     return {
       taskId: task.id,
       description: task.description,
-      tddAnnotation,
+      hasTdd,
       expectedSkill,
       severity,
       message,

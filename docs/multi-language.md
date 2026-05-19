@@ -7,7 +7,7 @@ Configure OpenSpec to generate artifacts in languages other than English.
 Add a language instruction to your `openspec/config.yaml`:
 
 ```yaml
-schema: spec-driven
+schema: specpower-driven
 
 context: |
   Language: Portuguese (pt-BR)
@@ -88,7 +88,7 @@ context: |
 Language settings work alongside your other project context:
 
 ```yaml
-schema: spec-driven
+schema: specpower-driven
 
 context: |
   Language: Portuguese (pt-BR)

@@ -319,9 +319,11 @@ A change is a proposed modification to your system, packaged as a folder with ev
 ```
 openspec/changes/add-dark-mode/
 ├── proposal.md           # Why and what
+├── explore.md             # Mandatory: exploration notes
 ├── design.md             # How (technical approach)
-├── tasks.md              # Implementation checklist
-├── .openspec.yaml        # Change metadata (optional)
+├── tasks.md              # Implementation checklist (with [TDD])
+├── review.md             # Optional: code review record
+├── .openspec.yaml        # Change metadata
 └── specs/                # Delta specs
     └── ui/
         └── spec.md       # What's changing in ui/spec.md
@@ -452,20 +454,20 @@ Tasks are the **implementation checklist** — concrete steps with checkboxes.
 # Tasks
 
 ## 1. Theme Infrastructure
-- [ ] 1.1 Create ThemeContext with light/dark state
-- [ ] 1.2 Add CSS custom properties for colors
-- [ ] 1.3 Implement localStorage persistence
-- [ ] 1.4 Add system preference detection
+- [ ] 1.1 [TDD] Create ThemeContext with light/dark state
+- [ ] 1.2 [TDD] Add CSS custom properties for colors
+- [ ] 1.3 [TDD] Implement localStorage persistence
+- [ ] 1.4 [TDD] Add system preference detection
 
 ## 2. UI Components
-- [ ] 2.1 Create ThemeToggle component
-- [ ] 2.2 Add toggle to settings page
-- [ ] 2.3 Update Header to include quick toggle
+- [ ] 2.1 [TDD] Create ThemeToggle component
+- [ ] 2.2 [TDD] Add toggle to settings page
+- [ ] 2.3 [TDD] Update Header to include quick toggle
 
 ## 3. Styling
-- [ ] 3.1 Define dark theme color palette
-- [ ] 3.2 Update components to use CSS variables
-- [ ] 3.3 Test contrast ratios for accessibility
+- [ ] 3.1 [TDD] Define dark theme color palette
+- [ ] 3.2 [TDD] Update components to use CSS variables
+- [ ] 3.3 [TDD] Test contrast ratios for accessibility
 ```
 
 **Task best practices:**
@@ -542,12 +544,16 @@ Schemas define the artifact types and their dependencies for a workflow.
 ### How Schemas Work
 
 ```yaml
-# openspec/schemas/spec-driven/schema.yaml
-name: spec-driven
+# openspec/schemas/specpower-driven/schema.yaml
+name: specpower-driven
 artifacts:
+  - id: explore
+    generates: explore.md
+    requires: []              # Mandatory — must be first, uses brainstorming skill
+
   - id: proposal
     generates: proposal.md
-    requires: []              # No dependencies, can create first
+    requires: [explore]       # Requires explore before creating
 
   - id: specs
     generates: specs/**/*.md
@@ -560,42 +566,51 @@ artifacts:
   - id: tasks
     generates: tasks.md
     requires: [specs, design] # Needs both specs and design first
+
+  - id: review
+    generates: review.md
+    requires: [tasks]         # Optional, created after tasks
 ```
 
-**Artifacts form a dependency graph:**
+**Artifacts form a dependency graph (6 artifacts):**
 
 ```
-                    proposal
-                   (root node)
-                       │
-         ┌─────────────┴─────────────┐
-         │                           │
-         ▼                           ▼
-      specs                       design
-   (requires:                  (requires:
-    proposal)                   proposal)
-         │                           │
-         └─────────────┬─────────────┘
-                       │
-                       ▼
-                    tasks
-                (requires:
-                specs, design)
+              explore ── (mandatory, no deps)
+                   │
+                   ▼
+              proposal ──── (requires: explore)
+                   │
+         ┌─────────┴─────────┐
+         │                   │
+         ▼                   ▼
+      specs               design
+   (requires:            (requires:
+    proposal)             proposal)
+         │                   │
+         └─────────┬─────────┘
+                   │
+                   ▼
+                tasks
+            (requires:
+            specs, design)
+                   │
+                   ▼
+                review ────── (optional, after tasks)
 ```
 
 **Dependencies are enablers, not gates.** They show what's possible to create, not what you must create next. You can skip design if you don't need it. You can create specs before or after design — both depend only on proposal.
 
 ### Built-in Schemas
 
-**spec-driven** (default)
+**specpower-driven** (default)
 
-The standard workflow for spec-driven development:
+The standard workflow with mandatory TDD and subagent-driven development:
 
 ```
-proposal → specs → design → tasks → implement
+explore → proposal → specs → design → tasks → review → implement → verify → archive
 ```
 
-Best for: Most feature work where you want to agree on specs before implementation.
+6 artifacts, 14 workflows, TDD + subagent enforced for every task.
 
 ### Custom Schemas
 
@@ -606,7 +621,7 @@ Create custom schemas for your team's workflow:
 openspec schema init research-first
 
 # Or fork an existing one
-openspec schema fork spec-driven research-first
+openspec schema fork specpower-driven research-first
 ```
 
 **Example custom schema:**
@@ -693,7 +708,7 @@ openspec/
 │                              OPENSPEC FLOW                                   │
 │                                                                              │
 │   ┌────────────────┐                                                         │
-│   │  1. START      │  /opsx:propose (core) or /opsx:new (expanded)           │
+│   │  1. START      │  /opsx:propose or /opsx:new           │
 │   │     CHANGE     │                                                         │
 │   └───────┬────────┘                                                         │
 │           │                                                                  │

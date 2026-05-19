@@ -28,7 +28,7 @@ This walks you through creating a config interactively. Or create one manually:
 
 ```yaml
 # openspec/config.yaml
-schema: spec-driven
+schema: specpower-driven
 
 context: |
   Tech stack: TypeScript, React, Node.js, PostgreSQL
@@ -51,7 +51,7 @@ rules:
 
 ```bash
 # Without config
-openspec new change my-feature --schema spec-driven
+openspec new change my-feature --schema specpower-driven
 
 # With config - schema is automatic
 openspec new change my-feature
@@ -87,7 +87,7 @@ When OpenSpec needs a schema, it checks in this order:
 1. CLI flag: `--schema <name>`
 2. Change metadata (`.openspec.yaml` in the change folder)
 3. Project config (`openspec/config.yaml`)
-4. Default (`spec-driven`)
+4. Default (`specpower-driven`)
 
 ---
 
@@ -112,10 +112,10 @@ your-project/
 The fastest way to customize is to fork a built-in schema:
 
 ```bash
-openspec schema fork spec-driven my-workflow
+openspec schema fork specpower-driven my-workflow
 ```
 
-This copies the entire `spec-driven` schema to `openspec/schemas/my-workflow/` where you can edit it freely.
+This copies the entire `specpower-driven` schema to `openspec/schemas/my-workflow/` where you can edit it freely.
 
 **What you get:**
 
@@ -311,7 +311,7 @@ apply:
 Fork the default and add a review step:
 
 ```bash
-openspec schema fork spec-driven with-review
+openspec schema fork specpower-driven with-review
 ```
 
 Then edit `schema.yaml` to add:

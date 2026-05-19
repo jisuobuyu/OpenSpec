@@ -23,7 +23,7 @@ describe('CLI check --change', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it('should detect [TDD: Full] tasks as passing', async () => {
+  it('should detect [TDD] tasks as passing', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
       'schema: specpower-driven\ndiscipline:\n  level: strict\n'
@@ -32,7 +32,7 @@ describe('CLI check --change', () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
       `## 1. Core
-- [ ] 1.1 [TDD: Full] Implement login endpoint
+- [ ] 1.1 [TDD] Implement login endpoint
 - [ ] 1.2 Update README
 - [ ] 1.3 Implement dashboard
 `
@@ -46,9 +46,9 @@ describe('CLI check --change', () => {
     expect(output).toContain('Compliance Check: test-change');
     expect(output).toContain('Discipline: strict');
     expect(output).toContain('TDD: mandatory');
-    expect(output).toContain('[TDD: Full]');
+    expect(output).toContain('[TDD]');
     expect(output).toContain('test-driven-development');
-    expect(output).toContain('MISSING [TDD: Full]');
+    expect(output).toContain('MISSING [TDD]');
   });
 
   it('should show TDD mandatory even with no config', async () => {
@@ -60,7 +60,7 @@ describe('CLI check --change', () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
       `## 1. Core
-- [ ] 1.1 [TDD: Full] Implement login
+- [ ] 1.1 [TDD] Implement login
 `
     );
 
@@ -81,9 +81,9 @@ describe('CLI check --change', () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
       `## 1. Core
-- [ ] 1.1 [TDD: Full] Implement login
+- [ ] 1.1 [TDD] Implement login
 - [ ] 1.2 Add tests (missing TDD)
-- [ ] 1.3 [TDD: Full] Update docs
+- [ ] 1.3 [TDD] Update docs
 `
     );
 
@@ -102,10 +102,10 @@ describe('CLI check --change', () => {
     expect(report.tasks.every((t: any) => t.expectedSkill === 'test-driven-development')).toBe(true);
 
     // Full tasks are pass, missing TDD are warn
-    const fullTask = report.tasks.find((t: any) => t.tddAnnotation === 'full');
+    const fullTask = report.tasks.find((t: any) => t.hasTdd === true);
     expect(fullTask.severity).toBe('pass');
 
-    const missingTask = report.tasks.find((t: any) => t.tddAnnotation === 'none');
+    const missingTask = report.tasks.find((t: any) => t.hasTdd === false);
     expect(missingTask.severity).toBe('warn');
 
     // JSON should NOT have tddDefault

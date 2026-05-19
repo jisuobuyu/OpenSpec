@@ -9,7 +9,7 @@ For each selected tool, OpenSpec can install:
 1. **Skills** (if delivery includes skills): `.../skills/openspec-*/SKILL.md`
 2. **Commands** (if delivery includes commands): tool-specific `opsx-*` command files
 
-By default, OpenSpec uses the `core` profile, which includes:
+By default, OpenSpec uses the `strict` profile (14 workflows):
 - `propose`
 - `explore`
 - `apply`

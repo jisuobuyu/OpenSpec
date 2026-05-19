@@ -1,33 +1,40 @@
 # Commands
 
-This is the reference for OpenSpec's slash commands. These commands are invoked in your AI coding assistant's chat interface (e.g., Claude Code, Cursor, Windsurf).
+Reference for OpenSpec slash commands. Invoked in your AI coding assistant (Claude Code, Cursor, Windsurf, etc.).
 
-For workflow patterns and when to use each command, see [Workflows](workflows.md). For CLI commands, see [CLI](cli.md).
+For workflow patterns, see [Workflows](workflows.md). For CLI commands, see [CLI](cli.md).
 
 ## Quick Reference
 
-### Default Quick Path (`core` profile)
+Default profile is `strict` with 14 workflows:
+
+### Core Workflows (5)
 
 | Command | Purpose |
 |---------|---------|
-| `/opsx:propose` | Create a change and generate planning artifacts in one step |
+| `/opsx:propose` | Create a change and generate all planning artifacts |
 | `/opsx:explore` | Think through ideas before committing to a change |
-| `/opsx:apply` | Implement tasks from the change |
+| `/opsx:apply` | Implement tasks with mandatory TDD + subagent |
 | `/opsx:sync` | Merge delta specs into main specs |
 | `/opsx:archive` | Archive a completed change |
 
-### Expanded Workflow Commands (custom workflow selection)
+### Enhanced Workflows (9)
 
 | Command | Purpose |
 |---------|---------|
 | `/opsx:new` | Start a new change scaffold |
 | `/opsx:continue` | Create the next artifact based on dependencies |
 | `/opsx:ff` | Fast-forward: create all planning artifacts at once |
-| `/opsx:verify` | Validate implementation matches artifacts |
+| `/opsx:verify` | 6-dimension consistency audit + test verification |
+| `/opsx:review` | Adaptive code review (self-audit / two-phase) |
+| `/opsx:simplify` | Post-task code refinement |
+| `/opsx:abort` | Non-destructive change abortion |
+| `/opsx:rewind` | Task-level rewind with checkbox sync |
+| `/opsx:unarchive` | Restore archived change |
 | `/opsx:bulk-archive` | Archive multiple changes at once |
 | `/opsx:onboard` | Guided tutorial through the complete workflow |
 
-The default global profile is `core`. To enable expanded workflow commands, run `openspec config profile`, select workflows, then run `openspec update` in your project.
+To switch profiles: `openspec config profile [core|enhanced|strict]` then `openspec update`.
 
 ---
 
@@ -35,21 +42,11 @@ The default global profile is `core`. To enable expanded workflow commands, run 
 
 ### `/opsx:propose`
 
-Create a new change and generate planning artifacts in one step. This is the default start command in the `core` profile.
-
-**Syntax:**
-```text
-/opsx:propose [change-name-or-description]
-```
-
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-name-or-description` | No | Kebab-case name or plain-language change description |
+Create a new change and generate all planning artifacts in one step.
 
 **What it does:**
 - Creates `openspec/changes/<change-name>/`
-- Generates artifacts needed before implementation (for `spec-driven`: proposal, specs, design, tasks)
+- Generates artifacts needed before implementation (proposal, exploration, specs, design, tasks, review)
 - Stops when the change is ready for `/opsx:apply`
 
 **Example:**
@@ -64,553 +61,160 @@ AI:  Created openspec/changes/add-dark-mode/
      Ready for implementation. Run /opsx:apply.
 ```
 
-**Tips:**
-- Use this for the fastest end-to-end path
-- If you want step-by-step artifact control, enable expanded workflows and use `/opsx:new` + `/opsx:continue`
-
 ---
 
 ### `/opsx:explore`
 
-Think through ideas, investigate problems, and clarify requirements before committing to a change.
-
-**Syntax:**
-```
-/opsx:explore [topic]
-```
-
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `topic` | No | What you want to explore or investigate |
-
-**What it does:**
-- Opens an exploratory conversation with no structure required
-- Investigates the codebase to answer questions
-- Compares options and approaches
-- Creates visual diagrams to clarify thinking
-- Can transition to `/opsx:propose` (default) or `/opsx:new` (expanded workflow) when insights crystallize
-
-**Example:**
-```text
-You: /opsx:explore
-
-AI:  What would you like to explore?
-
-You: How should we handle authentication for the mobile app?
-
-AI:  Let me investigate your current auth setup...
-     [Analyzes codebase]
-
-     I see you're using session-based auth for the web app.
-     For mobile, we have three main options:
-
-     1. JWT tokens (stateless, works offline)
-     2. OAuth2 (if you need third-party login)
-     3. Extend current sessions (simpler, but requires connectivity)
-
-     Your API already has CORS configured. Which direction interests you?
-
-You: Let's go with JWT. Can we start a change for that?
-
-AI:  Ready when you are. Run /opsx:propose add-jwt-auth to begin.
-```
-
-**Tips:**
-- Use when requirements are unclear or you need to investigate
-- No artifacts are created during exploration
-- Good for comparing multiple approaches before deciding
-- Can read files and search the codebase
+Think through ideas, investigate problems, and clarify requirements. Can optionally invoke `Skill({skill: "brainstorming"})` for complex decisions.
 
 ---
 
 ### `/opsx:new`
 
-Start a new change scaffold. Creates the change folder and waits for you to generate artifacts with `/opsx:continue` or `/opsx:ff`.
-
-This command is part of the expanded workflow set (not included in the default `core` profile).
-
-**Syntax:**
-```
-/opsx:new [change-name] [--schema <schema-name>]
-```
-
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-name` | No | Name for the change folder (prompted if not provided) |
-| `--schema` | No | Workflow schema to use (default: from config or `spec-driven`) |
-
-**What it does:**
-- Creates `openspec/changes/<change-name>/` directory
-- Creates `.openspec.yaml` metadata file in the change folder
-- Shows the first artifact template ready for creation
-- Prompts for change name and schema if not provided
-
-**What it creates:**
-```
-openspec/changes/<change-name>/
-└── .openspec.yaml    # Change metadata (schema, created date)
-```
+Start a new change scaffold — creates the change folder with `.openspec.yaml` metadata. Use `/opsx:continue` or `/opsx:ff` to create artifacts.
 
 **Example:**
 ```
 You: /opsx:new add-dark-mode
 
 AI:  Created openspec/changes/add-dark-mode/
-     Schema: spec-driven
+     Schema: specpower-driven
 
-     Ready to create: proposal
-     Use /opsx:continue to create it, or /opsx:ff to create all artifacts.
+     Ready to create: exploration, proposal
+     Use /opsx:continue to create one, or /opsx:ff to create all.
 ```
-
-**Tips:**
-- Use descriptive names: `add-feature`, `fix-bug`, `refactor-module`
-- Avoid generic names like `update`, `changes`, `wip`
-- Schema can also be set in project config (`openspec/config.yaml`)
 
 ---
 
 ### `/opsx:continue`
 
-Create the next artifact in the dependency chain. Creates one artifact at a time for incremental progress.
-
-**Syntax:**
-```
-/opsx:continue [change-name]
-```
-
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-name` | No | Which change to continue (inferred from context if not provided) |
-
-**What it does:**
-- Queries the artifact dependency graph
-- Shows which artifacts are ready vs blocked
-- Creates the first ready artifact
-- Reads dependency files for context
-- Shows what becomes available after creation
-
-**Example:**
-```
-You: /opsx:continue
-
-AI:  Change: add-dark-mode
-
-     Artifact status:
-     ✓ proposal    (done)
-     ◆ specs       (ready)
-     ◆ design      (ready)
-     ○ tasks       (blocked - needs: specs)
-
-     Creating specs...
-
-     [Reads proposal.md, creates specs based on requirements]
-
-     ✓ Created openspec/changes/add-dark-mode/specs/ui/spec.md
-
-     Now available: tasks
-     Run /opsx:continue to create the next artifact.
-```
-
-**Tips:**
-- Use when you want to review each artifact before proceeding
-- Good for complex changes where you want control
-- Multiple artifacts may become ready simultaneously
-- You can edit created artifacts before continuing
+Create the next artifact in the dependency chain, one at a time.
 
 ---
 
 ### `/opsx:ff`
 
-Fast-forward through artifact creation. Creates all planning artifacts at once.
-
-**Syntax:**
-```
-/opsx:ff [change-name]
-```
-
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-name` | No | Which change to fast-forward (inferred from context if not provided) |
-
-**What it does:**
-- Creates all artifacts in dependency order
-- Tracks progress via todo list
-- Stops when all `apply-required` artifacts are complete
-- Reads each dependency before creating the next artifact
-
-**Example:**
-```
-You: /opsx:ff add-dark-mode
-
-AI:  Fast-forwarding add-dark-mode...
-
-     ✓ Creating proposal.md
-     ✓ Creating specs/ui/spec.md
-     ✓ Creating design.md
-     ✓ Creating tasks.md
-
-     All planning artifacts complete!
-     Ready for implementation. Run /opsx:apply to begin.
-```
-
-**Tips:**
-- Use when you have a clear picture of what you're building
-- Faster than `/opsx:continue` for straightforward changes
-- You can still edit artifacts afterward
-- Good for small to medium features
+Fast-forward: creates all planning artifacts at once in dependency order. Complex changes invoke `Skill({skill: "writing-plans"})`.
 
 ---
 
 ### `/opsx:apply`
 
-Implement tasks from the change. Works through the task list, writing code and checking off items.
+Implement tasks from the change. **TDD and subagent are mandatory for every task.**
 
-**Syntax:**
+**Three-phase outer loop:**
+
 ```
-/opsx:apply [change-name]
+Phase A: Pre-context
+  → Every task MUST have [TDD]
+  → Extract Spec references for context injection
+
+Phase B: Skill Execution
+  → Skill({skill: "test-driven-development"}) — mandatory
+  → Skill({skill: "subagent-driven-development"}) — mandatory per-task
+
+Phase C: Post-checkpoint
+  → C0: Verify skills were actually called
+  → Update tasks.md checkbox: [ ] → [x]
+  → Skill({skill: "simplify"}) on changed files
+  → Read next task, loop back
 ```
-
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-name` | No | Which change to implement (inferred from context if not provided) |
-
-**What it does:**
-- Reads `tasks.md` and identifies incomplete tasks
-- Works through tasks one by one
-- Writes code, creates files, runs tests as needed
-- Marks tasks complete with checkboxes `[x]`
 
 **Example:**
 ```
 You: /opsx:apply
 
-AI:  Implementing add-dark-mode...
+AI:  [Skill] test-driven-development → TDD (RED→GREEN→REFACTOR)
+     [Skill] subagent-driven-development → isolating task 1.1
 
-     Reading tasks.md:
-     - [ ] 1.1 Create ThemeContext
-     - [ ] 1.2 Add CSS custom properties
-     - [ ] 1.3 Implement localStorage persistence
-
-     Working on 1.1: Create ThemeContext...
-     [Creates src/context/ThemeContext.tsx]
+     Working on 1.1: [TDD] Create ThemeContext...
+     [Creates src/context/ThemeContext.tsx + tests]
 
      ✓ 1.1 Complete
+     [Skill] simplify → refining files: src/context/ThemeContext.tsx
 
-     Working on 1.2: Add CSS custom properties...
-     [Updates src/styles/globals.css]
-
-     ✓ 1.2 Complete
+     Working on 1.2: [TDD] Add CSS variables...
      ...
 ```
-
-**Tips:**
-- Can resume where you left off if interrupted
-- Use for parallel changes by specifying the change name
-- Completion state is tracked in `tasks.md` checkboxes
 
 ---
 
 ### `/opsx:verify`
 
-Validate that implementation matches your change artifacts. Checks completeness, correctness, and coherence.
+Two-layer verification:
 
-**Syntax:**
-```
-/opsx:verify [change-name]
-```
+| Layer | Method | What it checks |
+|-------|--------|----------------|
+| L1 | `Skill("verification-before-completion")` | Test suite + coverage |
+| L2 | `openspec verify --change` | 6-dimension consistency audit |
 
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-name` | No | Which change to verify (inferred from context if not provided) |
+**6 audit dimensions:** Spec Coverage, Scenario Completeness, Task Alignment, Design Consistency, Scope Boundary, Implicit Change.
 
-**What it does:**
-- Checks three dimensions of implementation quality
-- Searches codebase for implementation evidence
-- Reports issues categorized as CRITICAL, WARNING, or SUGGESTION
-- Does not block archive, but surfaces issues
+Use `openspec verify --change <name>` for programmatic (code-driven) audit with reproducible results.
 
-**Verification dimensions:**
+---
 
-| Dimension | What it validates |
-|-----------|-------------------|
-| **Completeness** | All tasks done, all requirements implemented, scenarios covered |
-| **Correctness** | Implementation matches spec intent, edge cases handled |
-| **Coherence** | Design decisions reflected in code, patterns consistent |
+### `/opsx:review`
 
-**Example:**
-```
-You: /opsx:verify
+Complexity-adaptive code review:
 
-AI:  Verifying add-dark-mode...
+| Complexity | Method |
+|------------|--------|
+| Simple (<5 files) | AI self-audit checklist |
+| Medium (5-15 files) | AI self-review, generate review.md |
+| Complex (15+ files) | Two-phase: `Skill("requesting-code-review")` + Spec Review |
 
-     COMPLETENESS
-     ✓ All 8 tasks in tasks.md are checked
-     ✓ All requirements in specs have corresponding code
-     ⚠ Scenario "System preference detection" has no test coverage
+---
 
-     CORRECTNESS
-     ✓ Implementation matches spec intent
-     ✓ Edge cases from scenarios are handled
-     ✓ Error states match spec definitions
+### `/opsx:simplify`
 
-     COHERENCE
-     ✓ Design decisions reflected in code structure
-     ✓ Naming conventions consistent with design.md
-     ⚠ Design mentions "CSS variables" but implementation uses Tailwind classes
-
-     SUMMARY
-     ─────────────────────────────
-     Critical issues: 0
-     Warnings: 2
-     Ready to archive: Yes (with warnings)
-
-     Recommendations:
-     1. Add test for system preference detection
-     2. Update design.md to reflect Tailwind usage, or refactor to use CSS variables
-```
-
-**Tips:**
-- Run before archiving to catch mismatches early
-- Warnings don't block archive but indicate potential issues
-- Good for reviewing AI's work before committing
-- Can reveal drift between artifacts and implementation
+Post-task code refinement via `Skill({skill: "simplify"})`. Scoped to files changed in the current task. Creates dedicated `simplify(<task-id>)` commit for easy undo.
 
 ---
 
 ### `/opsx:sync`
 
-**Optional command.** Merge delta specs from a change into main specs. Archive will prompt to sync if needed, so you typically don't need to run this manually.
-
-**Syntax:**
-```
-/opsx:sync [change-name]
-```
-
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-name` | No | Which change to sync (inferred from context if not provided) |
-
-**What it does:**
-- Reads delta specs from change folder
-- Parses ADDED/MODIFIED/REMOVED/RENAMED sections
-- Merges changes into main `openspec/specs/` directory
-- Preserves existing content not mentioned in delta
-- Does not archive the change (remains active)
-
-**Example:**
-```text
-You: /opsx:sync
-
-AI:  Syncing add-dark-mode delta specs...
-
-     Reading: openspec/changes/add-dark-mode/specs/ui/spec.md
-     Target:  openspec/specs/ui/spec.md
-
-     Changes to apply:
-     ✓ ADDED: Theme Selection requirement (2 scenarios)
-     ✓ ADDED: Accessibility requirement (1 scenario)
-
-     Merging...
-     ✓ openspec/specs/ui/spec.md updated
-
-     Change remains active. Run /opsx:archive when ready to complete.
-```
-
-**When to use manually:**
-
-| Scenario | Use sync? |
-|----------|-----------|
-| Long-running change, want specs in main before archiving | Yes |
-| Multiple parallel changes need the updated base specs | Yes |
-| Want to preview/review the merge separately | Yes |
-| Quick change, going straight to archive | No (archive handles it) |
-
-**Tips:**
-- Sync is intelligent, not copy-paste
-- Can add scenarios to existing requirements without duplicating
-- Change stays active after sync (not archived)
-- Most users will never need to call this directly—archive prompts if needed
+Merge delta specs from a change into main specs without archiving.
 
 ---
 
 ### `/opsx:archive`
 
-Archive a completed change. Finalizes the change and moves it to the archive folder.
+Archive a completed change. For `specpower-driven` schema, warns if `review.md` or verification checkpoint is missing.
 
-**Syntax:**
-```
-/opsx:archive [change-name]
-```
+---
 
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-name` | No | Which change to archive (inferred from context if not provided) |
+### `/opsx:abort`
 
-**What it does:**
-- Checks artifact completion status
-- Checks task completion (warns if incomplete)
-- Offers to sync delta specs if not already synced
-- Moves change folder to `openspec/changes/archive/YYYY-MM-DD-<name>/`
-- Preserves all artifacts for audit trail
+Non-destructive change abortion. Code backed up to git branch `aborted/<change-name>`, artifacts moved to `openspec/changes/aborted/`.
 
-**Example:**
-```text
-You: /opsx:archive
+---
 
-AI:  Archiving add-dark-mode...
+### `/opsx:rewind`
 
-     Artifact status:
-     ✓ proposal.md exists
-     ✓ specs/ exists
-     ✓ design.md exists
-     ✓ tasks.md exists (8/8 tasks complete)
+Task-level rewind. Uses `git revert` to undo commits after a specified task, resets `tasks.md` checkboxes.
 
-     Delta specs: Not yet synced
-     → Sync now? (recommended)
+---
 
-You: Yes
+### `/opsx:unarchive`
 
-AI:  ✓ Synced specs to openspec/specs/ui/spec.md
-     ✓ Moved to openspec/changes/archive/2025-01-24-add-dark-mode/
-
-     Change archived successfully.
-```
-
-**Tips:**
-- Archive won't block on incomplete tasks, but will warn
-- Delta specs can be synced during archive or beforehand
-- Archived changes are preserved for history
-- Use `/opsx:verify` first to catch issues
+Restore an archived change. Delta specs reverted from main specs, change moved back to active.
 
 ---
 
 ### `/opsx:bulk-archive`
 
-Archive multiple completed changes at once. Handles spec conflicts between changes.
-
-**Syntax:**
-```
-/opsx:bulk-archive [change-names...]
-```
-
-**Arguments:**
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `change-names` | No | Specific changes to archive (prompts to select if not provided) |
-
-**What it does:**
-- Lists all completed changes
-- Validates each change before archiving
-- Detects spec conflicts across changes
-- Resolves conflicts by checking what's actually implemented
-- Archives in chronological order
-
-**Example:**
-```
-You: /opsx:bulk-archive
-
-AI:  Found 3 completed changes:
-     - add-dark-mode (8/8 tasks complete)
-     - fix-login-bug (3/3 tasks complete)
-     - update-footer (2/2 tasks complete)
-
-     Checking for spec conflicts...
-     ⚠ add-dark-mode and update-footer both touch specs/ui/
-
-     Inspecting codebase to resolve...
-     Both changes are implemented. Will merge in chronological order:
-     1. add-dark-mode (created Jan 20)
-     2. update-footer (created Jan 22)
-
-     Archive all 3 changes?
-
-You: Yes
-
-AI:  ✓ Archived add-dark-mode
-     ✓ Archived fix-login-bug
-     ✓ Archived update-footer
-     Specs merged: add-dark-mode → update-footer
-```
-
-**Tips:**
-- Good for parallel work streams
-- Conflict resolution is agentic (checks codebase)
-- Changes are archived in order of creation
-- Prompts before overwriting spec content
+Archive multiple completed changes at once. Detects spec conflicts across changes.
 
 ---
 
 ### `/opsx:onboard`
 
-Guided onboarding through the complete OpenSpec workflow. An interactive tutorial using your actual codebase.
-
-**Syntax:**
-```
-/opsx:onboard
-```
-
-**What it does:**
-- Walks through a complete workflow cycle with narration
-- Scans your codebase for real improvement opportunities
-- Creates an actual change with real artifacts
-- Implements actual work (small, safe changes)
-- Archives the completed change
-- Explains each step as it happens
-
-**Phases:**
-1. Welcome and codebase analysis
-2. Finding an improvement opportunity
-3. Creating a change (`/opsx:new`)
-4. Writing the proposal
-5. Creating specs
-6. Writing the design
-7. Creating tasks
-8. Implementing tasks (`/opsx:apply`)
-9. Verifying implementation
-10. Archiving the change
-11. Summary and next steps
-
-**Example:**
-```
-You: /opsx:onboard
-
-AI:  Welcome to OpenSpec!
-
-     I'll walk you through the complete workflow using your actual codebase.
-     We'll find something small to improve, create a proper change for it,
-     implement it, and archive it.
-
-     Let me scan your codebase for opportunities...
-
-     [Analyzes codebase]
-
-     I found a few things we could work on:
-     1. Add input validation to the contact form
-     2. Improve error messages in the auth flow
-     3. Add loading states to async buttons
-
-     Which interests you? (or suggest something else)
-```
-
-**Tips:**
-- Best for new users learning the workflow
-- Uses real code, not toy examples
-- Creates a real change you can keep or discard
-- Takes 15-30 minutes to complete
+Guided onboarding tutorial using your actual codebase.
 
 ---
 
 ## Command Syntax by AI Tool
-
-Different AI tools use slightly different command syntax. Use the format that matches your tool:
 
 | Tool | Syntax Example |
 |------|----------------|
@@ -618,88 +222,19 @@ Different AI tools use slightly different command syntax. Use the format that ma
 | Cursor | `/opsx-propose`, `/opsx-apply` |
 | Windsurf | `/opsx-propose`, `/opsx-apply` |
 | Copilot (IDE) | `/opsx-propose`, `/opsx-apply` |
-| Kimi CLI | Skill-based invocations such as `/skill:openspec-propose`, `/skill:openspec-apply-change` (no generated `opsx-*` command files) |
-| Trae | Skill-based invocations such as `/openspec-propose`, `/openspec-apply-change` (no generated `opsx-*` command files) |
-
-The intent is the same across tools, but how commands are surfaced can differ by integration.
-
-> **Note:** GitHub Copilot commands (`.github/prompts/*.prompt.md`) are only available in IDE extensions (VS Code, JetBrains, Visual Studio). GitHub Copilot CLI does not currently support custom prompt files — see [Supported Tools](supported-tools.md) for details and workarounds.
-
----
-
-## Legacy Commands
-
-These commands use the older "all-at-once" workflow. They still work but OPSX commands are recommended.
-
-| Command | What it does |
-|---------|--------------|
-| `/openspec:proposal` | Create all artifacts at once (proposal, specs, design, tasks) |
-| `/openspec:apply` | Implement the change |
-| `/openspec:archive` | Archive the change |
-
-**When to use legacy commands:**
-- Existing projects using the old workflow
-- Simple changes where you don't need incremental artifact creation
-- Preference for the all-or-nothing approach
-
-**Migrating to OPSX:**
-Legacy changes can be continued with OPSX commands. The artifact structure is compatible.
 
 ---
 
 ## Troubleshooting
 
 ### "Change not found"
-
-The command couldn't identify which change to work on.
-
-**Solutions:**
-- Specify the change name explicitly: `/opsx:apply add-dark-mode`
-- Check that the change folder exists: `openspec list`
-- Verify you're in the right project directory
+Specify the change name explicitly: `/opsx:apply add-dark-mode`
 
 ### "No artifacts ready"
-
-All artifacts are either complete or blocked by missing dependencies.
-
-**Solutions:**
-- Run `openspec status --change <name>` to see what's blocking
-- Check if required artifacts exist
-- Create missing dependency artifacts first
+Run `openspec status --change <name>` to see what's blocking
 
 ### "Schema not found"
-
-The specified schema doesn't exist.
-
-**Solutions:**
-- List available schemas: `openspec schemas`
-- Check spelling of schema name
-- Create the schema if it's custom: `openspec schema init <name>`
+List available schemas: `openspec schemas`
 
 ### Commands not recognized
-
-The AI tool doesn't recognize OpenSpec commands.
-
-**Solutions:**
-- Ensure OpenSpec is initialized: `openspec init`
-- Regenerate skills: `openspec update`
-- Check that `.claude/skills/` directory exists (for Claude Code)
-- Restart your AI tool to pick up new skills
-
-### Artifacts not generating properly
-
-The AI creates incomplete or incorrect artifacts.
-
-**Solutions:**
-- Add project context in `openspec/config.yaml`
-- Add per-artifact rules for specific guidance
-- Provide more detail in your change description
-- Use `/opsx:continue` instead of `/opsx:ff` for more control
-
----
-
-## Next Steps
-
-- [Workflows](workflows.md) - Common patterns and when to use each command
-- [CLI](cli.md) - Terminal commands for management and validation
-- [Customization](customization.md) - Create custom schemas and workflows
+Run `openspec init` then `openspec update` to regenerate skills

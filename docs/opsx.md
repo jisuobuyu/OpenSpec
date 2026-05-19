@@ -65,7 +65,7 @@ openspec init
 
 This creates skills in `.claude/skills/` (or equivalent) that AI coding assistants auto-detect.
 
-By default, OpenSpec uses the `core` workflow profile (`propose`, `explore`, `apply`, `sync`, `archive`). If you want the expanded workflow commands (`new`, `continue`, `ff`, `verify`, `bulk-archive`, `onboard`), configure them with `openspec config profile` and apply with `openspec update`.
+By default, OpenSpec uses the `strict` profile with all 14 workflows. TDD and subagent are mandatory. Switch profiles with `openspec config profile` and `openspec update`.
 
 During setup, you'll be prompted to create a **project config** (`openspec/config.yaml`). This is optional but recommended.
 
@@ -79,7 +79,7 @@ Config is created during `openspec init`, or manually:
 
 ```yaml
 # openspec/config.yaml
-schema: spec-driven
+schema: specpower-driven
 
 context: |
   Tech stack: TypeScript, React, Node.js
@@ -101,7 +101,7 @@ rules:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `schema` | string | Default schema for new changes (e.g., `spec-driven`) |
+| `schema` | string | Default schema for new changes (e.g., `specpower-driven`) |
 | `context` | string | Project context injected into all artifact instructions |
 | `rules` | object | Per-artifact rules, keyed by artifact ID |
 
@@ -111,7 +111,7 @@ rules:
 1. CLI flag (`--schema <name>`)
 2. Change metadata (`.openspec.yaml` in change directory)
 3. Project config (`openspec/config.yaml`)
-4. Default (`spec-driven`)
+4. Default (`specpower-driven`)
 
 **Context injection:**
 - Context is prepended to every artifact's instructions
@@ -125,7 +125,7 @@ rules:
 
 ### Artifact IDs by Schema
 
-**spec-driven** (default):
+**specpower-driven** (default):
 - `proposal` — Change proposal
 - `specs` — Specifications
 - `design` — Technical design
@@ -313,7 +313,7 @@ Think of it like git branches:
 ## Architecture Deep Dive
 
 This section explains how OPSX works under the hood and how it compares to the legacy workflow.
-Examples in this section use the expanded command set (`new`, `continue`, etc.); default `core` users can map the same flow to `propose → apply → sync → archive`.
+Examples in this section use the expanded command set (`new`, `continue`, etc.); `strict` profile users have all 14 workflows available.
 
 ### Philosophy: Phases vs Actions
 
@@ -391,7 +391,7 @@ Examples in this section use the expanded command set (`new`, `continue`, etc.);
 │                                                                             │
 │   Schema Definitions (YAML)                                                 │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │  name: spec-driven                                                  │   │
+│   │  name: specpower-driven                                                  │   │
 │   │  artifacts:                                                         │   │
 │   │    - id: proposal                                                   │   │
 │   │      generates: proposal.md                                         │   │
@@ -567,7 +567,7 @@ Create custom workflows using the schema management commands:
 openspec schema init my-workflow
 
 # Or fork an existing schema as a starting point
-openspec schema fork spec-driven my-workflow
+openspec schema fork specpower-driven my-workflow
 
 # Validate your schema structure
 openspec schema validate my-workflow
@@ -625,7 +625,7 @@ artifacts:
 
 Schemas define what artifacts exist and their dependencies. Currently available:
 
-- **spec-driven** (default): proposal → specs → design → tasks
+- **specpower-driven** (default): proposal → specs → design → tasks
 
 ```bash
 # List available schemas
@@ -638,7 +638,7 @@ openspec schema which --all
 openspec schema init my-workflow
 
 # Fork an existing schema for customization
-openspec schema fork spec-driven my-workflow
+openspec schema fork specpower-driven my-workflow
 
 # Validate schema structure before use
 openspec schema validate my-workflow

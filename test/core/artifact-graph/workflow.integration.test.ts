@@ -39,21 +39,21 @@ describe('artifact-graph workflow integration', () => {
       const schema = resolveSchema('specpower-driven');
       const graph = ArtifactGraph.fromSchema(schema);
 
-      // 6 artifacts: exploration, proposal, design, specs, tasks, review
+      // 6 artifacts: explore, proposal, design, specs, tasks, review
       expect(graph.getName()).toBe('specpower-driven');
       expect(graph.getAllArtifacts()).toHaveLength(6);
 
-      // Initial state - exploration and proposal are ready (both require nothing)
+      // Initial state - explore and proposal are ready (both require nothing)
       let completed = detectCompleted(graph, tempDir);
       expect(completed.size).toBe(0);
-      expect(graph.getNextArtifacts(completed).sort()).toEqual(['exploration', 'proposal']);
+      expect(graph.getNextArtifacts(completed).sort()).toEqual(['explore']);
       expect(graph.isComplete(completed)).toBe(false);
 
       // Create proposal.md - design and specs become ready
       fs.writeFileSync(path.join(tempDir, 'proposal.md'), '# Proposal\n\nInitial proposal content.');
       completed = detectCompleted(graph, tempDir);
       expect(completed.has('proposal')).toBe(true);
-      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['design', 'specs', 'exploration']));
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['design', 'specs', 'explore']));
 
       // Create design.md
       fs.writeFileSync(path.join(tempDir, 'design.md'), '# Design\n\nTechnical design content.');
@@ -70,7 +70,7 @@ describe('artifact-graph workflow integration', () => {
       completed = detectCompleted(graph, tempDir);
       expect(completed.has('tasks')).toBe(true);
       // All required for apply are done, but review still pending
-      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['review', 'exploration']));
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['review', 'explore']));
     });
 
     it('should handle out-of-order file creation', () => {
@@ -83,8 +83,8 @@ describe('artifact-graph workflow integration', () => {
       let completed = detectCompleted(graph, tempDir);
       // design file exists and is marked complete (filesystem-based)
       expect(completed.has('design')).toBe(true);
-      // exploration and proposal are ready (no deps)
-      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['exploration', 'proposal']));
+      // explore and proposal are ready (no deps)
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['explore']));
 
       // Now create proposal
       fs.writeFileSync(path.join(tempDir, 'proposal.md'), '# Proposal');
@@ -92,7 +92,7 @@ describe('artifact-graph workflow integration', () => {
       expect(completed.has('proposal')).toBe(true);
       expect(completed.has('design')).toBe(true);
       // specs is among the artifacts ready now
-      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['specs', 'exploration']));
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['specs', 'explore']));
     });
 
     it('should handle multiple spec files in glob pattern', () => {
@@ -136,7 +136,7 @@ describe('artifact-graph workflow integration', () => {
       // Directory exists but is empty
       const completed = detectCompleted(graph, tempDir);
       expect(completed.size).toBe(0);
-      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['proposal']));
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['explore']));
     });
 
     it('should handle non-existent change directory', () => {

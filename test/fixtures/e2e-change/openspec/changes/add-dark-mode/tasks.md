@@ -5,7 +5,7 @@
 
 ## 2. Core Implementation
 
-- [x] 2.1 [TDD: Full] [Spec: REQ-theme-toggle] Implement theme toggle component
+- [x] 2.1 [TDD] [Spec: REQ-theme-toggle] Implement theme toggle component
 - [x] 2.2 [TDD: Lite] Wire up localStorage persistence
 
 ## 3. Integration

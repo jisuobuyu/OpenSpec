@@ -2,11 +2,7 @@
 
 <!-- Explain the motivation for this change. What problem does this solve? Why now? -->
 
-<!--
-  If `exploration.md` exists in this change directory, read it first — it may contain
-  key insights, options considered, and a recommendation that inform this proposal.
-  If no exploration.md exists, use the conversation history and your own analysis.
--->
+<!-- IMPORTANT: Read `explore.md` first — it contains the mandatory investigation results, trade-off analysis, and recommendation that inform this proposal. -->
 
 ## What Changes
 

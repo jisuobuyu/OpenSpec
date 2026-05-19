@@ -102,7 +102,7 @@ Process tasks ONE AT A TIME. For each pending task, follow this three-phase stru
 
 **A1. TDD is mandatory**
 
-Every task MUST have \`[TDD: Full]\` — Full RED→GREEN→REFACTOR cycle.
+Every task MUST have \`[TDD]\` — Full RED→GREEN→REFACTOR cycle.
 If a task is missing this annotation, add it before proceeding.
 
 **A2. Parse Spec reference annotation**
@@ -159,7 +159,7 @@ Verify that all required skills were actually invoked during Phase B:
 
 | Check | Rule |
 |-------|------|
-| Task has \`[TDD: Full]\` → was \`Skill({skill: "test-driven-development"})\` called? | Required |
+| Task has \`[TDD]\` → was \`Skill({skill: "test-driven-development"})\` called? | Required |
 | Task completed → was \`Skill({skill: "simplify"})\` called? | Required |
 
 How to verify:
@@ -170,7 +170,7 @@ How to verify:
 If a required skill was NOT called:
 \`\`\`
 ⚠ Skill compliance failure:
-   Task 1.2 has [TDD: Full] but test-driven-development was not invoked.
+   Task 1.2 has [TDD] but test-driven-development was not invoked.
 
    Options:
    [1] Retry — redo task with Skill({skill: "test-driven-development"})
@@ -284,7 +284,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 **The Outer Loop** — process ONE task at a time through three phases:
 
 ### Pre-context
-- **TDD is mandatory**: every task MUST have \`[TDD: Full]\` — add it if missing
+- **TDD is mandatory**: every task MUST have \`[TDD]\` — add it if missing
 - **Parse Spec reference**: \`[Spec: REQ-xxx]\` → extract requirement block for precise context injection; no ref → full spec summary
 - **Subagent**: every task MUST use \`Skill({skill: "subagent-driven-development"})\`
 

@@ -8,7 +8,7 @@ import { readChangeMetadata } from '../utils/change-metadata.js';
 interface ChangeInfo {
   name: string;
   schema?: string;
-  hasExploration: boolean;
+  hasExplore: boolean;
   hasReview: boolean;
 }
 
@@ -98,7 +98,7 @@ export class ViewCommand {
     if (change.schema === 'specpower-driven') {
       tags.push(chalk.magenta('SP'));
     }
-    if (change.hasExploration) {
+    if (change.hasExplore) {
       tags.push(chalk.blue('探'));
     }
     if (change.hasReview) {
@@ -139,10 +139,10 @@ export class ViewCommand {
         const changeDir = path.join(changesDir, entry.name);
         const progress = await getTaskProgressForChange(changesDir, entry.name);
         const schema = this.getChangeSchema(changesDir, entry.name);
-        const hasExploration = fs.existsSync(path.join(changeDir, 'exploration.md'));
+        const hasExplore = fs.existsSync(path.join(changeDir, 'explore.md'));
         const hasReview = fs.existsSync(path.join(changeDir, 'review.md'));
 
-        const info: ChangeInfo = { name: entry.name, schema, hasExploration, hasReview };
+        const info: ChangeInfo = { name: entry.name, schema, hasExplore, hasReview };
 
         if (progress.total === 0) {
           draft.push(info);
