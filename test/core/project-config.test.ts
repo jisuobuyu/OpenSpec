@@ -524,7 +524,7 @@ discipline:
         const config = readProjectConfig(tempDir);
 
         expect(config?.discipline?.level).toBe('strict');
-        expect(config?.discipline?.subagent).toEqual({ mode: 'adaptive' });
+        expect(config?.discipline?.subagent).toEqual({ mode: 'per-task' });
         expect(config?.discipline?.worktree).toEqual({ enabled: true });
         expect(config?.discipline?.exploration).toEqual({ search_history: false });
       });

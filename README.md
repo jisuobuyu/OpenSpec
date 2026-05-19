@@ -96,17 +96,17 @@ openspec init
 
 Now tell your AI: `/opsx:propose <what-you-want-to-build>`
 
-### Superpowers Profile
+### TDD is Mandatory
 
-For the full engineering discipline experience with Superpowers skill orchestration:
+OpenSpec enforces test-driven development by default. Every task in `tasks.md` must include `[TDD: Full]` — the full RED→GREEN→REFACTOR cycle. No exceptions.
 
 ```bash
-openspec init --profile enhanced
+openspec init
 ```
 
-This enables 14 workflows including:
+This enables 14 workflows by default:
 
-- **TDD-driven apply** — automatic test-driven-development skill calls per task
+- **TDD-driven apply** — mandatory `Skill("test-driven-development")` call per task
 - **Two-layer verify** — test execution (L1) + 6-dimension consistency audit (L2)
 - **Adaptive review** — complexity-based depth (self-audit / AI review / two-phase review)
 - **Simplify integration** — post-task code refinement with dedicated commits
@@ -118,9 +118,9 @@ Configure discipline level in `openspec/config.yaml`:
 ```yaml
 schema: specpower-driven
 discipline:
-  level: enhanced  # core | enhanced | strict
-  tdd:
-    default: adaptive  # full | lite | skip | adaptive
+  level: strict  # core | enhanced | strict
+  subagent:
+    mode: per-task
 ```
 
 > [!NOTE]

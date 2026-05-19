@@ -1126,14 +1126,13 @@ discipline:
   # strict: 全量 Superpowers 纪律（适合高风险项目）
 
   tdd:
-    default: adaptive    # full | lite | skip | adaptive
     # full: 未标注 task 默认走 Full TDD（RED→GREEN→REFACTOR）
     # lite: 未标注 task 默认走 Lite TDD（RED→GREEN，跳过 REFACTOR）
     # skip: 未标注 task 默认跳过 TDD
     # adaptive: 按 task 类型自动选择 Full/Lite/Skip（推荐）
 
   subagent:
-    mode: adaptive       # off | per-task | adaptive
+    mode: per-task
     # off: 所有 task 内联执行，不调用 subagent
     # per-task: 每个 task 独立 subagent + 两阶段审查
     # adaptive: 按复杂度选择 Inline/Batch/Per-Task（推荐）
@@ -1153,8 +1152,8 @@ context: |
 
 | 维度 | core（最小侵入） | enhanced（自适应，推荐） | strict（全量纪律） |
 |------|------------------|-------------------------|-------------------|
-| **TDD 策略** | `tdd.default: skip`，仅新增逻辑建议写测试 | `tdd.default: adaptive`，AI 按 task 类型自动选 Full/Lite/Skip | `tdd.default: full`，所有 task 强制 Full TDD |
-| **Subagent** | `subagent.mode: off`，全部 Inline 执行 | `subagent.mode: adaptive`，按复杂度选 Inline/Batch/Per-Task | `subagent.mode: per-task`，每个 task 独立 subagent + 两阶段审查 |
+| **TDD 策略** | 所有 task 强制 `[TDD: Full]`，不可跳过 | 所有 task 强制 `[TDD: Full]`，不可跳过 | 所有 task 强制 `[TDD: Full]`，不可跳过 |
+| **Subagent** | `subagent.mode: off`，全部 Inline 执行 | `subagent.mode: per-task`，按复杂度选 Inline/Batch/Per-Task | `subagent.mode: per-task`，每个 task 独立 subagent + 两阶段审查 |
 | **Verify** | 仅 Layer 1（测试验证），跳过一致性审计 | 双层验证，Warning 级提示，用户可跳过 | 双层验证，Warning 升级为 Error 且要求确认才能 archive |
 | **Review** | 跳过，不生成 review.md | 中等+变更自动 AI 自审；复杂变更两阶段审查 | 所有变更强制两阶段审查，不通过无法 archive |
 | **Simplify** | 关闭，仅提示可手动执行 | 每次 task 完成后自动执行 | 每次 task 完成后自动执行 + 需用户确认才继续 |
@@ -1162,7 +1161,7 @@ context: |
 | **Exploration** | 自由探索，不生成 exploration.md | 复杂探索可选生成 exploration.md | 所有探索必须生成 exploration.md |
 | **适用场景** | 个人项目、原型、实验性代码 | **大多数生产项目（推荐默认）** | 高风险项目（安全、合规、金融、基础设施） |
 
-> **设计原则**：`enhanced` 是唯一推荐的默认值。`core` 和 `strict` 存在的意义是提供"退路"和"上限"——用户知道最简能简到什么程度，最严能严到什么程度。这降低了选择焦虑。
+> **设计原则**：`strict` 是默认值，TDD 强制执行不可跳过。`core` 和 `enhanced` 为需要降低严格度或向后兼容的场景提供选择。
 
 ---
 

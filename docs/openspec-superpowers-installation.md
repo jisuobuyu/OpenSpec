@@ -134,7 +134,7 @@ Remove-Item -Recurse -Force $env:TEMP\superpowers
 | `brainstorming` | 系统化方案对比 | explore（可选提议） | 手动分析 |
 | `writing-plans` | 结构化设计文档 | ff（Complex 级别） | 手动创建 design.md |
 | `requesting-code-review` | 独立代码审查 | review（Complex 级别） | 扩展 AI 自审 |
-| `subagent-driven-development` | 子代理并行实现 | apply（per-task/adaptive） | 串行实现 |
+| `subagent-driven-development` | 子代理并行实现 | apply（per-task） | 串行实现 |
 
 > **注意**：使用 `core` profile 不需要安装任何 Superpowers 技能。使用 `enhanced` profile 缺失技能时会优雅降级。使用 `strict` profile 缺失技能时会报错。
 
@@ -216,7 +216,7 @@ ls ~/.claude/skills/test-driven-development/SKILL.md
 
 ```bash
 cd your-project
-openspec init --profile enhanced --tools claude
+openspec init 
 ```
 
 `openspec init` 是纯本地操作——读取内置模板、生成 `.md` 文件到 `.claude/` 目录，不需要网络。
@@ -244,29 +244,30 @@ openspec init --profile enhanced --tools claude
 
 ## 5. 初始化项目
 
-### 5.1 基础初始化（Core profile）
+### 5.1 默认初始化（推荐）
 
 ```bash
 cd your-project
 openspec init
 ```
 
-生成 `core` profile——5 个基础命令：`propose` `explore` `apply` `sync` `archive`。
+默认生成 **strict profile** + **specpower-driven schema**——14 个命令 + 14 个技能定义，TDD 强制执行。
 
-### 5.2 增强初始化（推荐）
+### 5.2 其他 profile
 
 ```bash
-cd your-project
-openspec init --profile enhanced --tools claude
-```
+# Enhanced profile — 技能缺失时优雅降级
+openspec init 
 
-生成 `enhanced` profile——14 个命令 + 14 个技能定义。
+# Core profile — 5 个基础命令
+openspec init --profile core --tools claude
+```
 
 **参数说明**：
 
 | 参数 | 值 | 说明 |
 |------|-----|------|
-| `--profile` | `core` / `enhanced` / `strict` / `custom` | 工作流 profile（默认 core） |
+| `--profile` | `core` / `enhanced` / `strict` / `custom` | 工作流 profile（默认 strict） |
 | `--tools` | 工具名列表，逗号分隔 | 目标 AI 工具（如 `claude,cursor`），`all` 全部，`none` 跳过 |
 
 **支持的 `--tools` 值**：
@@ -277,16 +278,7 @@ amazon-q, antigravity, auggie, bob, cline, costrict, crush,
 iflow, junie, kilocode, kiro, opencode, pi, qoder, lingma
 ```
 
-### 5.3 Strict profile（受监管环境）
-
-```bash
-cd your-project
-openspec init --profile strict --tools claude
-```
-
-与 enhanced 生成相同数量文件，但运行时行为更严格（技能缺失报错，不降级）。
-
-### 5.4 配置 discipline
+### 5.3 配置 discipline
 
 初始化后，编辑 `openspec/config.yaml`：
 
@@ -294,12 +286,10 @@ openspec init --profile strict --tools claude
 schema: specpower-driven
 discipline:
   level: strict        # core | enhanced | strict
-  tdd:
-    default: adaptive   # full | lite | skip | adaptive
   subagent:
-    mode: adaptive      # off | per-task | adaptive
+    mode: per-task
   worktree:
-    enabled: true       # 使用 git worktree 隔离
+    enabled: true      # 使用 git worktree 隔离
   exploration:
     search_history: false
 ```
@@ -389,7 +379,7 @@ AI 应进入探索模式，并可以读取你的项目上下文。
 如果同时使用多个 AI 工具（如 Claude Code + Cursor）：
 
 ```bash
-openspec init --profile enhanced --tools claude,cursor
+openspec init ,cursor
 ```
 
 生成的文件结构：
@@ -551,7 +541,7 @@ ls ~/.claude/skills/test-driven-development/SKILL.md
 ```
 
 **解决**：
-- 确保 `discipline.level: enhanced` 或 `strict`
+- 确保 `discipline.level: strict`（默认），TDD 强制执行
 - 安装缺失的 Superpowers 技能（参见 [3. 安装 Superpowers 技能](#3-安装-superpowers-技能)）
 
 ### Q5: `openspec status --deps` 报告循环依赖

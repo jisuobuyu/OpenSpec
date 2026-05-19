@@ -35,7 +35,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    Key settings and their effects:
    - \`discipline.level\`: \`core\` (no skill calls), \`enhanced\` (skill calls with graceful degradation), \`strict\` (skill calls, error if missing)
    - \`discipline.level\`: \`core\` / \`enhanced\` / \`strict\` — controls behavior when skills are unavailable
-   - \`discipline.subagent.mode\`: \`off\` / \`per-task\` / \`adaptive\` — whether to use subagent-driven-development
+   - \`discipline.subagent.mode\`: \`per-task\` — subagent-driven-development is mandatory for every task
 
 3. **Check status to understand the schema**
    \`\`\`bash
@@ -112,12 +112,9 @@ Scan the task line for \`[Spec: REQ-xxx]\` annotations:
 - Multiple references: \`[Spec: REQ-001, REQ-003]\` → extract and inject all referenced requirements
 - No \`[Spec: ...]\` annotation → Fall back to full spec summary injection (brief overview of all requirements)
 
-**A3. Determine subagent mode**
+**A3. Subagent-driven development**
 
-Check \`discipline.subagent.mode\` from the config snapshot:
-- \`per-task\`: Use \`Skill({skill: "subagent-driven-development"})\` for this task
-- \`adaptive\`: Use subagent only for Complex tasks (files > 5, cross-module, or architectural)
-- \`off\`: Never use subagent
+Every task MUST use \`Skill({skill: "subagent-driven-development"})\` — subagent is mandatory for all tasks.
 
 ---
 
@@ -289,7 +286,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 ### Pre-context
 - **TDD is mandatory**: every task MUST have \`[TDD: Full]\` — add it if missing
 - **Parse Spec reference**: \`[Spec: REQ-xxx]\` → extract requirement block for precise context injection; no ref → full spec summary
-- **Subagent mode**: check \`discipline.subagent.mode\` — \`per-task\` always, \`adaptive\` for complex tasks, \`off\` never
+- **Subagent**: every task MUST use \`Skill({skill: "subagent-driven-development"})\`
 
 ### Skill Execution
 - **Announce before every skill**: \`[Skill] <skill-name> → <what it does>\`

@@ -74,7 +74,7 @@ These options work with all commands:
 
 Initialize OpenSpec in your project. Creates the folder structure and configures AI tool integrations.
 
-Default behavior uses global config defaults: profile `core`, delivery `both`, workflows `propose, explore, apply, sync, archive`.
+Default behavior: profile `strict`, delivery `both`, 14 workflows with TDD mandatory.
 
 ```
 openspec init [path] [options]
@@ -610,19 +610,17 @@ openspec check --change add-user-auth --json
 **What it checks:**
 
 - Tasks marked `[TDD: Full]` or `[TDD: Lite]` should trigger `Skill("test-driven-development")`
-- Tasks with no `[TDD]` annotation fall back to `discipline.tdd.default`
-- In `core` mode, all skills are marked "not required"
-- In `enhanced`/`strict` mode, Full/Lite tasks get `warn` severity
+- Tasks without `[TDD: Full]` annotation are flagged as warnings — TDD is mandatory
+- Missing `[TDD: Full]` gets `warn` severity
+- 
 
 **Output (text):**
 
 ```
 Compliance Check: add-user-auth
-Discipline: enhanced | TDD default: adaptive
+Discipline: enhanced | TDD: mandatory
 
   ⚠ 1.1   [TDD: Full] → MUST call Skill("test-driven-development"). Verify it was invoked. [→ test-driven-development]
-  ⚠ 1.2   [TDD: Lite] → MUST call Skill("test-driven-development") with skip-refactor hint. [→ test-driven-development]
-  → 1.3   [TDD: Skip] → skill NOT required for this task.
 
   Summary: 2 task(s) require skill, 2 need verification
 ```

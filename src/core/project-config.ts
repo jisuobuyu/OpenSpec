@@ -50,13 +50,13 @@ export const ProjectConfigSchema = z.object({
       subagent: z
         .object({
           mode: z
-            .enum(['off', 'per-task', 'adaptive'])
+            .enum(['per-task'])
             .optional()
-            .default('adaptive')
+            .default('per-task')
             .describe('Subagent execution mode'),
         })
         .optional()
-        .default({ mode: 'adaptive' }),
+        .default({ mode: 'per-task' }),
       worktree: z
         .object({
           enabled: z
@@ -81,7 +81,7 @@ export const ProjectConfigSchema = z.object({
     .optional()
     .default({
       level: 'strict',
-      subagent: { mode: 'adaptive' },
+      subagent: { mode: 'per-task' },
       worktree: { enabled: true },
       exploration: { search_history: false },
     })
