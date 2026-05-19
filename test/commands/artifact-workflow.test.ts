@@ -15,6 +15,11 @@ describe('artifact-workflow CLI commands', () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-artifact-workflow-'));
     changesDir = path.join(tempDir, 'openspec', 'changes');
     await fs.mkdir(changesDir, { recursive: true });
+    // Write config with spec-driven schema for predictable test behavior
+    await fs.writeFile(
+      path.join(tempDir, 'openspec', 'config.yaml'),
+      'schema: spec-driven\n',
+    );
   });
 
   afterEach(async () => {
@@ -294,7 +299,7 @@ describe('artifact-workflow CLI commands', () => {
 
   describe('templates command', () => {
     it('shows template paths for default schema', async () => {
-      const result = await runCLI(['templates'], { cwd: tempDir });
+      const result = await runCLI(['templates', '--schema', 'spec-driven'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Schema: spec-driven');
       expect(result.stdout).toContain('proposal:');

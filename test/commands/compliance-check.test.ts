@@ -23,19 +23,17 @@ describe('CLI check --change', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it('should detect [TDD: Full] tasks requiring skill', async () => {
-    // Config with discipline level enhanced
+  it('should detect [TDD: Full] tasks as passing', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
-      `schema: specpower-driven\ndiscipline:\n  level: enhanced\n  tdd:\n    default: adaptive\n`
+      'schema: specpower-driven\ndiscipline:\n  level: strict\n'
     );
 
-    // Tasks with [TDD: Full] and [TDD: Skip]
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
       `## 1. Core
-- [x] 1.1 [TDD: Full] Implement login endpoint
-- [ ] 1.2 [TDD: Skip] Update README
+- [ ] 1.1 [TDD: Full] Implement login endpoint
+- [ ] 1.2 Update README
 - [ ] 1.3 Implement dashboard
 `
     );
@@ -46,14 +44,14 @@ describe('CLI check --change', () => {
     );
 
     expect(output).toContain('Compliance Check: test-change');
-    expect(output).toContain('Discipline: enhanced');
+    expect(output).toContain('Discipline: strict');
+    expect(output).toContain('TDD: mandatory');
     expect(output).toContain('[TDD: Full]');
     expect(output).toContain('test-driven-development');
-    expect(output).toContain('[TDD: Skip]');
-    expect(output).toContain('skill NOT required');
+    expect(output).toContain('MISSING [TDD: Full]');
   });
 
-  it('should show all-optional in core mode', async () => {
+  it('should show TDD mandatory even with no config', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
       'schema: specpower-driven\n'
@@ -71,21 +69,21 @@ describe('CLI check --change', () => {
       { cwd: testDir, encoding: 'utf-8' }
     );
 
-    expect(output).toContain('Discipline: core');
-    expect(output).toContain('skill NOT required');
+    expect(output).toContain('Discipline: strict');
+    expect(output).toContain('TDD: mandatory');
   });
 
   it('should output valid JSON', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
-      `schema: specpower-driven\ndiscipline:\n  level: enhanced\n  tdd:\n    default: adaptive\n`
+      'schema: specpower-driven\ndiscipline:\n  level: strict\n'
     );
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
       `## 1. Core
 - [ ] 1.1 [TDD: Full] Implement login
-- [ ] 1.2 [TDD: Lite] Add tests
-- [ ] 1.3 [TDD: Skip] Update docs
+- [ ] 1.2 Add tests (missing TDD)
+- [ ] 1.3 [TDD: Full] Update docs
 `
     );
 
@@ -97,17 +95,21 @@ describe('CLI check --change', () => {
     const report = JSON.parse(output);
     expect(report.changeName).toBe('test-change');
     expect(report.tasks).toHaveLength(3);
-    expect(report.summary.requireSkill).toBeGreaterThan(0);
+    expect(report.summary.requireSkill).toBe(3);
     expect(report.summary.total).toBe(3);
 
-    // Full and Lite tasks should have expectedSkill
-    const fullTask = report.tasks.find((t: any) => t.tddAnnotation === 'full');
-    expect(fullTask.expectedSkill).toBe('test-driven-development');
-    expect(fullTask.severity).toBe('warn');
+    // Full tasks have expectedSkill
+    expect(report.tasks.every((t: any) => t.expectedSkill === 'test-driven-development')).toBe(true);
 
-    const skipTask = report.tasks.find((t: any) => t.tddAnnotation === 'skip');
-    expect(skipTask.expectedSkill).toBeNull();
-    expect(skipTask.severity).toBe('pass');
+    // Full tasks are pass, missing TDD are warn
+    const fullTask = report.tasks.find((t: any) => t.tddAnnotation === 'full');
+    expect(fullTask.severity).toBe('pass');
+
+    const missingTask = report.tasks.find((t: any) => t.tddAnnotation === 'none');
+    expect(missingTask.severity).toBe('warn');
+
+    // JSON should NOT have tddDefault
+    expect(report.tddDefault).toBeUndefined();
   });
 
   it('should error when --change is missing', () => {

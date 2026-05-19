@@ -97,7 +97,7 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
   try {
     // Read discipline config (for display only)
     const config = readProjectConfig(projectRoot);
-    const disciplineLevel = config?.discipline?.level || 'enhanced';
+    const disciplineLevel = config?.discipline?.level || 'strict';
 
     // Read tasks.md
     let tasksContent = '';

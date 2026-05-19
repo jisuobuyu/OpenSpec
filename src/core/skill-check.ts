@@ -82,7 +82,7 @@ export function checkSuperpowersSkills(
     tools?: string[];
   },
 ): SkillCheckReport {
-  const level = disciplineLevel || 'core';
+  const level = disciplineLevel || 'strict';
   const isEnhancedOrStrict = level === 'enhanced' || level === 'strict';
   const isCore = level === 'core';
 

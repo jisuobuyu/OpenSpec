@@ -160,7 +160,7 @@ openspec update [path] [options]
 
 ```bash
 # Update instruction files after npm upgrade
-npm update @fission-ai/openspec
+cd OpenSpec && git pull origin dev && npm run build && npm install -g .
 openspec update
 ```
 

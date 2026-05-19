@@ -81,10 +81,10 @@ AI:  Archived to openspec/changes/archive/2025-01-23-add-dark-mode/
 
 **Requires Node.js 20.19.0 or higher.**
 
-Install OpenSpec globally:
-
 ```bash
-npm install -g @fission-ai/openspec@latest
+git clone https://github.com/jisuobuyu/OpenSpec.git
+cd OpenSpec && git checkout dev
+npm install && npm run build && npm install -g .
 ```
 
 Then navigate to your project directory and initialize:
@@ -170,7 +170,7 @@ AI coding assistants are powerful but unpredictable when requirements live only 
 **Upgrade the package**
 
 ```bash
-npm install -g @fission-ai/openspec@latest
+cd OpenSpec && git pull origin dev && npm install && npm run build && npm install -g .
 ```
 
 **Refresh agent instructions**

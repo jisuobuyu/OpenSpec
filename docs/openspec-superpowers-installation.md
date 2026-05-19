@@ -44,35 +44,25 @@ git --version     # ≥ 2.30.0
 
 ## 2. 安装 OpenSpec CLI
 
-### 方式一：npm 全局安装（推荐）
+从 GitHub 源码安装（推荐）：
 
 ```bash
-npm install -g @fission-ai/openspec@latest
+# 克隆仓库并切换到 dev 分支
+git clone https://github.com/jisuobuyu/OpenSpec.git
+cd OpenSpec
+git checkout dev
+
+# 安装依赖并构建
+npm install
+npm run build
+
+# 全局安装
+npm install -g .
 ```
 
 **验证**：
 ```bash
-openspec --version    # 输出: 1.3.1 或更高
-```
-
-### 方式二：使用其他包管理器
-
-```bash
-# pnpm
-pnpm add -g @fission-ai/openspec@latest
-
-# yarn
-yarn global add @fission-ai/openspec@latest
-
-# bun
-bun add -g @fission-ai/openspec@latest
-```
-
-### 方式三：nix（社区维护）
-
-```bash
-# 添加 nixpkgs 频道后
-nix-env -iA nixpkgs.openspec
+openspec --version    # 输出: 1.3.1
 ```
 
 ---
@@ -402,7 +392,11 @@ openspec init ,cursor
 ### 8.1 升级 OpenSpec CLI
 
 ```bash
-npm install -g @fission-ai/openspec@latest
+cd OpenSpec
+git pull origin dev
+npm install
+npm run build
+npm install -g .
 ```
 
 ### 8.2 升级项目指令文件
@@ -415,8 +409,8 @@ openspec update
 `openspec update` 会：
 - 重新生成所有 `.claude/commands/opsx/*.md` 文件
 - 重新生成所有 `.claude/skills/openspec-*/SKILL.md` 文件
-- 同步 `openspec/config.yaml` 的 `schema` 键（profile enhanced/strict → `superpowers`，core → `spec-driven`）
-- 检测 Superpowers 技能是否已安装（enhanced/strict 时），缺失时显示警告
+- 同步 `openspec/config.yaml` 的 `schema` 键（设为 `specpower-driven`）
+- 检测 Superpowers 技能是否已安装，缺失时显示警告
 - 检测版本漂移并提示
 
 ### 8.3 升级 Superpowers 技能
@@ -458,7 +452,7 @@ rm -rf .claude/skills/openspec-*/
 ### 9.2 卸载全局 CLI
 
 ```bash
-npm uninstall -g @fission-ai/openspec
+npm uninstall -g openspec
 ```
 
 ### 9.3 清理全局配置（可选）
@@ -565,8 +559,9 @@ ls ~/.claude/skills/test-driven-development/SKILL.md
 # GitHub Actions 示例
 - name: Setup OpenSpec
   run: |
-    npm install -g @fission-ai/openspec@latest
-    openspec init --profile strict --tools none
+    git clone https://github.com/jisuobuyu/OpenSpec.git /tmp/openspec
+    cd /tmp/openspec && git checkout dev && npm install && npm run build && npm install -g .
+    cd your-project && openspec init --tools none
 
 - name: Validate changes
   run: |

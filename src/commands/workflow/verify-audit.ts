@@ -104,6 +104,7 @@ export async function verifyAuditCommand(options: VerifyAuditOptions): Promise<v
         cwd: projectRoot,
         encoding: 'utf-8',
         timeout: 10000,
+        stdio: ['ignore', 'pipe', 'ignore'],
       });
       changedFiles.push(...output.trim().split('\n').filter(Boolean));
     } catch { /* no git or no changes */ }
