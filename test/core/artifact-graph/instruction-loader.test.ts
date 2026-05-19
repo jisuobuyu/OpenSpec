@@ -57,9 +57,9 @@ describe('instruction-loader', () => {
     it('should load context with default schema', () => {
       const context = loadChangeContext(tempDir, 'my-change');
 
-      expect(context.schemaName).toBe('spec-driven');
+      expect(context.schemaName).toBe('specpower-driven');
       expect(context.changeName).toBe('my-change');
-      expect(context.graph.getName()).toBe('spec-driven');
+      expect(context.graph.getName()).toBe('specpower-driven');
       expect(context.completed.size).toBe(0);
     });
 
@@ -120,7 +120,7 @@ describe('instruction-loader', () => {
 
       const context = loadChangeContext(tempDir, 'my-change');
 
-      expect(context.schemaName).toBe('spec-driven');
+      expect(context.schemaName).toBe('specpower-driven');
     });
   });
 
@@ -141,7 +141,7 @@ describe('instruction-loader', () => {
 
       expect(instructions.changeName).toBe('my-change');
       expect(instructions.artifactId).toBe('proposal');
-      expect(instructions.schemaName).toBe('spec-driven');
+      expect(instructions.schemaName).toBe('specpower-driven');
       expect(instructions.outputPath).toBe('proposal.md');
     });
 
@@ -523,7 +523,7 @@ rules:
       const status = formatChangeStatus(context);
 
       expect(status.changeName).toBe('my-change');
-      expect(status.schemaName).toBe('spec-driven');
+      expect(status.schemaName).toBe('specpower-driven');
       expect(status.isComplete).toBe(false);
 
       // proposal has no deps, should be ready
@@ -574,7 +574,7 @@ rules:
       fs.writeFileSync(path.join(changeDir, 'design.md'), '# Design');
       fs.writeFileSync(path.join(changeDir, 'tasks.md'), '# Tasks');
 
-      const context = loadChangeContext(tempDir, 'my-change');
+      const context = loadChangeContext(tempDir, 'my-change', 'spec-driven');
       const status = formatChangeStatus(context);
 
       expect(status.isComplete).toBe(true);
@@ -582,7 +582,7 @@ rules:
     });
 
     it('should show blocked artifacts with missing dependencies', () => {
-      const context = loadChangeContext(tempDir, 'my-change');
+      const context = loadChangeContext(tempDir, 'my-change', 'spec-driven');
       const status = formatChangeStatus(context);
 
       // tasks requires specs and design
@@ -593,7 +593,7 @@ rules:
     });
 
     it('should sort artifacts in build order', () => {
-      const context = loadChangeContext(tempDir, 'my-change');
+      const context = loadChangeContext(tempDir, 'my-change', 'spec-driven');
       const status = formatChangeStatus(context);
 
       const ids = status.artifacts.map(a => a.id);

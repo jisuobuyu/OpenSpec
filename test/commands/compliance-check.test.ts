@@ -27,7 +27,7 @@ describe('CLI check --change', () => {
     // Config with discipline level enhanced
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
-      `schema: superpowers\ndiscipline:\n  level: enhanced\n  tdd:\n    default: adaptive\n`
+      `schema: specpower-driven\ndiscipline:\n  level: enhanced\n  tdd:\n    default: adaptive\n`
     );
 
     // Tasks with [TDD: Full] and [TDD: Skip]
@@ -56,7 +56,7 @@ describe('CLI check --change', () => {
   it('should show all-optional in core mode', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
-      'schema: superpowers\n'
+      'schema: specpower-driven\n'
     );
 
     await fs.writeFile(
@@ -78,7 +78,7 @@ describe('CLI check --change', () => {
   it('should output valid JSON', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
-      `schema: superpowers\ndiscipline:\n  level: enhanced\n  tdd:\n    default: adaptive\n`
+      `schema: specpower-driven\ndiscipline:\n  level: enhanced\n  tdd:\n    default: adaptive\n`
     );
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
@@ -121,7 +121,7 @@ describe('CLI check --change', () => {
   it('should show helpful message when no tasks.md', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
-      'schema: superpowers\n'
+      'schema: specpower-driven\n'
     );
 
     expect(() => {

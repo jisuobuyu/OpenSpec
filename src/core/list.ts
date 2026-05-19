@@ -136,7 +136,7 @@ export class ListCommand {
       // JSON output for programmatic use
       if (json) {
         // Determine project schema fallback
-        let projectSchema = 'spec-driven';
+        let projectSchema = 'specpower-driven';
         try {
           const { readProjectConfig } = await import('./project-config.js');
           const config = readProjectConfig(targetPath);

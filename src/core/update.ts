@@ -313,7 +313,7 @@ export class UpdateCommand {
       const { parse, stringify } = await import('yaml');
       const content = fs.readFileSync(actualPath, 'utf-8');
       const config = parse(content) || {};
-      const expectedSchema = (profile === 'enhanced' || profile === 'strict') ? 'superpowers' : 'spec-driven';
+      const expectedSchema = 'specpower-driven';
 
       if (config.schema !== expectedSchema) {
         config.schema = expectedSchema;

@@ -1,9 +1,9 @@
 # OpenSpec Superpowers 安装指南
 
-**文档导航**：  
-→ 想**了解设计思路**？阅读 [设计规格](./openspec-superpowers-fusion.md)  
-→ 想**安装部署**？你在看的正是安装指南  
-→ 想**学习使用**？阅读 [使用手册](./openspec-superpowers-usage-guide.md)  
+**文档导航**：
+→ 想**了解设计思路**？阅读 [设计规格](./openspec-superpowers-fusion.md)
+→ 想**安装部署**？你在看的正是安装指南
+→ 想**学习使用**？阅读 [使用手册](./openspec-superpowers-usage-guide.md)
 → 想**了解实施过程**？阅读 [实施方案](./openspec-superpowers-implementation-plan.md)
 
 ## 目录
@@ -81,40 +81,47 @@ nix-env -iA nixpkgs.openspec
 
 Superpowers 是一组 AI 工程纪律技能，OpenSpec Enhanced/Strict profile 会编排调用它们。
 
-### 3.1 自动安装（推荐）
+### 3.1 一键安装（推荐）
 
-在 Claude Code 中输入以下命令自动安装：
-
-```
-/skill:install test-driven-development
-/skill:install verification-before-completion
-/skill:install simplify
-/skill:install brainstorming
-/skill:install writing-plans
-/skill:install requesting-code-review
-/skill:install subagent-driven-development
-```
-
-如果你使用 Cursor 或其他工具，对应的 skill 安装命令略有不同，请参考 [Supported Tools](supported-tools.md)。
-
-### 3.2 手动安装
-
-从 Superpowers 仓库下载技能文件到对应目录：
+从 Superpowers 仓库克隆所有技能到 Claude Code 技能目录：
 
 ```bash
-# Claude Code (macOS / Linux)
-mkdir -p ~/.claude/skills/
+# macOS / Linux
 cd ~/.claude/skills/
-git clone https://github.com/anthropic/superpowers-test-driven-development.git test-driven-development
-git clone https://github.com/anthropic/superpowers-verification.git verification-before-completion
-git clone https://github.com/anthropic/superpowers-simplify.git simplify
-# ... 其他技能类似
+git clone https://github.com/obra/superpowers.git
+cp -r superpowers/skills/* .
+rm -rf superpowers
 
-# Claude Code (Windows PowerShell)
-mkdir $env:USERPROFILE\.claude\skills\ -Force
+# Windows PowerShell
 cd $env:USERPROFILE\.claude\skills\
-git clone https://github.com/anthropic/superpowers-test-driven-development.git test-driven-development
-# ... 其他技能类似
+git clone https://github.com/obra/superpowers.git
+Copy-Item -Path superpowers/skills/* -Destination . -Recurse
+Remove-Item -Recurse -Force superpowers
+```
+
+> Superpowers 仓库地址：[https://github.com/obra/superpowers](https://github.com/obra/superpowers)。
+> 如果你使用 Cursor 或其他 AI 工具，将技能文件复制到对应的 skills 目录即可（如 `~/.cursor/skills/`）。
+
+### 3.2 手动安装（按需选择技能）
+
+如果只需要部分技能，可以从 Superpowers 仓库中单独复制：
+
+```bash
+# 1. 克隆 Superpowers 仓库
+git clone https://github.com/obra/superpowers.git /tmp/superpowers
+
+# 2. 只复制需要的技能（以 TDD 为例）
+mkdir -p ~/.claude/skills/
+cp -r /tmp/superpowers/skills/test-driven-development ~/.claude/skills/
+
+# 3. 清理
+rm -rf /tmp/superpowers
+
+# Windows PowerShell
+git clone https://github.com/obra/superpowers.git $env:TEMP\superpowers
+mkdir $env:USERPROFILE\.claude\skills\ -Force
+Copy-Item -Path $env:TEMP\superpowers\skills\test-driven-development -Destination $env:USERPROFILE\.claude\skills\ -Recurse
+Remove-Item -Recurse -Force $env:TEMP\superpowers
 ```
 
 ### 3.3 技能对照表
@@ -284,7 +291,7 @@ openspec init --profile strict --tools claude
 初始化后，编辑 `openspec/config.yaml`：
 
 ```yaml
-schema: superpowers
+schema: specpower-driven
 discipline:
   level: enhanced       # core | enhanced | strict
   tdd:
@@ -312,8 +319,8 @@ openspec init --profile enhanced --delivery commands --tools claude
 如果是已有 OpenSpec 项目，升级到 Superpowers：
 
 ```bash
-# 更新全局配置的 profile
-openspec config set profile enhanced
+# 更新全局配置的 profile（三个预设：core / enhanced / strict）
+openspec config profile enhanced
 
 # 重新生成 AI 指令文件
 openspec update
@@ -363,7 +370,7 @@ openspec new change test-feature
 openspec status --change test-feature
 
 # 查看 schema 模板
-openspec templates --schema superpowers
+openspec templates --schema specpower-driven
 ```
 
 ### 6.4 测试 slash 命令
@@ -435,11 +442,11 @@ cd ~/.claude/skills/verification-before-completion && git pull
 
 ```bash
 # 从 core 升级到 enhanced
-openspec config set profile enhanced
+openspec config profile enhanced
 openspec update
 
 # 从 enhanced 降级到 core
-openspec config set profile core
+openspec config profile core
 openspec update    # 会提示清理多余文件
 ```
 

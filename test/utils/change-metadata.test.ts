@@ -198,7 +198,7 @@ describe('resolveSchemaForChange', () => {
 
   it('should return default when no metadata and no explicit schema', () => {
     const result = resolveSchemaForChange(changeDir);
-    expect(result).toBe('spec-driven');
+    expect(result).toBe('specpower-driven');
   });
 
   it('should return default when metadata read fails', async () => {
@@ -208,7 +208,7 @@ describe('resolveSchemaForChange', () => {
 
     // Should fall back to default, not throw
     const result = resolveSchemaForChange(changeDir);
-    expect(result).toBe('spec-driven');
+    expect(result).toBe('specpower-driven');
   });
 
   it('should use project config schema when no metadata exists', async () => {
@@ -285,14 +285,14 @@ describe('resolveSchemaForChange', () => {
 
     // Remove config, default should win
     await fs.unlink(path.join(configDir, 'config.yaml'));
-    expect(resolveSchemaForChange(changeDir)).toBe('spec-driven'); // Default wins
+    expect(resolveSchemaForChange(changeDir)).toBe('specpower-driven'); // Default wins
   });
 });
 
   describe('ChangeMetadataSchema with depends_on and last_checkpoint', () => {
     it('should accept depends_on as optional string array', () => {
       const result = ChangeMetadataSchema.safeParse({
-        schema: 'superpowers',
+        schema: 'specpower-driven',
         depends_on: ['add-auth-service', 'add-rate-limit'],
       });
       expect(result.success).toBe(true);
@@ -303,7 +303,7 @@ describe('resolveSchemaForChange', () => {
 
     it('should accept last_checkpoint as optional string', () => {
       const result = ChangeMetadataSchema.safeParse({
-        schema: 'superpowers',
+        schema: 'specpower-driven',
         last_checkpoint: '2.3',
       });
       expect(result.success).toBe(true);
@@ -314,7 +314,7 @@ describe('resolveSchemaForChange', () => {
 
     it('should accept both depends_on and last_checkpoint together', () => {
       const result = ChangeMetadataSchema.safeParse({
-        schema: 'superpowers',
+        schema: 'specpower-driven',
         depends_on: ['other-change'],
         last_checkpoint: '1.1',
       });
@@ -335,7 +335,7 @@ describe('resolveSchemaForChange', () => {
 
     it('should reject depends_on containing empty strings', () => {
       const result = ChangeMetadataSchema.safeParse({
-        schema: 'superpowers',
+        schema: 'specpower-driven',
         depends_on: ['valid', ''],
       });
       expect(result.success).toBe(false);
@@ -372,7 +372,7 @@ describe('validateDependsOn', () => {
     it('should warn when dependency does not exist', async () => {
       await fs.writeFile(
         path.join(changeDir, '.openspec.yaml'),
-        'schema: superpowers\ndepends_on:\n  - non-existent-change\n',
+        'schema: specpower-driven\ndepends_on:\n  - non-existent-change\n',
         'utf-8'
       );
 
@@ -387,7 +387,7 @@ describe('validateDependsOn', () => {
       await fs.mkdir(depDir, { recursive: true });
       await fs.writeFile(
         path.join(changeDir, '.openspec.yaml'),
-        'schema: superpowers\ndepends_on:\n  - existing-dep\n',
+        'schema: specpower-driven\ndepends_on:\n  - existing-dep\n',
         'utf-8'
       );
 

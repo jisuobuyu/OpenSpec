@@ -54,7 +54,7 @@ const { version: OPENSPEC_VERSION } = require('../../package.json');
 // Constants
 // -----------------------------------------------------------------------------
 
-const DEFAULT_SCHEMA = 'spec-driven';
+const DEFAULT_SCHEMA = 'specpower-driven';
 
 const PROGRESS_SPINNER = {
   interval: 80,
@@ -622,7 +622,7 @@ export class InitCommand {
 
     try {
       const profile = this.resolveProfileOverride();
-      const schema = (profile === 'enhanced' || profile === 'strict') ? 'superpowers' : DEFAULT_SCHEMA;
+      const schema = (profile === 'enhanced' || profile === 'strict') ? 'specpower-driven' : DEFAULT_SCHEMA;
       const yamlContent = serializeConfig({ schema });
       await FileSystemUtils.writeFile(configPath, yamlContent);
       return 'created';
@@ -753,7 +753,7 @@ export class InitCommand {
     // Config status
     if (configStatus === 'created') {
       const profile = this.resolveProfileOverride();
-      const schemaLabel = (profile === 'enhanced' || profile === 'strict') ? 'superpowers' : DEFAULT_SCHEMA;
+      const schemaLabel = (profile === 'enhanced' || profile === 'strict') ? 'specpower-driven' : DEFAULT_SCHEMA;
       console.log(`Config: openspec/config.yaml (schema: ${schemaLabel})`);
     } else if (configStatus === 'exists') {
       // Show actual filename (config.yaml or config.yml)

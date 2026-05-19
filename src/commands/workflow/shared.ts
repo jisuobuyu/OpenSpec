@@ -41,7 +41,7 @@ export interface ApplyInstructions {
 // Constants
 // -----------------------------------------------------------------------------
 
-export const DEFAULT_SCHEMA = 'spec-driven';
+export const DEFAULT_SCHEMA = 'specpower-driven';
 
 // -----------------------------------------------------------------------------
 // Utility Functions

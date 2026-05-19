@@ -107,12 +107,12 @@ describe('CLI status --deps', () => {
     // Create changes with depends_on
     await fs.mkdir(path.join(changesDir, 'change-a'), { recursive: true });
     await fs.writeFile(path.join(changesDir, 'change-a', '.openspec.yaml'),
-      'schema: superpowers\ndepends_on:\n  - change-b\n');
+      'schema: specpower-driven\ndepends_on:\n  - change-b\n');
     await fs.writeFile(path.join(changesDir, 'change-a', 'proposal.md'), '# Change A\n\n## Why\nTest\n\n## What Changes\n- Test');
 
     await fs.mkdir(path.join(changesDir, 'change-b'), { recursive: true });
     await fs.writeFile(path.join(changesDir, 'change-b', '.openspec.yaml'),
-      'schema: superpowers\ndepends_on:\n  - change-c\n');
+      'schema: specpower-driven\ndepends_on:\n  - change-c\n');
     await fs.writeFile(path.join(changesDir, 'change-b', 'proposal.md'), '# Change B\n\n## Why\nTest\n\n## What Changes\n- Test');
 
     await fs.mkdir(path.join(changesDir, 'change-c'), { recursive: true });

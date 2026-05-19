@@ -192,7 +192,7 @@ export function resolveSchemaForChange(
   }
 
   // 4. Default
-  return 'spec-driven';
+  return 'specpower-driven';
 }
 
 /**

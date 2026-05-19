@@ -116,7 +116,7 @@ This enables 14 workflows including:
 Configure discipline level in `openspec/config.yaml`:
 
 ```yaml
-schema: superpowers
+schema: specpower-driven
 discipline:
   level: enhanced  # core | enhanced | strict
   tdd:

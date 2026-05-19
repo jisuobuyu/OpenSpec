@@ -488,7 +488,7 @@ rules:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: superpowers
+          `schema: specpower-driven
 discipline:
   level: enhanced
   tdd:
@@ -518,7 +518,7 @@ discipline:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: superpowers
+          `schema: specpower-driven
 discipline:
   level: strict
 `
@@ -552,7 +552,7 @@ discipline:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: superpowers
+          `schema: specpower-driven
 discipline: "not an object"
 `
         );
@@ -569,7 +569,7 @@ discipline: "not an object"
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: superpowers
+          `schema: specpower-driven
 discipline:
   level: invalid-level
 `

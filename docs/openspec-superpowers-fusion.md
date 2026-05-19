@@ -2,10 +2,10 @@
 
 > **状态：已实施完成** | 全部 6 个 Phase（31 tasks）已在 dev 分支实现完毕。
 
-**文档导航**：  
-→ 想**了解设计思路**？你在看的正是设计规格  
-→ 想**安装部署**？阅读 [安装指南](./openspec-superpowers-installation.md)  
-→ 想**学习使用**？阅读 [使用手册](./openspec-superpowers-usage-guide.md)  
+**文档导航**：
+→ 想**了解设计思路**？你在看的正是设计规格
+→ 想**安装部署**？阅读 [安装指南](./openspec-superpowers-installation.md)
+→ 想**学习使用**？阅读 [使用手册](./openspec-superpowers-usage-guide.md)
 → 想**了解实施过程**？阅读 [实施方案](./openspec-superpowers-implementation-plan.md)
 
 ## 1. 融合概述
@@ -723,7 +723,7 @@ AI:  add-oauth2-login 已 archive。
 
 ```yaml
 # openspec/changes/add-google-provider/.openspec.yaml
-schema: superpowers
+schema: specpower-driven
 created: 2026-05-15
 depends_on:
   - add-oauth2-model    # 必须先完成 OAuth 基础模型
@@ -764,7 +764,7 @@ You: /opsx:propose add-session-refresh
 
 AI:  ❌ 依赖错误：检测到循环依赖
      add-session-refresh → add-oauth2-model → add-session-refresh
-     
+
      请修改 depends_on 字段解除循环。
 ```
 
@@ -825,7 +825,7 @@ AI:  已执行 git revert a1b2c3d，恢复 simplify 前的代码。✅
 为支持 Superpowers 融合，创建新的 `superpowers` Schema：
 
 ```yaml
-# openspec/schemas/superpowers/schema.yaml
+# openspec/schemas/specpower-driven/schema.yaml
 name: superpowers
 version: 1
 description: OpenSpec with Superpowers engineering disciplines
@@ -1116,7 +1116,7 @@ openspec/
 ### 融合强度配置（`config.yaml`）
 
 ```yaml
-schema: superpowers
+schema: specpower-driven
 
 # 融合强度控制
 discipline:

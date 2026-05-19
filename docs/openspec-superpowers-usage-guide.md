@@ -2,10 +2,10 @@
 
 > 基于 OpenSpec v1.3.1 + Superpowers 融合方案，覆盖 P0-P6 全部功能。
 
-**文档导航**：  
-→ 想**了解设计思路**？阅读 [设计规格](./openspec-superpowers-fusion.md)  
-→ 想**安装部署**？阅读 [安装指南](./openspec-superpowers-installation.md)  
-→ 想**学习使用**？你在看的正是使用手册  
+**文档导航**：
+→ 想**了解设计思路**？阅读 [设计规格](./openspec-superpowers-fusion.md)
+→ 想**安装部署**？阅读 [安装指南](./openspec-superpowers-installation.md)
+→ 想**学习使用**？你在看的正是使用手册
 → 想**了解实施过程**？阅读 [实施方案](./openspec-superpowers-implementation-plan.md)
 
 ## 目录
@@ -62,7 +62,7 @@ openspec init --profile enhanced --tools claude
 编辑 `openspec/config.yaml`：
 
 ```yaml
-schema: superpowers
+schema: specpower-driven
 discipline:
   level: enhanced       # core | enhanced | strict
   tdd:
@@ -918,7 +918,7 @@ openspec metrics --json
 
 ```yaml
 # openspec/config.yaml
-schema: superpowers
+schema: specpower-driven
 
 context: |
   This is a TypeScript monorepo using React + Express.
@@ -944,7 +944,7 @@ discipline:
     search_history: false
 ```
 
-> **最小配置**：只需要 `schema: superpowers` 一行即可，其余全部使用默认值。
+> **最小配置**：只需要 `schema: specpower-driven` 一行即可，其余全部使用默认值。
 
 ### 8.3 Profile 对比
 
@@ -1054,7 +1054,7 @@ openspec status --deps
 
 ```yaml
 # openspec/changes/add-api-gateway/.openspec.yaml
-schema: superpowers
+schema: specpower-driven
 created: 2026-05-16
 depends_on:
   - add-auth-service

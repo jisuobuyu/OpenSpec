@@ -153,7 +153,7 @@ export class ArchiveCommand {
     } else {
       // Log warning when validation is skipped
       const timestamp = new Date().toISOString();
-      
+
       if (!options.yes) {
         const { confirm } = await import('@inquirer/prompts');
         const proceed = await confirm({
@@ -167,7 +167,7 @@ export class ArchiveCommand {
       } else {
         console.log(chalk.yellow(`\n⚠️  WARNING: Skipping validation may archive invalid specs.`));
       }
-      
+
       console.log(chalk.yellow(`[${timestamp}] Validation skipped for change: ${changeName}`));
       console.log(chalk.yellow(`Affected files: ${changeDir}`));
     }
@@ -196,14 +196,14 @@ export class ArchiveCommand {
       try {
         const { readProjectConfig } = await import('./project-config.js');
         const config = readProjectConfig(targetPath);
-        schema = config?.schema ?? 'spec-driven';
-      } catch { schema = 'spec-driven'; }
+        schema = config?.schema ?? 'specpower-driven';
+      } catch { schema = 'specpower-driven'; }
     }
-    if (schema === 'superpowers' && !hasReviewMd) {
+    if (schema === 'specpower-driven' && !hasReviewMd) {
       console.log(chalk.yellow('\n⚠  No review.md found for superpowers change.'));
       console.log(chalk.dim('  Consider running /opsx:review before archiving.'));
     }
-    if (schema === 'superpowers' && !lastCheckpoint) {
+    if (schema === 'specpower-driven' && !lastCheckpoint) {
       console.log(chalk.yellow('⚠  No verification checkpoint found — verify may not have run.'));
       console.log(chalk.dim('  Consider running /opsx:verify before archiving.'));
     }
@@ -253,7 +253,7 @@ export class ArchiveCommand {
     } else {
       // Find specs to update
       const specUpdates = await findSpecUpdates(changeDir, mainSpecsDir);
-      
+
       if (specUpdates.length > 0) {
         console.log('\nSpecs to update:');
         for (const update of specUpdates) {
