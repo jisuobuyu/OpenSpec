@@ -69,7 +69,7 @@ openspec --version    # 输出: 1.3.1
 
 ## 3. 安装 Superpowers 技能
 
-Superpowers 是一组 AI 工程纪律技能，OpenSpec Enhanced/Strict profile 会编排调用它们。
+Superpowers 是一组 AI 工程纪律技能，OpenSpec 所有 profile（strict/enhanced/core）均会编排调用它们。TDD 强制执行，不可跳过。
 
 ### 3.1 一键安装（推荐）
 
@@ -118,15 +118,15 @@ Remove-Item -Recurse -Force $env:TEMP\superpowers
 
 | 技能名 | 用途 | 被哪些命令调用 | 降级级别 |
 |--------|------|---------------|----------|
-| `test-driven-development` | RED→GREEN→REFACTOR 循环 | apply（TDD: Full/Lite） | 降级为手动 Lite TDD |
+| `test-driven-development` | RED→GREEN→REFACTOR 循环 | apply（每个 task 强制执行） | 所有 profile 均强制执行 |
 | `verification-before-completion` | 运行测试套件 + 覆盖率 | verify（Layer 1） | 手动运行测试 |
-| `simplify` | 代码精炼和重构 | apply（Post-checkpoint） | 跳过低风险 |
+| `simplify` | 代码精炼和重构 | apply（Post-checkpoint） | 自动执行 |
 | `brainstorming` | 系统化方案对比 | explore（可选提议） | 手动分析 |
 | `writing-plans` | 结构化设计文档 | ff（Complex 级别） | 手动创建 design.md |
 | `requesting-code-review` | 独立代码审查 | review（Complex 级别） | 扩展 AI 自审 |
-| `subagent-driven-development` | 子代理并行实现 | apply（per-task） | 串行实现 |
+| `subagent-driven-development` | 子代理并行实现 | apply（每个 task 强制执行） | 所有 profile 均强制执行 |
 
-> **注意**：使用 `core` profile 不需要安装任何 Superpowers 技能。使用 `enhanced` profile 缺失技能时会优雅降级。使用 `strict` profile 缺失技能时会报错。
+> **注意**：TDD 和 Subagent 在所有 profile 下均强制执行。严格模式（strict，默认）缺失技能时报错，增强模式（enhanced）缺失时优雅降级。
 
 ---
 
@@ -206,7 +206,7 @@ ls ~/.claude/skills/test-driven-development/SKILL.md
 
 ```bash
 cd your-project
-openspec init 
+openspec init
 ```
 
 `openspec init` 是纯本地操作——读取内置模板、生成 `.md` 文件到 `.claude/` 目录，不需要网络。
@@ -247,7 +247,7 @@ openspec init
 
 ```bash
 # Enhanced profile — 技能缺失时优雅降级
-openspec init 
+openspec init --profile enhanced --tools claude
 
 # Core profile — 5 个基础命令
 openspec init --profile core --tools claude
@@ -288,10 +288,10 @@ discipline:
 
 ```bash
 # 仅生成技能文件
-openspec init --profile enhanced --delivery skills --tools claude
+openspec init --delivery skills --tools claude
 
 # 仅生成命令文件
-openspec init --profile enhanced --delivery commands --tools claude
+openspec init --delivery commands --tools claude
 ```
 
 ### 5.6 已有项目更新
@@ -300,7 +300,7 @@ openspec init --profile enhanced --delivery commands --tools claude
 
 ```bash
 # 更新全局配置的 profile（三个预设：core / enhanced / strict）
-openspec config profile enhanced
+openspec config profile strict
 
 # 重新生成 AI 指令文件
 openspec update
@@ -335,7 +335,7 @@ Available schemas:
     Default OpenSpec workflow - proposal → specs → design → tasks
     Artifacts: proposal → specs → design → tasks
 
-  superpowers
+  specpower-driven
     OpenSpec x Superpowers fusion - engineering discipline orchestrated by AI skills
     Artifacts: proposal → exploration → specs → design → tasks → review
 ```
@@ -369,7 +369,7 @@ AI 应进入探索模式，并可以读取你的项目上下文。
 如果同时使用多个 AI 工具（如 Claude Code + Cursor）：
 
 ```bash
-openspec init ,cursor
+openspec init --tools claude,cursor
 ```
 
 生成的文件结构：
@@ -425,11 +425,11 @@ cd ~/.claude/skills/verification-before-completion && git pull
 ### 8.4 切换 profile
 
 ```bash
-# 从 core 升级到 enhanced
+# 切换到 enhanced（技能缺失时优雅降级）
 openspec config profile enhanced
 openspec update
 
-# 从 enhanced 降级到 core
+# 切换到 core（仅 5 个基础命令）
 openspec config profile core
 openspec update    # 会提示清理多余文件
 ```
@@ -508,7 +508,7 @@ discipline:
     enabled: false
 ```
 
-### Q3: Enhanced profile 只有 9 个命令，不是 14 个
+### Q3: 生成的命令数量不对
 
 **原因**：`openspec update` 时部分 workflow 模板未被识别。
 
@@ -523,19 +523,19 @@ openspec update --force
 
 ### Q4: `/opsx:apply` 不调用 TDD 技能
 
-**原因**：`discipline.level` 为 `core` 或技能未安装。
+**原因**：技能未安装或 tasks.md 缺少 `[TDD: Full]` 标注。
 
 **检查**：
 ```bash
-# 1. 检查 discipline 配置
-cat openspec/config.yaml | grep -A 3 "discipline:"
+# 1. 检查 tasks.md 标注
+cat openspec/changes/<name>/tasks.md | grep "TDD"
 
 # 2. 检查技能是否存在
 ls ~/.claude/skills/test-driven-development/SKILL.md
 ```
 
 **解决**：
-- 确保 `discipline.level: strict`（默认），TDD 强制执行
+- 确保 tasks.md 中每个 task 标注了 `[TDD: Full]`
 - 安装缺失的 Superpowers 技能（参见 [3. 安装 Superpowers 技能](#3-安装-superpowers-技能)）
 
 ### Q5: `openspec status --deps` 报告循环依赖
