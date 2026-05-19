@@ -97,7 +97,7 @@ export class UpdateCommand {
 
     // 3. Read global config for profile/delivery
     const globalConfig = getGlobalConfig();
-    const profile = globalConfig.profile ?? 'core';
+    const profile = globalConfig.profile ?? 'strict';
     const delivery: Delivery = globalConfig.delivery ?? 'both';
     const profileWorkflows = getProfileWorkflows(profile, globalConfig.workflows);
     const desiredWorkflows = profileWorkflows.filter((workflow): workflow is (typeof ALL_WORKFLOWS)[number] =>
