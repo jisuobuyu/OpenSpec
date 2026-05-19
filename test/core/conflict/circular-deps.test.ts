@@ -19,7 +19,7 @@ describe('circular-deps', () => {
     if (dependsOn && dependsOn.length > 0) {
       await fs.writeFile(
         path.join(changeDir, '.openspec.yaml'),
-        yamlStringify({ schema: 'spec-driven', depends_on: dependsOn })
+        yamlStringify({ schema: 'specpower-driven', depends_on: dependsOn })
       );
     }
   }

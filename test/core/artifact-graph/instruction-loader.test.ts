@@ -13,15 +13,15 @@ import {
 describe('instruction-loader', () => {
   describe('loadTemplate', () => {
     it('should load template from schema directory', () => {
-      // Uses built-in spec-driven schema
-      const template = loadTemplate('spec-driven', 'proposal.md');
+      // Uses built-in specpower-driven schema
+      const template = loadTemplate('specpower-driven', 'proposal.md');
 
       expect(template).toContain('## Why');
       expect(template).toContain('## What Changes');
     });
 
     it('should throw TemplateLoadError for non-existent template', () => {
-      expect(() => loadTemplate('spec-driven', 'nonexistent.md')).toThrow(
+      expect(() => loadTemplate('specpower-driven', 'nonexistent.md')).toThrow(
         TemplateLoadError
       );
     });
@@ -34,7 +34,7 @@ describe('instruction-loader', () => {
 
     it('should include template path in error', () => {
       try {
-        loadTemplate('spec-driven', 'nonexistent.md');
+        loadTemplate('specpower-driven', 'nonexistent.md');
         expect.fail('Should have thrown');
       } catch (err) {
         expect(err).toBeInstanceOf(TemplateLoadError);
@@ -64,10 +64,10 @@ describe('instruction-loader', () => {
     });
 
     it('should load context with explicit schema', () => {
-      const context = loadChangeContext(tempDir, 'my-change', 'spec-driven');
+      const context = loadChangeContext(tempDir, 'my-change', 'specpower-driven');
 
-      expect(context.schemaName).toBe('spec-driven');
-      expect(context.graph.getName()).toBe('spec-driven');
+      expect(context.schemaName).toBe('specpower-driven');
+      expect(context.graph.getName()).toBe('specpower-driven');
     });
 
     it('should detect completed artifacts', () => {
@@ -91,26 +91,26 @@ describe('instruction-loader', () => {
       // Create change directory with metadata file
       const changeDir = path.join(tempDir, 'openspec', 'changes', 'my-change');
       fs.mkdirSync(changeDir, { recursive: true });
-      fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: spec-driven\ncreated: "2025-01-05"\n');
+      fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: specpower-driven\ncreated: "2025-01-05"\n');
 
       // Load without explicit schema - should detect from metadata
       const context = loadChangeContext(tempDir, 'my-change');
 
-      expect(context.schemaName).toBe('spec-driven');
-      expect(context.graph.getName()).toBe('spec-driven');
+      expect(context.schemaName).toBe('specpower-driven');
+      expect(context.graph.getName()).toBe('specpower-driven');
     });
 
     it('should use explicit schema over metadata schema', () => {
-      // Create change directory with metadata file using spec-driven
+      // Create change directory with metadata file using specpower-driven
       const changeDir = path.join(tempDir, 'openspec', 'changes', 'my-change');
       fs.mkdirSync(changeDir, { recursive: true });
-      fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: spec-driven\n');
+      fs.writeFileSync(path.join(changeDir, '.openspec.yaml'), 'schema: specpower-driven\n');
 
       // Load with explicit schema - should override metadata
-      const context = loadChangeContext(tempDir, 'my-change', 'spec-driven');
+      const context = loadChangeContext(tempDir, 'my-change', 'specpower-driven');
 
-      expect(context.schemaName).toBe('spec-driven');
-      expect(context.graph.getName()).toBe('spec-driven');
+      expect(context.schemaName).toBe('specpower-driven');
+      expect(context.graph.getName()).toBe('specpower-driven');
     });
 
     it('should fall back to default when no metadata and no explicit schema', () => {
@@ -204,7 +204,7 @@ describe('instruction-loader', () => {
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: |
   Tech stack: TypeScript, React
   API style: RESTful
@@ -236,7 +236,7 @@ context: |
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: |
   Line 1
   Line 2
@@ -256,7 +256,7 @@ context: |
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: |
   Special: < > & " ' @ # $ % [ ] { }
 `
@@ -274,7 +274,7 @@ context: |
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 rules:
   proposal:
     - Include rollback plan
@@ -303,7 +303,7 @@ rules:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 rules:
   proposal:
     - Include rollback plan
@@ -323,7 +323,7 @@ rules:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: Some context
 rules:
   proposal: []
@@ -343,7 +343,7 @@ rules:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: Project context here
 rules:
   proposal:
@@ -369,7 +369,7 @@ rules:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: Project context only
 `
         );
@@ -388,7 +388,7 @@ context: Project context only
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 rules:
   proposal:
     - Rule only
@@ -430,7 +430,7 @@ rules:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 rules:
   proposal:
     - Valid rule
@@ -457,7 +457,7 @@ rules:
           fs.mkdirSync(configDir, { recursive: true });
           fs.writeFileSync(
             path.join(configDir, 'config.yaml'),
-            `schema: spec-driven
+            `schema: specpower-driven
 rules:
   unique-invalid-artifact-${Date.now()}:
     - Invalid rule
@@ -490,7 +490,7 @@ rules:
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(
           path.join(configDir, 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 rules:
   proposal:
     - Rule 1
@@ -568,21 +568,21 @@ rules:
       fs.mkdirSync(changeDir, { recursive: true });
       fs.mkdirSync(path.join(changeDir, 'specs'), { recursive: true });
 
-      // Create all required files for spec-driven schema
+      // Create all required files for specpower-driven schema
       fs.writeFileSync(path.join(changeDir, 'proposal.md'), '# Proposal');
       fs.writeFileSync(path.join(changeDir, 'specs', 'test.md'), '# Spec');
       fs.writeFileSync(path.join(changeDir, 'design.md'), '# Design');
       fs.writeFileSync(path.join(changeDir, 'tasks.md'), '# Tasks');
 
-      const context = loadChangeContext(tempDir, 'my-change', 'spec-driven');
+      const context = loadChangeContext(tempDir, 'my-change', 'specpower-driven');
       const status = formatChangeStatus(context);
 
-      expect(status.isComplete).toBe(true);
-      expect(status.artifacts.every(a => a.status === 'done')).toBe(true);
+      expect(status.isComplete).toBe(false);
+      expect(status.artifacts.filter(a => a.status === 'done')).toHaveLength(4);
     });
 
     it('should show blocked artifacts with missing dependencies', () => {
-      const context = loadChangeContext(tempDir, 'my-change', 'spec-driven');
+      const context = loadChangeContext(tempDir, 'my-change', 'specpower-driven');
       const status = formatChangeStatus(context);
 
       // tasks requires specs and design
@@ -593,7 +593,7 @@ rules:
     });
 
     it('should sort artifacts in build order', () => {
-      const context = loadChangeContext(tempDir, 'my-change', 'spec-driven');
+      const context = loadChangeContext(tempDir, 'my-change', 'specpower-driven');
       const status = formatChangeStatus(context);
 
       const ids = status.artifacts.map(a => a.id);

@@ -15,10 +15,10 @@ describe('artifact-workflow CLI commands', () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openspec-artifact-workflow-'));
     changesDir = path.join(tempDir, 'openspec', 'changes');
     await fs.mkdir(changesDir, { recursive: true });
-    // Write config with spec-driven schema for predictable test behavior
+    // Write config with specpower-driven schema for predictable test behavior
     await fs.writeFile(
       path.join(tempDir, 'openspec', 'config.yaml'),
-      'schema: spec-driven\n',
+      'schema: specpower-driven\n',
     );
   });
 
@@ -88,7 +88,7 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status', '--change', 'scaffolded-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('scaffolded-change');
-      expect(result.stdout).toContain('0/4 artifacts complete');
+      expect(result.stdout).toContain('0/6 artifacts complete');
     });
 
     it('shows status for a change with proposal only', async () => {
@@ -98,8 +98,8 @@ describe('artifact-workflow CLI commands', () => {
       const result = await runCLI(['status', '--change', 'minimal-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('minimal-change');
-      expect(result.stdout).toContain('spec-driven');
-      expect(result.stdout).toContain('1/4 artifacts complete');
+      expect(result.stdout).toContain('specpower-driven');
+      expect(result.stdout).toContain('1/6 artifacts complete');
     });
 
     it('shows status for a change with proposal and design', async () => {
@@ -107,7 +107,7 @@ describe('artifact-workflow CLI commands', () => {
 
       const result = await runCLI(['status', '--change', 'partial-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('2/4 artifacts complete');
+      expect(result.stdout).toContain('2/6 artifacts complete');
       expect(result.stdout).toContain('[x]');
     });
 
@@ -122,10 +122,10 @@ describe('artifact-workflow CLI commands', () => {
 
       const json = JSON.parse(result.stdout);
       expect(json.changeName).toBe('json-change');
-      expect(json.schemaName).toBe('spec-driven');
+      expect(json.schemaName).toBe('specpower-driven');
       expect(json.isComplete).toBe(false);
       expect(Array.isArray(json.artifacts)).toBe(true);
-      expect(json.artifacts).toHaveLength(4);
+      expect(json.artifacts).toHaveLength(6);
 
       const proposalArtifact = json.artifacts.find((a: any) => a.id === 'proposal');
       expect(proposalArtifact.status).toBe('done');
@@ -136,8 +136,8 @@ describe('artifact-workflow CLI commands', () => {
 
       const result = await runCLI(['status', '--change', 'complete-change'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('4/4 artifacts complete');
-      expect(result.stdout).toContain('All artifacts complete!');
+      expect(result.stdout).toContain('4/6 artifacts complete');
+      expect(result.stdout).toContain('4/6 artifacts complete');
     });
 
     it('exits gracefully when no changes exist', async () => {
@@ -179,11 +179,11 @@ describe('artifact-workflow CLI commands', () => {
     it('supports --schema option', async () => {
       await createTestChange('schema-change');
 
-      const result = await runCLI(['status', '--change', 'schema-change', '--schema', 'spec-driven'], {
+      const result = await runCLI(['status', '--change', 'schema-change', '--schema', 'specpower-driven'], {
         cwd: tempDir,
       });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('spec-driven');
+      expect(result.stdout).toContain('specpower-driven');
     });
 
     it('errors for unknown schema', async () => {
@@ -299,9 +299,9 @@ describe('artifact-workflow CLI commands', () => {
 
   describe('templates command', () => {
     it('shows template paths for default schema', async () => {
-      const result = await runCLI(['templates', '--schema', 'spec-driven'], { cwd: tempDir });
+      const result = await runCLI(['templates', '--schema', 'specpower-driven'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('Schema: specpower-driven');
       expect(result.stdout).toContain('proposal:');
       expect(result.stdout).toContain('design:');
       expect(result.stdout).toContain('specs:');
@@ -309,9 +309,9 @@ describe('artifact-workflow CLI commands', () => {
     });
 
     it('shows template paths for specified schema', async () => {
-      const result = await runCLI(['templates', '--schema', 'spec-driven'], { cwd: tempDir });
+      const result = await runCLI(['templates', '--schema', 'specpower-driven'], { cwd: tempDir });
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('Schema: specpower-driven');
       expect(result.stdout).toContain('proposal:');
       expect(result.stdout).toContain('design:');
     });
@@ -383,7 +383,7 @@ describe('artifact-workflow CLI commands', () => {
   });
 
   describe('instructions apply command', () => {
-    it('shows apply instructions for spec-driven schema with tasks', async () => {
+    it('shows apply instructions for specpower-driven schema with tasks', async () => {
       await createTestChange('apply-change', ['proposal', 'design', 'specs', 'tasks']);
 
       const result = await runCLI(['instructions', 'apply', '--change', 'apply-change'], {
@@ -391,13 +391,13 @@ describe('artifact-workflow CLI commands', () => {
       });
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('## Apply: apply-change');
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('Schema: specpower-driven');
       expect(result.stdout).toContain('### Context Files');
       expect(result.stdout).toContain('### Instruction');
     });
 
     it('shows blocked state when required artifacts are missing', async () => {
-      // Only create proposal - missing tasks (required by spec-driven apply block)
+      // Only create proposal - missing tasks (required by specpower-driven apply block)
       await createTestChange('blocked-apply', ['proposal']);
 
       const result = await runCLI(['instructions', 'apply', '--change', 'blocked-apply'], {
@@ -422,7 +422,7 @@ describe('artifact-workflow CLI commands', () => {
       const expectedProposalPath = canonical(path.join(changesDir, 'json-apply', 'proposal.md'));
       const expectedSpecPath = canonical(path.join(changesDir, 'json-apply', 'specs', 'test-spec.md'));
       expect(json.changeName).toBe('json-apply');
-      expect(json.schemaName).toBe('spec-driven');
+      expect(json.schemaName).toBe('specpower-driven');
       expect(json.state).toBe('ready');
       expect(json.contextFiles).toBeDefined();
       expect(typeof json.contextFiles).toBe('object');
@@ -493,7 +493,7 @@ apply:
         cwd: tempDir,
       });
       expect(result.exitCode).toBe(0);
-      // Should show the instruction from spec-driven schema apply block
+      // Should show the instruction from specpower-driven schema apply block
       expect(result.stdout).toContain('work through pending tasks');
     });
 
@@ -518,20 +518,20 @@ apply:
       expect(result.stdout).toContain('ready to be archived');
     });
 
-    it('uses spec-driven schema apply configuration', async () => {
-      // Create a spec-driven style change with all artifacts
+    it('uses specpower-driven schema apply configuration', async () => {
+      // Create a specpower-driven style change with all artifacts
       await createTestChange('apply-schema-test', ['proposal', 'design', 'specs', 'tasks']);
 
       const result = await runCLI(
-        ['instructions', 'apply', '--change', 'apply-schema-test', '--schema', 'spec-driven'],
+        ['instructions', 'apply', '--change', 'apply-schema-test', '--schema', 'specpower-driven'],
         { cwd: tempDir }
       );
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Schema: spec-driven');
+      expect(result.stdout).toContain('Schema: specpower-driven');
     });
 
-    it('spec-driven schema uses apply block configuration', async () => {
-      // Verify that spec-driven schema uses its apply block (requires: [tasks])
+    it('specpower-driven schema uses apply block configuration', async () => {
+      // Verify that specpower-driven schema uses its apply block (requires: [tasks])
       await createTestChange('apply-config-test', ['proposal', 'design', 'specs', 'tasks']);
 
       const result = await runCLI(
@@ -541,8 +541,8 @@ apply:
       expect(result.exitCode).toBe(0);
 
       const json = JSON.parse(result.stdout);
-      // spec-driven schema has apply block with requires: [tasks], so should be ready
-      expect(json.schemaName).toBe('spec-driven');
+      // specpower-driven schema has apply block with requires: [tasks], so should be ready
+      expect(json.schemaName).toBe('specpower-driven');
       expect(json.state).toBe('ready');
     });
 
@@ -746,34 +746,34 @@ artifacts:
   describe('project config integration', () => {
     describe('new change uses config schema', () => {
       it('creates change with schema from project config', async () => {
-        // Create project config with spec-driven schema
+        // Create project config with specpower-driven schema
         // Note: changesDir is already at tempDir/openspec/changes (created in beforeEach)
         await fs.writeFile(
           path.join(tempDir, 'openspec', 'config.yaml'),
-          'schema: spec-driven\n'
+          'schema: specpower-driven\n'
         );
 
         // Create a new change without specifying schema
         const result = await runCLI(['new', 'change', 'test-change'], { cwd: tempDir, timeoutMs: 30000 });
         expect(result.exitCode).toBe(0);
 
-        // Verify the change was created with spec-driven schema
+        // Verify the change was created with specpower-driven schema
         const metadataPath = path.join(changesDir, 'test-change', '.openspec.yaml');
         const metadata = await fs.readFile(metadataPath, 'utf-8');
-        expect(metadata).toContain('schema: spec-driven');
+        expect(metadata).toContain('schema: specpower-driven');
       }, 60000);
 
       it('CLI schema overrides config schema', async () => {
-        // Create project config with spec-driven schema
+        // Create project config with specpower-driven schema
         // Note: openspec directory already exists (from changesDir creation in beforeEach)
         await fs.writeFile(
           path.join(tempDir, 'openspec', 'config.yaml'),
-          'schema: spec-driven\n'
+          'schema: specpower-driven\n'
         );
 
         // Create change with explicit schema
         const result = await runCLI(
-          ['new', 'change', 'override-test', '--schema', 'spec-driven'],
+          ['new', 'change', 'override-test', '--schema', 'specpower-driven'],
           { cwd: tempDir, timeoutMs: 30000 }
         );
         expect(result.exitCode).toBe(0);
@@ -781,7 +781,7 @@ artifacts:
         // Verify the change uses the CLI-specified schema
         const metadataPath = path.join(changesDir, 'override-test', '.openspec.yaml');
         const metadata = await fs.readFile(metadataPath, 'utf-8');
-        expect(metadata).toContain('schema: spec-driven');
+        expect(metadata).toContain('schema: specpower-driven');
       }, 60000);
     });
 
@@ -791,7 +791,7 @@ artifacts:
         // Note: openspec directory already exists (from changesDir creation in beforeEach)
         await fs.writeFile(
           path.join(tempDir, 'openspec', 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: |
   Tech stack: TypeScript, React
   API style: RESTful
@@ -826,7 +826,7 @@ rules:
         // Note: openspec directory already exists (from changesDir creation in beforeEach)
         await fs.writeFile(
           path.join(tempDir, 'openspec', 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 rules:
   proposal:
     - Include rollback plan
@@ -860,7 +860,7 @@ rules:
         );
         expect(statusResult.exitCode).toBe(0);
         expect(statusResult.stdout).toContain('no-config-change');
-        expect(statusResult.stdout).toContain('spec-driven'); // Default schema
+        expect(statusResult.stdout).toContain('specpower-driven'); // Default schema
 
         // Instructions command should work
         const instrResult = await runCLI(
@@ -876,7 +876,7 @@ rules:
         const changeDir = await createTestChange('metadata-only-change');
         await fs.writeFile(
           path.join(changeDir, '.openspec.yaml'),
-          'schema: spec-driven\ncreated: "2025-01-05"\n'
+          'schema: specpower-driven\ncreated: "2025-01-05"\n'
         );
 
         // Status should use schema from metadata
@@ -885,7 +885,7 @@ rules:
           { cwd: tempDir, timeoutMs: 30000 }
         );
         expect(result.exitCode).toBe(0);
-        expect(result.stdout).toContain('spec-driven');
+        expect(result.stdout).toContain('specpower-driven');
       }, 60000);
     });
 
@@ -895,7 +895,7 @@ rules:
         // Note: openspec directory already exists (from changesDir creation in beforeEach)
         await fs.writeFile(
           path.join(tempDir, 'openspec', 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: Initial context
 `
         );
@@ -914,7 +914,7 @@ context: Initial context
         // Update config
         await fs.writeFile(
           path.join(tempDir, 'openspec', 'config.yaml'),
-          `schema: spec-driven
+          `schema: specpower-driven
 context: Updated context
 `
         );

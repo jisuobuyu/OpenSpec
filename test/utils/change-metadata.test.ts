@@ -17,12 +17,12 @@ describe('ChangeMetadataSchema', () => {
   describe('valid metadata', () => {
     it('should accept valid schema with created date', () => {
       const result = ChangeMetadataSchema.safeParse({
-        schema: 'spec-driven',
+        schema: 'specpower-driven',
         created: '2025-01-05',
       });
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.schema).toBe('spec-driven');
+        expect(result.data.schema).toBe('specpower-driven');
         expect(result.data.created).toBe('2025-01-05');
       }
     });
@@ -56,7 +56,7 @@ describe('ChangeMetadataSchema', () => {
 
     it('should reject invalid date format', () => {
       const result = ChangeMetadataSchema.safeParse({
-        schema: 'spec-driven',
+        schema: 'specpower-driven',
         created: '01/05/2025', // Wrong format
       });
       expect(result.success).toBe(false);
@@ -64,7 +64,7 @@ describe('ChangeMetadataSchema', () => {
 
     it('should reject non-ISO date format', () => {
       const result = ChangeMetadataSchema.safeParse({
-        schema: 'spec-driven',
+        schema: 'specpower-driven',
         created: '2025-1-5', // Missing leading zeros
       });
       expect(result.success).toBe(false);
@@ -88,14 +88,14 @@ describe('writeChangeMetadata', () => {
 
   it('should write valid YAML metadata file', async () => {
     writeChangeMetadata(changeDir, {
-      schema: 'spec-driven',
+      schema: 'specpower-driven',
       created: '2025-01-05',
     });
 
     const metaPath = path.join(changeDir, '.openspec.yaml');
     const content = await fs.readFile(metaPath, 'utf-8');
 
-    expect(content).toContain('schema: spec-driven');
+    expect(content).toContain('schema: specpower-driven');
     expect(content).toContain('created: 2025-01-05');
   });
 
@@ -132,13 +132,13 @@ describe('readChangeMetadata', () => {
     const metaPath = path.join(changeDir, '.openspec.yaml');
     await fs.writeFile(
       metaPath,
-      'schema: spec-driven\ncreated: "2025-01-05"\n',
+      'schema: specpower-driven\ncreated: "2025-01-05"\n',
       'utf-8'
     );
 
     const result = readChangeMetadata(changeDir);
     expect(result).toEqual({
-      schema: 'spec-driven',
+      schema: 'specpower-driven',
       created: '2025-01-05',
     });
   });
@@ -182,7 +182,7 @@ describe('resolveSchemaForChange', () => {
   it('should return explicit schema when provided', async () => {
     // Even with metadata file, explicit schema wins
     const metaPath = path.join(changeDir, '.openspec.yaml');
-    await fs.writeFile(metaPath, 'schema: spec-driven\n', 'utf-8');
+    await fs.writeFile(metaPath, 'schema: specpower-driven\n', 'utf-8');
 
     const result = resolveSchemaForChange(changeDir, 'custom-schema');
     expect(result).toBe('custom-schema');
@@ -190,10 +190,10 @@ describe('resolveSchemaForChange', () => {
 
   it('should return schema from metadata when no explicit schema', async () => {
     const metaPath = path.join(changeDir, '.openspec.yaml');
-    await fs.writeFile(metaPath, 'schema: spec-driven\n', 'utf-8');
+    await fs.writeFile(metaPath, 'schema: specpower-driven\n', 'utf-8');
 
     const result = resolveSchemaForChange(changeDir);
-    expect(result).toBe('spec-driven');
+    expect(result).toBe('specpower-driven');
   });
 
   it('should return default when no metadata and no explicit schema', () => {
@@ -237,10 +237,10 @@ describe('resolveSchemaForChange', () => {
 
     // Create change metadata with different schema
     const metaPath = path.join(changeDir, '.openspec.yaml');
-    await fs.writeFile(metaPath, 'schema: spec-driven\n', 'utf-8');
+    await fs.writeFile(metaPath, 'schema: specpower-driven\n', 'utf-8');
 
     const result = resolveSchemaForChange(changeDir);
-    expect(result).toBe('spec-driven'); // Change metadata wins
+    expect(result).toBe('specpower-driven'); // Change metadata wins
   });
 
   it('should prefer explicit schema over all config sources', async () => {
@@ -255,7 +255,7 @@ describe('resolveSchemaForChange', () => {
 
     // Create change metadata
     const metaPath = path.join(changeDir, '.openspec.yaml');
-    await fs.writeFile(metaPath, 'schema: spec-driven\n', 'utf-8');
+    await fs.writeFile(metaPath, 'schema: specpower-driven\n', 'utf-8');
 
     // Explicit schema should win
     const result = resolveSchemaForChange(changeDir, 'custom-schema');
@@ -273,11 +273,11 @@ describe('resolveSchemaForChange', () => {
     );
 
     const metaPath = path.join(changeDir, '.openspec.yaml');
-    await fs.writeFile(metaPath, 'schema: spec-driven\n', 'utf-8');
+    await fs.writeFile(metaPath, 'schema: specpower-driven\n', 'utf-8');
 
     // Test each level
     expect(resolveSchemaForChange(changeDir, 'custom-schema')).toBe('custom-schema'); // CLI wins
-    expect(resolveSchemaForChange(changeDir)).toBe('spec-driven'); // Metadata wins when no CLI
+    expect(resolveSchemaForChange(changeDir)).toBe('specpower-driven'); // Metadata wins when no CLI
 
     // Remove metadata, config should win
     await fs.unlink(metaPath);
@@ -323,7 +323,7 @@ describe('resolveSchemaForChange', () => {
 
     it('should accept metadata without depends_on (backward compatible)', () => {
       const result = ChangeMetadataSchema.safeParse({
-        schema: 'spec-driven',
+        schema: 'specpower-driven',
         created: '2025-01-05',
       });
       expect(result.success).toBe(true);
@@ -399,7 +399,7 @@ describe('validateDependsOn', () => {
 
 describe('validateSchemaName', () => {
   it('should accept valid schema name', () => {
-    expect(() => validateSchemaName('spec-driven')).not.toThrow();
+    expect(() => validateSchemaName('specpower-driven')).not.toThrow();
   });
 
   it('should throw for unknown schema', () => {

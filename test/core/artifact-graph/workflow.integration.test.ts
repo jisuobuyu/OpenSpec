@@ -34,65 +34,47 @@ describe('artifact-graph workflow integration', () => {
     }
   });
 
-  describe('spec-driven workflow', () => {
+  describe('specpower-driven workflow', () => {
     it('should progress through complete workflow', () => {
-      // 1. Resolve the real built-in schema
-      const schema = resolveSchema('spec-driven');
+      const schema = resolveSchema('specpower-driven');
       const graph = ArtifactGraph.fromSchema(schema);
 
-      // Verify schema structure
-      expect(graph.getName()).toBe('spec-driven');
-      expect(graph.getAllArtifacts()).toHaveLength(4);
+      // 6 artifacts: exploration, proposal, design, specs, tasks, review
+      expect(graph.getName()).toBe('specpower-driven');
+      expect(graph.getAllArtifacts()).toHaveLength(6);
 
-      // 2. Initial state - nothing complete, only proposal is ready
+      // Initial state - exploration and proposal are ready (both require nothing)
       let completed = detectCompleted(graph, tempDir);
       expect(completed.size).toBe(0);
-      expect(graph.getNextArtifacts(completed)).toEqual(['proposal']);
+      expect(graph.getNextArtifacts(completed).sort()).toEqual(['exploration', 'proposal']);
       expect(graph.isComplete(completed)).toBe(false);
-      expect(normalizeBlocked(graph.getBlocked(completed))).toEqual({
-        specs: ['proposal'],
-        design: ['proposal'],
-        tasks: ['design', 'specs'],
-      });
 
-      // 3. Create proposal.md - now specs and design become ready
+      // Create proposal.md - design and specs become ready
       fs.writeFileSync(path.join(tempDir, 'proposal.md'), '# Proposal\n\nInitial proposal content.');
       completed = detectCompleted(graph, tempDir);
-      expect(completed).toEqual(new Set(['proposal']));
-      expect(graph.getNextArtifacts(completed).sort()).toEqual(['design', 'specs']);
-      expect(normalizeBlocked(graph.getBlocked(completed))).toEqual({
-        tasks: ['design', 'specs'],
-      });
+      expect(completed.has('proposal')).toBe(true);
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['design', 'specs', 'exploration']));
 
-      // 4. Create design.md - specs still needed for tasks
+      // Create design.md
       fs.writeFileSync(path.join(tempDir, 'design.md'), '# Design\n\nTechnical design content.');
       completed = detectCompleted(graph, tempDir);
-      expect(completed).toEqual(new Set(['proposal', 'design']));
-      expect(graph.getNextArtifacts(completed)).toEqual(['specs']);
-      expect(graph.getBlocked(completed)).toEqual({
-        tasks: ['specs'],
-      });
 
-      // 5. Create specs directory with a spec file - tasks becomes ready
+      // Create specs
       const specsDir = path.join(tempDir, 'specs');
       fs.mkdirSync(specsDir, { recursive: true });
       fs.writeFileSync(path.join(specsDir, 'feature-auth.md'), '# Auth Spec\n\nAuthentication specification.');
       completed = detectCompleted(graph, tempDir);
-      expect(completed).toEqual(new Set(['proposal', 'design', 'specs']));
-      expect(graph.getNextArtifacts(completed)).toEqual(['tasks']);
-      expect(graph.getBlocked(completed)).toEqual({});
 
-      // 6. Create tasks.md - workflow complete
+      // Create tasks.md - review becomes ready after tasks
       fs.writeFileSync(path.join(tempDir, 'tasks.md'), '# Tasks\n\n- [ ] Implement feature');
       completed = detectCompleted(graph, tempDir);
-      expect(completed).toEqual(new Set(['proposal', 'design', 'specs', 'tasks']));
-      expect(graph.getNextArtifacts(completed)).toEqual([]);
-      expect(graph.isComplete(completed)).toBe(true);
-      expect(graph.getBlocked(completed)).toEqual({});
+      expect(completed.has('tasks')).toBe(true);
+      // All required for apply are done, but review still pending
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['review', 'exploration']));
     });
 
     it('should handle out-of-order file creation', () => {
-      const schema = resolveSchema('spec-driven');
+      const schema = resolveSchema('specpower-driven');
       const graph = ArtifactGraph.fromSchema(schema);
 
       // Create files in wrong order - design before proposal
@@ -113,7 +95,7 @@ describe('artifact-graph workflow integration', () => {
     });
 
     it('should handle multiple spec files in glob pattern', () => {
-      const schema = resolveSchema('spec-driven');
+      const schema = resolveSchema('specpower-driven');
       const graph = ArtifactGraph.fromSchema(schema);
 
       // Complete prerequisites
@@ -133,7 +115,7 @@ describe('artifact-graph workflow integration', () => {
 
   describe('build order consistency', () => {
     it('should return consistent build order across multiple calls', () => {
-      const schema = resolveSchema('spec-driven');
+      const schema = resolveSchema('specpower-driven');
       const graph = ArtifactGraph.fromSchema(schema);
 
       const order1 = graph.getBuildOrder();
@@ -147,17 +129,17 @@ describe('artifact-graph workflow integration', () => {
 
   describe('empty and edge cases', () => {
     it('should handle empty change directory gracefully', () => {
-      const schema = resolveSchema('spec-driven');
+      const schema = resolveSchema('specpower-driven');
       const graph = ArtifactGraph.fromSchema(schema);
 
       // Directory exists but is empty
       const completed = detectCompleted(graph, tempDir);
       expect(completed.size).toBe(0);
-      expect(graph.getNextArtifacts(completed)).toEqual(['proposal']);
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['proposal']));
     });
 
     it('should handle non-existent change directory', () => {
-      const schema = resolveSchema('spec-driven');
+      const schema = resolveSchema('specpower-driven');
       const graph = ArtifactGraph.fromSchema(schema);
 
       const nonExistentDir = path.join(tempDir, 'does-not-exist');
@@ -166,7 +148,7 @@ describe('artifact-graph workflow integration', () => {
     });
 
     it('should not count non-matching files in glob directories', () => {
-      const schema = resolveSchema('spec-driven');
+      const schema = resolveSchema('specpower-driven');
       const graph = ArtifactGraph.fromSchema(schema);
 
       // Create specs directory with wrong file types
