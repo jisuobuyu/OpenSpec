@@ -494,7 +494,7 @@ apply:
       });
       expect(result.exitCode).toBe(0);
       // Should show the instruction from specpower-driven schema apply block
-      expect(result.stdout).toContain('work through pending tasks');
+      expect(result.stdout).toContain('Process tasks one at a time');
     });
 
     it('shows all_done state when all tasks are complete', async () => {

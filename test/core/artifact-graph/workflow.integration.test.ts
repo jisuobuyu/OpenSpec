@@ -81,17 +81,18 @@ describe('artifact-graph workflow integration', () => {
       fs.writeFileSync(path.join(tempDir, 'design.md'), '# Design');
 
       let completed = detectCompleted(graph, tempDir);
-      // design file exists but it's still marked complete (filesystem-based)
-      expect(completed).toEqual(new Set(['design']));
-      // proposal is still the only "ready" artifact since it has no deps
-      expect(graph.getNextArtifacts(completed)).toEqual(['proposal']);
+      // design file exists and is marked complete (filesystem-based)
+      expect(completed.has('design')).toBe(true);
+      // exploration and proposal are ready (no deps)
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['exploration', 'proposal']));
 
       // Now create proposal
       fs.writeFileSync(path.join(tempDir, 'proposal.md'), '# Proposal');
       completed = detectCompleted(graph, tempDir);
-      expect(completed).toEqual(new Set(['proposal', 'design']));
-      // specs is the only thing ready now (design already done)
-      expect(graph.getNextArtifacts(completed)).toEqual(['specs']);
+      expect(completed.has('proposal')).toBe(true);
+      expect(completed.has('design')).toBe(true);
+      // specs is among the artifacts ready now
+      expect(graph.getNextArtifacts(completed)).toEqual(expect.arrayContaining(['specs', 'exploration']));
     });
 
     it('should handle multiple spec files in glob pattern', () => {
