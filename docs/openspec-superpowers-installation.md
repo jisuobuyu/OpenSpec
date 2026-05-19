@@ -293,7 +293,7 @@ openspec init --profile strict --tools claude
 ```yaml
 schema: specpower-driven
 discipline:
-  level: enhanced       # core | enhanced | strict
+  level: strict        # core | enhanced | strict
   tdd:
     default: adaptive   # full | lite | skip | adaptive
   subagent:

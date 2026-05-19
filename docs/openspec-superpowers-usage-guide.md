@@ -64,7 +64,7 @@ openspec init --profile enhanced --tools claude
 ```yaml
 schema: specpower-driven
 discipline:
-  level: enhanced       # core | enhanced | strict
+  level: strict        # core | enhanced | strict
   tdd:
     default: adaptive   # full | lite | skip | adaptive
   subagent:
@@ -933,7 +933,7 @@ rules:
     - "数据库变更必须有 migration 脚本"
 
 discipline:
-  level: enhanced
+  level: strict
   tdd:
     default: adaptive
   subagent:

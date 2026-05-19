@@ -39,24 +39,14 @@ export const ProjectConfigSchema = z.object({
     .optional()
     .describe('Per-artifact rules, keyed by artifact ID'),
 
-  // Optional: discipline configuration (superpowers schema)
+  // Optional: discipline configuration (specpower-driven schema)
   discipline: z
     .object({
       level: z
         .enum(['core', 'enhanced', 'strict'])
         .optional()
-        .default('core')
+        .default('strict')
         .describe('Discipline level for engineering rigor'),
-      tdd: z
-        .object({
-          default: z
-            .enum(['full', 'lite', 'skip', 'adaptive'])
-            .optional()
-            .default('adaptive')
-            .describe('Default TDD level for tasks'),
-        })
-        .optional()
-        .default({ default: 'adaptive' }),
       subagent: z
         .object({
           mode: z
@@ -90,8 +80,7 @@ export const ProjectConfigSchema = z.object({
     })
     .optional()
     .default({
-      level: 'core',
-      tdd: { default: 'adaptive' },
+      level: 'strict',
       subagent: { mode: 'adaptive' },
       worktree: { enabled: true },
       exploration: { search_history: false },

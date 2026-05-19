@@ -31,12 +31,10 @@ interface TaskCompliance {
 export interface ComplianceReport {
   changeName: string;
   disciplineLevel: string;
-  tddDefault: string;
   tasks: TaskCompliance[];
   summary: {
     total: number;
     requireSkill: number;
-    skipSkill: number;
     warn: number;
   };
 }
@@ -49,57 +47,23 @@ export function parseTddAnnotation(line: string): 'full' | 'lite' | 'skip' | 'no
 }
 
 /**
- * Pure function: analyze task compliance by mapping TDD annotations to expected skills
- * and severities based on the discipline configuration.
+ * Pure function: analyze task compliance. TDD is mandatory — every task
+ * must have [TDD: Full] annotation and call test-driven-development skill.
  */
 export function analyzeTaskCompliance(
   tasks: Array<{ id: string; description: string }>,
   rawLines: string[],
-  disciplineLevel: string,
-  tddDefault: string,
 ): TaskCompliance[] {
   return tasks.map((task, i) => {
     const rawLine = rawLines[i] || '';
     const tddAnnotation = parseTddAnnotation(rawLine);
 
-    let expectedSkill: string | null = null;
-    let severity: 'pass' | 'warn' | 'skip' = 'pass';
-    let message = '';
-
-    if (disciplineLevel === 'core') {
-      if (tddAnnotation === 'full' || tddAnnotation === 'lite') {
-        expectedSkill = 'test-driven-development';
-        severity = 'skip';
-        message = `[TDD: ${tddAnnotation}] annotation found but discipline.level=core — skill NOT required`;
-      } else {
-        message = 'core mode — no skill required';
-      }
-    } else {
-      switch (tddAnnotation) {
-        case 'full':
-          expectedSkill = 'test-driven-development';
-          severity = 'warn';
-          message = `[TDD: Full] → MUST call Skill("test-driven-development"). Verify it was invoked.`;
-          break;
-        case 'lite':
-          expectedSkill = 'test-driven-development';
-          severity = 'warn';
-          message = `[TDD: Lite] → MUST call Skill("test-driven-development") with skip-refactor hint.`;
-          break;
-        case 'skip':
-          message = `[TDD: Skip] → skill NOT required for this task.`;
-          break;
-        case 'none':
-          if (tddDefault === 'full' || tddDefault === 'lite') {
-            expectedSkill = 'test-driven-development';
-            severity = 'warn';
-            message = `No [TDD] annotation → default=${tddDefault} → SHOULD call Skill("test-driven-development").`;
-          } else {
-            message = `No [TDD] annotation → default=${tddDefault} → skill optional.`;
-          }
-          break;
-      }
-    }
+    const isFull = tddAnnotation === 'full';
+    const expectedSkill = 'test-driven-development';
+    const severity: 'pass' | 'warn' | 'skip' = isFull ? 'pass' : 'warn';
+    const message = isFull
+      ? `[TDD: Full] → Skill("test-driven-development") expected.`
+      : `MISSING [TDD: Full] annotation → TDD is mandatory for all tasks. Add [TDD: Full] to this task.`;
 
     return {
       taskId: task.id,
@@ -131,10 +95,9 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
   const spinner = options.json ? undefined : ora('Running compliance check...').start();
 
   try {
-    // Read discipline config
+    // Read discipline config (for display only)
     const config = readProjectConfig(projectRoot);
-    const disciplineLevel = config?.discipline?.level || 'core';
-    const tddDefault = config?.discipline?.tdd?.default || 'adaptive';
+    const disciplineLevel = config?.discipline?.level || 'enhanced';
 
     // Read tasks.md
     let tasksContent = '';
@@ -157,12 +120,11 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
     const taskLineRegex = /^- \[([ x])\] (\d+\.\d+)\s*(.*)$/;
     const rawLines = tasksContent.split('\n').filter((l) => taskLineRegex.test(l));
 
-    const taskCompliances = analyzeTaskCompliance(tasks, rawLines, disciplineLevel, tddDefault);
+    const taskCompliances = analyzeTaskCompliance(tasks, rawLines);
 
     const summary = {
       total: taskCompliances.length,
-      requireSkill: taskCompliances.filter((t) => t.expectedSkill !== null).length,
-      skipSkill: taskCompliances.filter((t) => t.expectedSkill === null).length,
+      requireSkill: taskCompliances.length,
       warn: taskCompliances.filter((t) => t.severity === 'warn').length,
     };
 
@@ -172,7 +134,6 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
       console.log(JSON.stringify({
         changeName: options.change,
         disciplineLevel,
-        tddDefault,
         tasks: taskCompliances,
         summary,
       } as ComplianceReport, null, 2));
@@ -181,13 +142,12 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
 
     // Text output
     console.log(chalk.bold(`\nCompliance Check: ${options.change}`));
-    console.log(chalk.gray(`Discipline: ${disciplineLevel} | TDD default: ${tddDefault}\n`));
+    console.log(chalk.gray(`Discipline: ${disciplineLevel} | TDD: mandatory\n`));
 
     for (const tc of taskCompliances) {
       const icon = tc.severity === 'warn' ? chalk.yellow('⚠')
-        : tc.severity === 'skip' ? chalk.gray('→')
         : chalk.green('✓');
-      const skill = tc.expectedSkill ? chalk.yellow(` [→ ${tc.expectedSkill}]`) : '';
+      const skill = chalk.yellow(` [→ ${tc.expectedSkill}]`);
 
       console.log(`  ${icon} ${tc.taskId.padEnd(5)} ${tc.message}${skill}`);
     }

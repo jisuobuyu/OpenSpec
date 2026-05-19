@@ -32,9 +32,9 @@ export const SchemaYamlSchema = z.object({
   artifacts: z.array(ArtifactSchema).min(1, { error: 'At least one artifact required' }),
   // Optional apply phase configuration (for schema-aware apply instructions)
   apply: ApplyPhaseSchema.optional(),
-  // Optional verify phase configuration (superpowers schema)
+  // Optional verify phase configuration (specpower-driven schema)
   verify: PhaseSchema.optional(),
-  // Optional archive phase configuration (superpowers schema)
+  // Optional archive phase configuration (specpower-driven schema)
   archive: PhaseSchema.optional(),
 });
 
