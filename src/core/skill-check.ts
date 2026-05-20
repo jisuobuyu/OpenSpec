@@ -70,8 +70,18 @@ const ALL_SUPERPOWERS_SKILLS = [
 
 // ── Core check logic ───────────────────────────────────────────────
 
-function getSkillPath(skillName: string, toolSkillsDir: string): string {
-  return path.join(homedir(), toolSkillsDir, 'skills', skillName, 'SKILL.md');
+function getSkillPaths(skillName: string, toolSkillsDir: string, projectRoot?: string): string[] {
+  const paths: string[] = [];
+
+  // 1. Project-level: .claude/skills/<skillName>/SKILL.md (copied by init)
+  if (projectRoot) {
+    paths.push(path.join(projectRoot, toolSkillsDir, 'skills', skillName, 'SKILL.md'));
+  }
+
+  // 2. User-level: ~/.claude/skills/<skillName>/SKILL.md (manually installed Superpowers)
+  paths.push(path.join(homedir(), toolSkillsDir, 'skills', skillName, 'SKILL.md'));
+
+  return paths;
 }
 
 /**
@@ -82,6 +92,8 @@ export function checkSuperpowersSkills(
   options?: {
     /** Only check these specific tools (values from AI_TOOLS) */
     tools?: string[];
+    /** Project root to check project-level .claude/skills/ */
+    projectRoot?: string;
   },
 ): SkillCheckReport {
   const level = disciplineLevel || 'strict';
@@ -114,12 +126,14 @@ export function checkSuperpowersSkills(
     let foundAt: string | undefined;
 
     for (const tool of tools) {
-      const skillPath = getSkillPath(skillName, tool.skillsDir!);
-      checkedPaths.push(skillPath);
-      if (existsSync(skillPath)) {
-        foundAt = skillPath;
-        break; // Found in at least one tool — good enough
+      const paths = getSkillPaths(skillName, tool.skillsDir!, options?.projectRoot);
+      for (const skillPath of paths) {
+        checkedPaths.push(skillPath);
+        if (!foundAt && existsSync(skillPath)) {
+          foundAt = skillPath;
+        }
       }
+      if (foundAt) break; // Found — good enough
     }
 
     skills.push({

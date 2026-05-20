@@ -248,6 +248,8 @@ Done!
 - Let implementer self-review replace actual review (both are needed)
 - **Start code quality review before spec compliance is ✅** (wrong order)
 - Move to next task while either review has open issues
+- Let implementer apply random fixes without root cause investigation
+- Skip systematic debugging when review finds issues ("just fix it quickly")
 
 **If subagent asks questions:**
 - Answer clearly and completely
@@ -255,13 +257,16 @@ Done!
 - Don't rush them into implementation
 
 **If reviewer finds issues:**
-- Implementer (same subagent) fixes them
+- Implementer applies systematic debugging: find root cause before fixing
+- Implementer (same subagent) fixes them — one fix at a time
 - Reviewer reviews again
 - Repeat until approved
 - Don't skip the re-review
+- If 3+ fix attempts for the same review finding → escalate (architectural problem)
 
 **If subagent fails task:**
-- Dispatch fix subagent with specific instructions
+- Subagent should apply systematic debugging (implementer-prompt.md "When Something Fails") before escalating
+- If blocked after debugging: dispatch fix subagent with specific instructions
 - Don't try to fix manually (context pollution)
 
 ## Integration
@@ -271,9 +276,11 @@ Done!
 - **superpowers:writing-plans** - Creates the plan this skill executes
 - **superpowers:requesting-code-review** - Code review template for reviewer subagents
 - **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:systematic-debugging** - Applied by implementer subagents when encountering failures (see implementer-prompt.md "When Something Fails")
 
 **Subagents should use:**
 - **superpowers:test-driven-development** - Subagents follow TDD for each task
+- **superpowers:systematic-debugging** - Root cause investigation before any fix attempt
 
 **Alternative workflow:**
 - **superpowers:executing-plans** - Use for parallel session instead of same-session execution

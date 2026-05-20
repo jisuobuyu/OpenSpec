@@ -176,7 +176,7 @@ After each sub-step completes, mark its checkbox: \`- [ ]\` → \`- [x]\`.
 
 **B2. Execution wrapper (执行增强)**
 
-Call \`Skill({skill: "subagent-driven-development"})\` to wrap the TDD cycle in an isolated subagent. The skill:
+Call \`Skill({skill: "subagent-driven-development"})\` — this skill wraps the TDD cycle in an isolated subagent. It:
 
 - Creates a git worktree for isolation
 - Dispatches an implementer subagent that FOLLOWS THE TDD SUB-STEPS above
@@ -187,11 +187,50 @@ Call \`Skill({skill: "subagent-driven-development"})\` to wrap the TDD cycle in 
 
 Announce: \`[Skill] subagent-driven-development → task 1.1 (model, N files)\`
 
-**If the subagent skill is unavailable:**
-- **strict**: Error — "[Skill check] subagent-driven-development ✗ — 请安装后重试"
-- **enhanced**: Degrade — "[Skill check] subagent-driven-development ✗ (降级为本地执行)". Still execute the full TDD cycle in B1.
+**If the subagent skill is available:**
+- Verify the skill exists — check both project-level (\`.claude/skills/subagent-driven-development/SKILL.md\`) and user-level (\`~/.claude/skills/subagent-driven-development/SKILL.md\`).
+- Dispatch via \`Skill({skill: "subagent-driven-development"})\` — handles TDD + review + debugging internally.
+- **After the skill returns**, verify the task result. Blocked or incomplete → pause, escalate to user.
 
-**After the skill returns**, verify the task result. Blocked or incomplete → pause, escalate to user.
+**If the subagent skill is unavailable (降级路径):**
+
+- **strict**: Error — "[Skill check] subagent-driven-development ✗ — 请安装 subagent 技能后重试". Halt. Do not proceed without subagent in strict mode. Run \`openspec init --tools claude\` to install bundled skills, or manually copy to \`.claude/skills/subagent-driven-development/\`.
+
+- **enhanced**: Degrade — "[Skill check] subagent-driven-development ✗ (降级为本地执行)". Execute the full TDD cycle locally AND apply the following discipline manually:
+
+  **B2-fallback. Local execution with subagent-equivalent discipline**
+
+  When executing without subagent, you take on the subagent's responsibilities:
+
+  1. **B1 TDD cycle** — execute all 6 sub-steps in full. No shortcuts.
+
+  2. **Spec compliance self-check** — after GREEN passes, re-read the Spec reference
+     for this task. Verify:
+     - Does the implementation cover every scenario in the spec requirement?
+     - Is anything built that the spec doesn't ask for (over-building)?
+     - Fix gaps before proceeding to REFACTOR.
+
+  3. **Systematic debugging on failure** — if any TDD sub-step fails
+     (RED passes when it should fail, GREEN doesn't pass, Verify GREEN shows
+     regressions), apply the same debugging discipline the subagent would use:
+     - **Phase 1 — Root cause**: Read error fully, reproduce consistently, trace
+       data flow backward to find source. See \`@systematic-debugging/root-cause-tracing.md\`.
+     - **Phase 2 — Pattern**: Find working similar code, compare differences.
+     - **Phase 3 — Hypothesis**: Single hypothesis, minimal test, one variable.
+     - **Phase 4 — Fix**: One fix at source. Verify. Add defense-in-depth
+       (see \`@systematic-debugging/defense-in-depth.md\`).
+     - **3-attempt rule**: 1-2 failures → re-analyze. 3+ failures → pause,
+       report as BLOCKED (possible architectural problem).
+     - **Flaky tests**: Use condition-based waiting (see \`@systematic-debugging/condition-based-waiting.md\`),
+       not arbitrary delays.
+
+  4. **Code quality self-review** — before marking task complete:
+     - Are names clear and accurate?
+     - Is code clean and maintainable?
+     - Did I avoid overbuilding (YAGNI)?
+     - Are tests testing real behavior, not mocks?
+
+  Announce: "[Local] TDD + spec check + debugging discipline (subagent unavailable)"
 
 ---
 
@@ -311,7 +350,7 @@ What would you like to do?
 - Snapshot discipline config at start and use it consistently for the entire change
 - Follow TDD sub-steps in strict order: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY
 - The Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
-- Subagent: mandatory per task via \`Skill({skill: "subagent-driven-development"})\` — model by complexity, skill handles review internally
+- Subagent: mandatory per task via \`Skill({skill: "subagent-driven-development"})\` — model by complexity. Check \`.claude/skills/\` (project) and \`~/.claude/skills/\` (user). Unavailable → enhanced degrades, strict halts.
 - Post-checkpoint: verify sub-steps → checkbox → commit → checkpoint → next task
 - Pause on errors, blockers, or unclear requirements — do not guess
 - Keep code changes minimal and scoped to each task`,
@@ -362,8 +401,9 @@ Code before test? Delete it. Start over.
 ### Task Execution
 - Follow embedded TDD sub-steps in strict order:
   - RED: Write one failing test → Verify RED: Watch it fail correctly → GREEN: Minimal code → Verify GREEN: Watch it pass → REFACTOR: Clean up → SIMPLIFY: Review files
-- Subagent: \`Skill({skill: "subagent-driven-development"})\` handles implementer + review internally
-- Skill check: enhanced → degrade gracefully if missing; strict → error
+- Subagent: \`Skill({skill: "subagent-driven-development"})\` — isolate + review. Skill location: \`.claude/skills/\` or \`~/.claude/skills/\`
+- Subagent unavailable (enhanced): local fallback — TDD + spec check + debugging discipline + quality review
+- Subagent unavailable (strict): error, halt
 
 ### Post-checkpoint
 - **C0 Sub-step compliance**: verify all 6 TDD sub-steps are \`[x]\`; if not → Retry/Explain/Override

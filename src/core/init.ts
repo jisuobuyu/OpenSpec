@@ -157,7 +157,7 @@ export class InitCommand {
     const configStatus = await this.createConfig(openspecPath, extendMode);
 
     // Check Superpowers skill prerequisites for enhanced/strict profiles
-    await this.checkSkillPrerequisites(projectPath);
+    await this.checkSkillPrerequisites(projectPath, validatedTools);
 
     // Display success message
     this.displaySuccessMessage(projectPath, validatedTools, results, configStatus);
@@ -554,6 +554,12 @@ export class InitCommand {
             // Write the skill file
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }
+
+          // Copy bundled Superpowers skills (subagent-driven-development,
+          // systematic-debugging, test-driven-development, using-git-worktrees)
+          // from the OpenSpec installation's skills/ to the project's skills dir.
+          // These are needed by the apply workflow at runtime.
+          await this.copyBundledSkills(skillsDir);
         }
         if (!shouldGenerateSkills) {
           const skillsDir = path.join(projectPath, tool.skillsDir, 'skills');
@@ -635,7 +641,10 @@ export class InitCommand {
   // SKILL PREREQUISITES
   // ═══════════════════════════════════════════════════════════
 
-  private async checkSkillPrerequisites(projectPath: string): Promise<void> {
+  private async checkSkillPrerequisites(
+    projectPath: string,
+    tools: Array<{ value: string; name: string; skillsDir: string; wasConfigured: boolean }>,
+  ): Promise<void> {
     const profile = this.resolveProfileOverride();
     if (profile !== 'enhanced' && profile !== 'strict') return;
 
@@ -654,7 +663,8 @@ export class InitCommand {
       }
     } catch { /* use profile as fallback */ }
 
-    const report = checkSuperpowersSkills(disciplineLevel);
+    const selectedTools = tools.map((t) => t.value);
+    const report = checkSuperpowersSkills(disciplineLevel, { projectRoot: projectPath, tools: selectedTools });
     if (!report.allInstalled) {
       console.log();
       const isStrict = disciplineLevel === 'strict';
@@ -801,6 +811,52 @@ export class InitCommand {
       color: 'gray',
       spinner: PROGRESS_SPINNER,
     }).start();
+  }
+
+  /**
+   * Copy bundled Superpowers skills from the OpenSpec installation's skills/
+   * directory to the target project's .claude/skills/ (or equivalent).
+   *
+   * These skills are needed at runtime by the apply workflow:
+   * - subagent-driven-development: mandatory per-task execution wrapper
+   * - systematic-debugging: referenced by B2-fallback and implementer prompt
+   * - test-driven-development: reference for TDD cycle (embedded in tasks)
+   * - using-git-worktrees: worktree isolation for subagent
+   */
+  private async copyBundledSkills(targetSkillsDir: string): Promise<void> {
+    const bundledSkills = [
+      'subagent-driven-development',
+      'systematic-debugging',
+      'test-driven-development',
+      'using-git-worktrees',
+    ];
+
+    // Resolve the OpenSpec installation root (where skills/ lives alongside package.json)
+    const pkgRoot = path.resolve(require.resolve('../../package.json'), '..');
+    const sourceSkillsDir = path.join(pkgRoot, 'skills');
+
+    for (const skillName of bundledSkills) {
+      const sourceDir = path.join(sourceSkillsDir, skillName);
+      const targetDir = path.join(targetSkillsDir, skillName);
+
+      try {
+        // Skip if source doesn't exist (e.g., installed via npm without skills/)
+        if (!fs.existsSync(sourceDir)) {
+          continue;
+        }
+
+        // Skip if target already exists (don't overwrite user modifications)
+        if (fs.existsSync(targetDir)) {
+          continue;
+        }
+
+        // Copy the skill directory recursively
+        await fs.promises.cp(sourceDir, targetDir, { recursive: true });
+      } catch (error) {
+        // Non-fatal: skills can be installed manually; the checkSkillPrerequisites
+        // step will warn the user if critical skills are missing.
+      }
+    }
   }
 
   private async removeSkillDirs(skillsDir: string): Promise<number> {
