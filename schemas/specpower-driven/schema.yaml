@@ -66,6 +66,7 @@ artifacts:
     template: design.md
     instruction: |
       Create the design document that explains HOW to implement the change.
+      Follow writing-plans discipline: no placeholders, exact paths, concrete decisions.
 
       When to include design.md (create only if any apply):
       - Cross-cutting change (multiple services/modules) or new architectural pattern
@@ -74,17 +75,25 @@ artifacts:
       - Ambiguity that benefits from technical decisions before coding
 
       Plan granularity is adaptive based on change complexity:
-      - **Simple** (1-3 files, single concern): Compact format — key decisions only
-      - **Medium** (4-10 files, 2+ modules): Standard format with full sections
-      - **Complex** (10+ files, cross-domain, architectural): Full format with detailed alternatives
+      - **Simple** (1-3 files, single concern): Compact — key decisions + file map
+      - **Medium** (4-10 files, 2+ modules): Standard format with all sections
+      - **Complex** (10+ files, cross-domain): Full format with detailed alternatives
 
       Sections:
       - **Context**: Background, current state, constraints, stakeholders
       - **Goals / Non-Goals**: What this design achieves and explicitly excludes
-      - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered.
-      - **Risks / Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
-      - **Migration Plan**: Steps to deploy, rollback strategy (if applicable)
-      - **Open Questions**: Outstanding decisions or unknowns to resolve
+      - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered and rejected.
+      - **File Structure**: Map every file that will be created/modified/deleted. Exact paths. One clear responsibility per file. Files that change together should live together.
+      - **Risks / Trade-offs**: Known limitations with concrete mitigations. No vague "performance impact" without specifics.
+      - **Migration Plan**: Steps to deploy with exact commands. Rollback strategy.
+      - **Open Questions**: Who decides, by when, what unblocks. No "decide later" without a trigger.
+
+      **NO PLACEHOLDERS**: Never write "TBD", "TODO", "implement later", "add error handling", "add validation", or "handle edge cases" without concrete specifics. Every decision must be actionable. Every file path must be exact.
+
+      **Self-Review** before finalizing:
+      1. Spec coverage: Can each requirement trace to a design decision or file?
+      2. Placeholder scan: Search for red flags — any TBD/TODO/vague generalities? Fix them.
+      3. Type/API consistency: Do types, signatures, and paths match across sections?
 
       Focus on architecture and approach, not line-by-line implementation.
     requires:

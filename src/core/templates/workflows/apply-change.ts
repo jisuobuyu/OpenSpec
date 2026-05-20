@@ -2,9 +2,9 @@
  * Skill Template Workflow Modules
  *
  * Apply workflow — the orchestration core of the OpenSpec x Superpowers fusion.
- * TDD and simplify are embedded directly in task structure (not external skills),
- * so they cannot be skipped. Subagent-driven-development remains a Skill call
- * because it requires worktree isolation.
+ * TDD and simplify are embedded directly in task sub-steps.
+ * Subagent-driven-development remains a Skill call for worktree isolation,
+ * enhanced with model selection and two-stage review from the Superpowers skill.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 
@@ -14,7 +14,15 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
     description: 'Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.',
     instructions: `Implement tasks from an OpenSpec change.
 
-**You are the OpenSpec apply outer-loop controller.** Your job is to process tasks one at a time. Each task has TDD sub-steps embedded directly — follow them in order. Do NOT autonomously decide to proceed to the next task — return to this controller after each task completes.
+**You are the OpenSpec apply outer-loop controller.** Process tasks one at a time. Each task has 6 TDD sub-steps embedded directly — follow them in order. Do NOT autonomously proceed to the next task.
+
+**The Iron Law:**
+
+\`\`\`
+NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+\`\`\`
+
+If you wrote code before the test, delete it. Start over. No exceptions. Don't keep it as "reference." Don't "adapt" it. Delete means delete. Implement fresh from tests.
 
 **Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
@@ -33,7 +41,6 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
 
    Read \`openspec/config.yaml\` and extract the \`discipline\` section. Cache these values for the entire apply session — do NOT re-read config mid-session. This prevents hot-config drift.
 
-   Key settings and their effects:
    - \`discipline.level\`: \`core\` / \`enhanced\` / \`strict\` — controls behavior when skills are unavailable
    - \`discipline.subagent.mode\`: \`per-task\` — subagent-driven-development is mandatory for every task
 
@@ -92,64 +99,99 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    - Remaining tasks with their Spec references
    - Dynamic instruction from CLI
 
+---
+
 **The Outer Loop**
 
 Process tasks ONE AT A TIME. For each pending task, follow this three-phase structure:
 
 ---
 
+---
+
+## Task Execution Model — Two Layers
+
+- **Layer 1: TDD CYCLE (strong constraint, NON-NEGOTIABLE)**
+  Defined by tasks.md. Every task MUST follow this. Derived from test-driven-development skill.
+  RED -> Verify RED -> GREEN -> Verify GREEN -> REFACTOR -> SIMPLIFY
+  **This is WHAT must happen. No subagent can skip it.**
+
+- **Layer 2: SUBAGENT ISOLATION (enhancement, EXECUTION MODE)**
+  Wraps the TDD cycle in an isolated subagent. Adds worktree isolation + two-stage review.
+  **This is HOW it happens. If unavailable, TDD still executes in full — just without isolation.**
+
+**CRITICAL**: Layer 1 (TDD) is the contract. Layer 2 (subagent) is the wrapper. The subagent follows the TDD sub-steps internally. Even if the subagent skill is unavailable, every TDD sub-step still executes. Subagent enhances execution — it does not replace TDD.
+
+---
+
 ### Phase A: Pre-context
 
-**A1. TDD is embedded in the task**
+**A1. The TDD Contract (强约束)**
 
-Each task has RED → GREEN → REFACTOR → SIMPLIFY sub-steps built into the task line. TDD cannot be skipped because the sub-steps are part of the task itself — not an external skill call.
+Every task in \`tasks.md\` has 6 embedded TDD sub-steps. These are non-negotiable. They cannot be skipped, regardless of execution mode:
 
-**A2. Parse Spec reference annotation**
+\`\`\`
+- [ ] RED: Write one minimal failing test showing what should happen
+- [ ] Verify RED: Run test — confirm it fails for the expected reason (feature missing, not typo/error)
+- [ ] GREEN: Write the minimum code to make the test pass
+- [ ] Verify GREEN: Run test — confirm it passes and ALL other tests still pass
+- [ ] REFACTOR: Clean up code (remove duplication, improve names, extract helpers). Keep tests green.
+- [ ] SIMPLIFY: Review all changed files for clarity, consistency, and dead code
+\`\`\`
 
-Scan the task line for \`[Spec: REQ-xxx]\` annotations:
-- Single reference: Extract the requirement block (header + description + all scenarios) from the spec file, inject as pre-context before implementation
-- Multiple references: \`[Spec: REQ-001, REQ-003]\` → extract and inject all referenced requirements
-- No \`[Spec: ...]\` annotation → Fall back to full spec summary injection (brief overview of all requirements)
+**The Iron Law**: \`NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST\`. Code before test? Delete it. Start over.
 
-**A3. Subagent-driven development**
+**A2. Parse Spec reference**
 
-Every task MUST use \`Skill({skill: "subagent-driven-development"})\` — subagent isolation is mandatory for all tasks. This is the ONE external skill call because it requires worktree isolation which cannot be inlined.
+Scan the task line for \`[Spec: REQ-xxx]\` annotations. Extract and inject the referenced requirement block as pre-context. No annotation → inject full spec summary.
+
+**A3. Execution mode (执行方式)**
+
+The TDD cycle runs inside a subagent for worktree isolation + review:
+
+| Complexity | Subagent model | Signals |
+|-----------|----------------|---------|
+| Mechanical | Fast/cheap | 1-2 files, clear spec, isolated function |
+| Integration | Standard | Multi-file coordination, pattern matching |
+| Judgment | Most capable | Architecture, design, broad codebase understanding |
 
 ---
 
 ### Phase B: Task Execution
 
-**B1. Follow TDD sub-steps in order**
+**B1. THE TDD CYCLE (强制执行)**
 
-Work through each task's embedded sub-steps:
+Execute each task's 6 sub-steps in strict order. For each sub-step:
 
-\`\`\`
-- [ ] RED: Write a failing test that validates the expected behavior
-- [ ] GREEN: Write the minimum code to make the test pass
-- [ ] REFACTOR: Clean up the code while keeping all tests green
-- [ ] SIMPLIFY: Review changed files for clarity, consistency, and dead code
-\`\`\`
+- **RED**: Write one minimal test. It MUST fail (not error). If it passes → you're testing existing behavior, fix the test.
+- **Verify RED**: Run the test. Confirm failure is because the feature is missing, not a typo.
+- **GREEN**: Write the SIMPLEST code to pass. No extra features, no "improvements" beyond the test.
+- **Verify GREEN**: Run the test. Confirm it passes AND all other tests still pass. Any other test fails → fix NOW.
+- **REFACTOR**: Remove duplication, improve names, extract helpers. Keep all tests green. Do NOT add behavior.
+- **SIMPLIFY**: Review all changed files for clarity, consistency, and dead code. Fix issues found.
 
-For each sub-step:
-1. Do the work described
-2. Verify the result (test fails for RED, test passes for GREEN, all pass for REFACTOR/SIMPLIFY)
-3. Mark the sub-checkbox: \`- [ ]\` → \`- [x]\`
+After each sub-step completes, mark its checkbox: \`- [ ]\` → \`- [x]\`.
 
-**TDD is NOT optional.** Every task MUST go through all four sub-steps. No shortcuts.
+**This is the contract. Subagent or not — these 6 steps always execute in full.**
 
-**B2. Announce subagent invocation**
+**B2. Execution wrapper (执行增强)**
 
-Before calling subagent, announce:
+Call \`Skill({skill: "subagent-driven-development"})\` to wrap the TDD cycle in an isolated subagent. The skill:
 
-\`\`\`
-[Skill] subagent-driven-development → isolating task (N files, <module>)
-\`\`\`
+- Creates a git worktree for isolation
+- Dispatches an implementer subagent that FOLLOWS THE TDD SUB-STEPS above
+- Runs two-stage review (spec compliance → code quality) after implementation
+- Returns the result
 
-**B3. Skill availability check (before calling subagent):**
+**The subagent's job is to execute B1's TDD cycle inside isolation.** It does not replace or shorten the TDD cycle. Pass the full task text including all 6 sub-steps to the subagent.
 
-Check if the skill directory exists at \`~/.claude/skills/subagent-driven-development/SKILL.md\` or equivalent:
-- **enhanced**: If skill is missing, degrade gracefully — proceed without isolation, note: "[Skill check] subagent-driven-development ✗ (降级为本地执行)"
-- **strict**: If skill is missing, error: "[Skill check] subagent-driven-development ✗ — 请安装后重试"
+Announce: \`[Skill] subagent-driven-development → task 1.1 (model, N files)\`
+
+**If the subagent skill is unavailable:**
+- **strict**: Error — "[Skill check] subagent-driven-development ✗ — 请安装后重试"
+- **enhanced**: Degrade — "[Skill check] subagent-driven-development ✗ (降级为本地执行)". Still execute the full TDD cycle in B1.
+
+**After the skill returns**, verify the task result. Blocked or incomplete → pause, escalate to user.
 
 ---
 
@@ -159,11 +201,13 @@ After the task implementation completes:
 
 **C0. SUB-STEP COMPLIANCE CHECK** — run this BEFORE marking task complete.
 
-Verify that ALL four TDD sub-steps are checked:
+Verify that ALL 6 TDD sub-steps are checked:
 
 \`\`\`
   - [x] RED: Write failing test
-  - [x] GREEN: Write minimal code to pass
+  - [x] Verify RED: Confirm test fails correctly
+  - [x] GREEN: Write minimum code to pass
+  - [x] Verify GREEN: Confirm test passes + no regressions
   - [x] REFACTOR: Clean up code, keep tests green
   - [x] SIMPLIFY: Review changed files for clarity
 \`\`\`
@@ -171,15 +215,17 @@ Verify that ALL four TDD sub-steps are checked:
 If any sub-step is NOT checked:
 \`\`\`
 ⚠ Sub-step compliance failure:
-   Task 1.2: RED sub-step not completed.
+   Task 1.2: Verify RED sub-step not completed.
+
+   If you didn't watch the test fail, you don't know if it tests the right thing.
 
    Options:
    [1] Retry — redo the missing sub-step
-   [2] Explain — provide reason why sub-step was not needed
+   [2] Explain — provide reason why sub-step was skipped
    [3] Override — mark task done anyway (will be noted in review)
 \`\`\`
 
-If user selects [1], go back to the missing sub-step. If [2] or [3], note the exception and continue.
+If user selects [1], go back to the missing sub-step. If [2] or [3], note the exception.
 
 **C1. Update task checkbox**
 
@@ -237,11 +283,35 @@ All tasks complete! Ready to verify with \`/opsx:verify\` and archive with \`/op
 What would you like to do?
 \`\`\`
 
+---
+
+### Common TDD Rationalizations — DON'T
+
+| Excuse | Reality |
+|--------|---------|
+| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
+| "I'll test after" | Tests passing immediately prove nothing. |
+| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
+| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
+| "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
+| "TDD will slow me down" | TDD is faster than debugging in production. |
+
+### Red Flags — STOP and Fix
+
+- Code before test → delete code, start over with RED
+- Test passes immediately → you're testing existing behavior, fix the test
+- Can't explain why test failed → understand before proceeding
+- Tests added "later" → that's not TDD, start over
+- Rationalizing "just this once" → stop rationalizing
+- Skipping Verify RED → you don't know if the test actually tests the right thing
+- Subagent reports blocked or incomplete → pause, escalate to user
+
 **Guardrails**
 - You are the outer-loop CONTROLLER — process ONE task at a time, then return here
 - Snapshot discipline config at start and use it consistently for the entire change
-- Follow TDD sub-steps in order: RED → GREEN → REFACTOR → SIMPLIFY
-- Subagent isolation is mandatory for every task
+- Follow TDD sub-steps in strict order: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY
+- The Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+- Subagent: mandatory per task via \`Skill({skill: "subagent-driven-development"})\` — model by complexity, skill handles review internally
 - Post-checkpoint: verify sub-steps → checkbox → commit → checkpoint → next task
 - Pause on errors, blockers, or unclear requirements — do not guess
 - Keep code changes minimal and scoped to each task`,
@@ -259,7 +329,10 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `Implement tasks from an OpenSpec change.
 
-**You are the OpenSpec apply outer-loop controller.** Process tasks one at a time. Each task has TDD sub-steps embedded directly — follow them in order. Do NOT autonomously proceed to the next task.
+**You are the OpenSpec apply outer-loop controller.** Process tasks one at a time. Each task has 6 TDD sub-steps embedded directly — follow them in strict order.
+
+**The Iron Law:** NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
+Code before test? Delete it. Start over.
 
 **Input**: Optionally specify a change name (e.g., \`/opsx:apply add-auth\`). If omitted, infer from context or prompt.
 
@@ -282,18 +355,18 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 **The Outer Loop** — process ONE task at a time through three phases:
 
 ### Pre-context
-- **TDD is embedded**: each task has RED → GREEN → REFACTOR → SIMPLIFY sub-steps in the task body. Follow them in order — no skipping.
-- **Parse Spec reference**: \`[Spec: REQ-xxx]\` → extract requirement block for precise context injection; no ref → full spec summary
-- **Subagent**: every task MUST use \`Skill({skill: "subagent-driven-development"})\` for worktree isolation
+- **TDD is embedded**: each task has 6 sub-steps: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY
+- **Parse Spec reference**: \`[Spec: REQ-xxx]\` → extract requirement block for precise context injection
+- **Subagent**: mandatory per task, model selected by complexity (cheap/standard/capable). Subagent executes TDD internally.
 
 ### Task Execution
-- Follow embedded TDD sub-steps in order: RED (failing test) → GREEN (minimal code) → REFACTOR (clean up) → SIMPLIFY (refine)
-- Mark each sub-checkbox \`- [x]\` after completing
-- Announce subagent: \`[Skill] subagent-driven-development → isolating task\`
+- Follow embedded TDD sub-steps in strict order:
+  - RED: Write one failing test → Verify RED: Watch it fail correctly → GREEN: Minimal code → Verify GREEN: Watch it pass → REFACTOR: Clean up → SIMPLIFY: Review files
+- Subagent: \`Skill({skill: "subagent-driven-development"})\` handles implementer + review internally
 - Skill check: enhanced → degrade gracefully if missing; strict → error
 
 ### Post-checkpoint
-- **C0 Sub-step compliance**: verify all four TDD sub-steps are \`[x]\`; if not → Retry/Explain/Override
+- **C0 Sub-step compliance**: verify all 6 TDD sub-steps are \`[x]\`; if not → Retry/Explain/Override
 - Update \`tasks.md\` checkbox: \`- [ ]\` → \`- [x]\`
 - Commit work as \`feat(<task-id>): <description>\`
 - Update \`.openspec.yaml\` → \`last_checkpoint: "<task-id>"\`
@@ -304,8 +377,8 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 **Guardrails**
 - You are the outer-loop CONTROLLER — one task at a time
 - Snapshot config at start, use consistently
-- Follow TDD sub-steps: RED → GREEN → REFACTOR → SIMPLIFY
-- Subagent isolation mandatory per task
-- Post-checkpoint: verify sub-steps → checkbox → commit → checkpoint → next`,
+- Follow TDD sub-steps: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY
+- Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
+- Subagent: mandatory per task, model by complexity, executes TDD internally`,
   };
 }

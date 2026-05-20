@@ -38,7 +38,7 @@ export interface ComplianceReport {
   };
 }
 
-const REQUIRED_SUB_STEPS = ['RED', 'GREEN', 'REFACTOR', 'SIMPLIFY'];
+const REQUIRED_SUB_STEPS = ['RED', 'Verify RED', 'GREEN', 'Verify GREEN', 'REFACTOR', 'SIMPLIFY'];
 
 /**
  * Check that a task has all required embedded TDD sub-steps.
@@ -69,9 +69,11 @@ export function checkTaskSubSteps(
     const line = rawLines[i];
     // Stop at next task (non-indented or new task number)
     if (/^- \[[ x]\] \d+\.\d+/.test(line)) break;
-    // Check for sub-step markers
+    // Check for sub-step markers — use precise prefix matching to avoid
+    // RED: matching both "RED:" and "Verify RED:"
     for (const step of REQUIRED_SUB_STEPS) {
-      if (line.includes(`${step}:`)) {
+      const escaped = step.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (new RegExp(`\\] ${escaped}:`).test(line)) {
         found.add(step);
       }
     }
@@ -187,8 +189,10 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
     if (summary.warn > 0) {
       console.log();
       console.log(chalk.yellow('  ⚠ Add the missing sub-steps under each task in tasks.md:'));
-      console.log(chalk.yellow('       - [ ] RED: Write failing test'));
-      console.log(chalk.yellow('       - [ ] GREEN: Write minimal code to pass'));
+      console.log(chalk.yellow('       - [ ] RED: Write one failing test'));
+      console.log(chalk.yellow('       - [ ] Verify RED: Confirm test fails correctly'));
+      console.log(chalk.yellow('       - [ ] GREEN: Write minimum code to pass'));
+      console.log(chalk.yellow('       - [ ] Verify GREEN: Confirm pass + no regressions'));
       console.log(chalk.yellow('       - [ ] REFACTOR: Clean up code'));
       console.log(chalk.yellow('       - [ ] SIMPLIFY: Review changed files'));
     }

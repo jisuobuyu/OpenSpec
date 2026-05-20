@@ -100,41 +100,48 @@ Fast-forward: creates all planning artifacts at once in dependency order. Comple
 
 ### `/opsx:apply`
 
-Implement tasks from the change. **TDD and subagent are mandatory for every task.**
+Implement tasks from the change. **TDD is the core contract — 6 sub-steps per task, non-negotiable. Subagent is the execution wrapper — worktree isolation + review.**
+
+**Two layers, clear separation:**
+
+| Layer      | Role             | How                                         |
+|------------|------------------|---------------------------------------------|
+| TDD cycle  | WHAT must happen | 6 sub-steps embedded in tasks.md |
+| Subagent   | HOW it happens  | Wraps TDD in worktree + two-stage review |
 
 **Three-phase outer loop:**
 
 ```
 Phase A: Pre-context
-  → Every task MUST have [TDD]
-  → Extract Spec references for context injection
+  → TDD contract: 6 sub-steps (RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY)
+  → Spec reference extraction for context injection
+  → Execution mode: model selection by complexity
 
-Phase B: Skill Execution
-  → Skill({skill: "test-driven-development"}) — mandatory
-  → Skill({skill: "subagent-driven-development"}) — mandatory per-task
+Phase B: Task Execution
+  → B1. TDD cycle (强制): execute 6 sub-steps in strict order — subagent or not
+  → B2. Subagent wrapper (加强): Skill("subagent-driven-development") wraps B1 in isolation
+      If subagent unavailable: strict=error, enhanced=local fallback, B1 still executes fully
 
 Phase C: Post-checkpoint
-  → C0: Verify skills were actually called
-  → Update tasks.md checkbox: [ ] → [x]
-  → Skill({skill: "simplify"}) on changed files
-  → Read next task, loop back
+  → C0: Verify all 6 sub-checkboxes are [x]
+  → Checkbox → commit → checkpoint → next task
 ```
 
 **Example:**
 ```
 You: /opsx:apply
 
-AI:  [Skill] test-driven-development → TDD (RED→GREEN→REFACTOR)
-     [Skill] subagent-driven-development → isolating task 1.1
+AI:  [Skill] subagent-driven-development → task 1.1 (standard, 3 files)
 
-     Working on 1.1: [TDD] Create ThemeContext...
-     [Creates src/context/ThemeContext.tsx + tests]
+     Working on 1.1: Implement ThemeContext...
+     [x] RED: Wrote failing test
+     [x] Verify RED: Test fails correctly (feature missing)
+     [x] GREEN: Implemented ThemeContext, test passes
+     [x] Verify GREEN: All tests pass, no regressions
+     [x] REFACTOR: Cleaned up code, tests still green
+     [x] SIMPLIFY: Reviewed files for clarity
 
-     ✓ 1.1 Complete
-     [Skill] simplify → refining files: src/context/ThemeContext.tsx
-
-     Working on 1.2: [TDD] Add CSS variables...
-     ...
+     ✓ 1.1 Complete. Commit: feat(1.1): Create ThemeContext
 ```
 
 ---
@@ -168,7 +175,7 @@ Complexity-adaptive code review:
 
 ### `/opsx:simplify`
 
-Post-task code refinement via `Skill({skill: "simplify"})`. Scoped to files changed in the current task. Creates dedicated `simplify(<task-id>)` commit for easy undo.
+Post-task code refinement — embedded as the SIMPLIFY sub-step in every task. Can also be invoked standalone via `Skill({skill: "simplify"})` for ad-hoc cleanup outside the apply workflow.
 
 ---
 

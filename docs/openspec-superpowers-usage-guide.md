@@ -115,13 +115,12 @@ Superpowers 技能不是 OpenSpec 的内置功能——它们是独立的 Claude
 │                                                             │
 │  编排层（OpenSpec 模板）                                     │
 │  .claude/commands/opsx/*.md                                │
-│  职责：告诉 AI 何时调用哪个技能                               │
-│  Skill({skill: "test-driven-development"})                 │
+│  职责：定义 TDD 合约（6 步内嵌）+ 调度 subagent 执行增强        │
 │              │                                              │
 │              ▼                                              │
-│  执行层（Superpowers 技能）                                  │
-│  ~/.claude/skills/<name>/SKILL.md                          │
-│  职责：告诉 AI 如何执行（TDD 步骤/审查维度/精炼规则）         │
+│  执行层（tasks.md + Subagent 技能）                          │
+│  tasks.md TDD 子步骤（强约束）+ Skill("subagent-driven-     │
+│  development")（执行增强：工作树隔离 + 两阶段审查）            │
 │              │                                              │
 │              ▼                                              │
 │  数据层（OpenSpec CLI）                                     │
@@ -144,8 +143,8 @@ AI 读取 .claude/commands/opsx/apply.md     ← 模板指令文件
       ▼
 模板告诉 AI：
   "你是 OpenSpec apply 外循环控制器"
-  "读取 tasks.md，解析 [TDD] 标注"
-  "[TDD] → Skill({skill: 'test-driven-development'})"
+  "读取 tasks.md，每个 task 内嵌 6 个 TDD 子步骤"
+  "Layer 1 (TDD 约束) + Layer 2 (subagent 增强)"
       │
       ▼
 AI 使用 Skill 工具调用外部技能               ← Claude Code 内置能力

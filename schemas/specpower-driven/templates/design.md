@@ -1,6 +1,6 @@
 ## Context
 
-<!-- Background and current state -->
+<!-- Background, current state, constraints, stakeholders -->
 
 ## Goals / Non-Goals
 
@@ -12,24 +12,37 @@
 
 ## Decisions
 
-<!-- Key design decisions and rationale. Include alternatives considered. -->
+<!-- Key design decisions with rationale. Include alternatives considered.
+     NO PLACEHOLDERS — every decision must be concrete. No "TBD", "later", or vague generalities. -->
 
 | Decision | Rationale | Alternatives |
-|----------|-----------|-------------|
-| <!-- decision --> | <!-- why --> | <!-- what else was considered --> |
+|----------|-----------|--------------|
+| <!-- concrete decision --> | <!-- why --> | <!-- what else was considered and rejected --> |
+
+## File Structure
+
+<!-- Map every file that will be created, modified, or deleted. Exact paths.
+     Each file has one clear responsibility. -->
+
+| Action | Path | Responsibility |
+|--------|------|----------------|
+| Create | `src/path/to/new.ts` | <!-- one clear responsibility --> |
+| Modify | `src/path/to/existing.ts` | <!-- what changes and why --> |
+| Delete | `src/path/to/old.ts` | <!-- why removed --> |
 
 ## Risks / Trade-offs
 
-<!-- Known risks and trade-offs -->
+<!-- Known risks and concrete mitigations. No vague "performance impact" without specifics. -->
 
 | Risk | Mitigation |
-|------|-----------|
-| <!-- risk --> | <!-- how to mitigate --> |
+|------|------------|
+| <!-- specific risk --> | <!-- concrete mitigation --> |
 
 ## Migration Plan
 
-<!-- Steps to deploy, rollback strategy (if applicable) -->
+<!-- Steps to deploy. Exact commands where relevant. Rollback strategy if applicable. -->
 
 ## Open Questions
 
-<!-- Outstanding decisions or unknowns -->
+<!-- Outstanding decisions: who decides, by when, what unblocks.
+     No "decide later" without a decision trigger. -->

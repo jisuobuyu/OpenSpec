@@ -116,15 +116,15 @@ Remove-Item -Recurse -Force $env:TEMP\superpowers
 
 ### 3.3 技能对照表
 
-| 技能名 | 用途 | 被哪些命令调用 | 降级级别 |
-|--------|------|---------------|----------|
-| `test-driven-development` | RED→GREEN→REFACTOR 循环 | apply（每个 task 强制执行） | 所有 profile 均强制执行 |
-| `verification-before-completion` | 运行测试套件 + 覆盖率 | verify（Layer 1） | 手动运行测试 |
-| `simplify` | 代码精炼和重构 | apply（Post-checkpoint） | 自动执行 |
-| `brainstorming` | 系统化方案对比 | explore（可选提议） | 手动分析 |
-| `writing-plans` | 结构化设计文档 | ff（Complex 级别） | 手动创建 design.md |
+| 技能名 | 用途 | 被哪些命令调用 | 说明 |
+|--------|------|---------------|------|
+| `test-driven-development` | RED→GREEN→REFACTOR 循环 | 独立调用 | TDD 已嵌入 task 子步骤，apply 不再依赖此技能 |
+| `verification-before-completion` | 运行测试套件 + 覆盖率 | verify（Layer 1） | 严格模式强制要求 |
+| `subagent-driven-development` | 工作树隔离的子代理 | apply（每个 task 强制执行） | 严格模式强制要求 |
+| `simplify` | 代码精炼和重构 | 独立调用 / 嵌入为 SIMPLIFY 子步骤 | 已内嵌到 task，也可独立使用 |
+| `brainstorming` | 系统化方案对比 | explore（可选提议） | 可选 |
+| `writing-plans` | 结构化设计文档 | ff（Complex 级别） | 可选 |
 | `requesting-code-review` | 独立代码审查 | review（Complex 级别） | 扩展 AI 自审 |
-| `subagent-driven-development` | 子代理并行实现 | apply（每个 task 强制执行） | 所有 profile 均强制执行 |
 
 > **注意**：TDD 和 Subagent 在所有 profile 下均强制执行。严格模式（strict，默认）缺失技能时报错，增强模式（enhanced）缺失时优雅降级。
 
@@ -521,22 +521,22 @@ openspec --version
 openspec update --force
 ```
 
-### Q4: `/opsx:apply` 不调用 TDD 技能
+### Q4: `/opsx:apply` 不执行 TDD
 
-**原因**：技能未安装或 tasks.md 缺少 `[TDD]` 标注。
+**原因**：tasks.md 中缺少嵌入式 TDD 子步骤。
 
 **检查**：
 ```bash
-# 1. 检查 tasks.md 标注
-cat openspec/changes/<name>/tasks.md | grep "TDD"
+# 检查 tasks.md 中是否包含 TDD 子步骤
+cat openspec/changes/<name>/tasks.md | grep -E "RED:|GREEN:|REFACTOR:|SIMPLIFY:"
 
-# 2. 检查技能是否存在
-ls ~/.claude/skills/test-driven-development/SKILL.md
+# 或使用合规性检查
+openspec check --change <name>
 ```
 
 **解决**：
-- 确保 tasks.md 中每个 task 标注了 `[TDD]`
-- 安装缺失的 Superpowers 技能（参见 [3. 安装 Superpowers 技能](#3-安装-superpowers-技能)）
+- 确保 tasks.md 中每个 task 包含 4 个 TDD 子步骤（RED/GREEN/REFACTOR/SIMPLIFY）
+- 使用 `openspec check --change <name>` 扫描缺失的子步骤
 
 ### Q5: `openspec status --deps` 报告循环依赖
 

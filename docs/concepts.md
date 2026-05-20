@@ -321,7 +321,7 @@ openspec/changes/add-dark-mode/
 ├── proposal.md           # Why and what
 ├── explore.md             # Mandatory: exploration notes
 ├── design.md             # How (technical approach)
-├── tasks.md              # Implementation checklist (with [TDD])
+├── tasks.md              # Implementation checklist (embedded TDD sub-steps)
 ├── review.md             # Optional: code review record
 ├── .openspec.yaml        # Change metadata
 └── specs/                # Delta specs
@@ -454,20 +454,29 @@ Tasks are the **implementation checklist** — concrete steps with checkboxes.
 # Tasks
 
 ## 1. Theme Infrastructure
-- [ ] 1.1 [TDD] Create ThemeContext with light/dark state
-- [ ] 1.2 [TDD] Add CSS custom properties for colors
-- [ ] 1.3 [TDD] Implement localStorage persistence
-- [ ] 1.4 [TDD] Add system preference detection
+- [ ] 1.1 Create ThemeContext with light/dark state
+  - [ ] RED: Write failing test for ThemeContext
+  - [ ] Verify RED: Confirm test fails correctly (feature missing, not typo)
+  - [ ] GREEN: Implement ThemeContext to pass test
+  - [ ] Verify GREEN: Confirm test passes + no regressions
+  - [ ] REFACTOR: Clean up code, keep tests green
+  - [ ] SIMPLIFY: Review changed files for clarity
+- [ ] 1.2 Add CSS custom properties for colors
+  - [ ] RED: Write failing test for CSS variables
+  - [ ] Verify RED: Confirm test fails correctly
+  - [ ] GREEN: Add CSS variables to pass test
+  - [ ] Verify GREEN: Confirm test passes + no regressions
+  - [ ] REFACTOR: Clean up code, keep tests green
+  - [ ] SIMPLIFY: Review changed files for clarity
 
 ## 2. UI Components
-- [ ] 2.1 [TDD] Create ThemeToggle component
-- [ ] 2.2 [TDD] Add toggle to settings page
-- [ ] 2.3 [TDD] Update Header to include quick toggle
-
-## 3. Styling
-- [ ] 3.1 [TDD] Define dark theme color palette
-- [ ] 3.2 [TDD] Update components to use CSS variables
-- [ ] 3.3 [TDD] Test contrast ratios for accessibility
+- [ ] 2.1 Create ThemeToggle component
+  - [ ] RED: Write failing test for ThemeToggle
+  - [ ] Verify RED: Confirm test fails correctly
+  - [ ] GREEN: Implement ThemeToggle to pass test
+  - [ ] Verify GREEN: Confirm test passes + no regressions
+  - [ ] REFACTOR: Clean up code, keep tests green
+  - [ ] SIMPLIFY: Review changed files for clarity
 ```
 
 **Task best practices:**
@@ -604,13 +613,13 @@ artifacts:
 
 **specpower-driven** (default)
 
-The standard workflow with mandatory TDD and subagent-driven development:
+The standard workflow with mandatory TDD and subagent-driven development. TDD is the core contract (6 sub-steps embedded in every task — non-negotiable). Subagent is the execution enhancement (wraps TDD in isolated worktree + two-stage review).
 
 ```
 explore → proposal → specs → design → tasks → review → implement → verify → archive
 ```
 
-6 artifacts, 14 workflows, TDD + subagent enforced for every task.
+6 artifacts, 14 workflows. TDD cycle: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY.
 
 ### Custom Schemas
 

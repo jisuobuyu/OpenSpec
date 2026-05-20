@@ -609,20 +609,20 @@ openspec check --change add-user-auth --json
 
 **What it checks:**
 
-- All tasks must have `[TDD]` should trigger `Skill("test-driven-development")`
-- Tasks without `[TDD]` annotation are flagged as warnings — TDD is mandatory
-- Missing `[TDD]` gets `warn` severity
-- 
+- Each task must have 6 embedded TDD sub-steps: RED, Verify RED, GREEN, Verify GREEN, REFACTOR, SIMPLIFY
+- Tasks missing any sub-step are flagged as warnings — TDD is mandatory
+- Missing sub-steps get `warn` severity with the list of missing items
 
 **Output (text):**
 
 ```
 Compliance Check: add-user-auth
-Discipline: enhanced | TDD: mandatory
+Discipline: strict | TDD: embedded (6 sub-steps required)
 
-  ⚠ 1.1   [TDD] → MUST call Skill("test-driven-development"). Verify it was invoked. [→ test-driven-development]
+  ✓ 1.1   TDD sub-steps: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY ✓
+  ⚠ 1.2   MISSING TDD sub-steps: Verify RED, GREEN, Verify GREEN, REFACTOR, SIMPLIFY
 
-  Summary: 2 task(s) require skill, 2 need verification
+  Summary: 2 task(s), 1 need TDD sub-steps
 ```
 
 ---
