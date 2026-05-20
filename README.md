@@ -56,7 +56,7 @@ Now tell your AI: `/opsx:propose <what-you-want-to-build>`
 
 ### TDD is Mandatory
 
-OpenSpec enforces test-driven development by default. Every task in `tasks.md` must include `[TDD]` — the full RED→GREEN→REFACTOR cycle. No exceptions.
+OpenSpec enforces test-driven development by default. Every task in `tasks.md` embeds the 6-step TDD cycle directly — RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY — as sub-checkboxes. No exceptions.
 
 ```bash
 openspec init

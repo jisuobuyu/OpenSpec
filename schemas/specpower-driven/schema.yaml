@@ -15,20 +15,34 @@ artifacts:
     description: Proposal informed by explore — defines WHY and WHAT
     template: proposal.md
     instruction: |
-      Create the proposal document that establishes WHY this change is needed.
+      Create the proposal document that establishes WHY this change is needed and WHAT approach was chosen.
 
-      If `explore.md` exists in the change directory, read it first — it may contain
-      key insights, options considered, and recommendations that inform the proposal.
+      **Read `explore.md` first** — it contains the mandatory investigation results, trade-off
+      analysis, and recommendation. The proposal synthesizes explore findings into a decision.
+      For complex decisions, the explore phase calls `Skill({skill: "brainstorming"})`.
 
       Sections:
-      - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
-      - **What Changes**: Bullet list of changes. Be specific about new capabilities, modifications, or removals. Mark breaking changes with **BREAKING**.
-      - **Capabilities**: Identify which specs will be created or modified:
-        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names.
-        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Each needs a delta spec file. Check `openspec/specs/` for existing spec names.
-      - **Impact**: Affected code, APIs, dependencies, or systems.
+      - **Why**: 1-2 sentences on the problem or opportunity. What problem? Why now? No vague statements.
+      - **What Changes**: Bullet list. Be specific. Mark breaking changes with **BREAKING**.
+      - **Non-Goals**: What is explicitly OUT of scope. Prevents scope creep. Be specific.
+      - **Decision**: Why THIS approach over alternatives? Summarize the key trade-off from explore.md.
+      - **Capabilities**: Define WHAT changes at the spec level. Each capability maps to a spec file.
+        - **New Capabilities**: kebab-case name + what it covers (behavior, scope, key scenarios). Examples: user-auth, data-export, dark-mode-theme. Each creates `specs/<name>/spec.md`.
+        - **Modified Capabilities**: Only if spec-level requirements change (not just implementation). Each needs a delta spec. Find existing names in `openspec/specs/`. Leave empty if no changes.
+      - **Impact**: Affected code, APIs, dependencies, systems. Name specific modules/services.
 
-      Keep it concise (1-2 pages). Focus on the "why" not the "how".
+      **NO PLACEHOLDERS**: Never "TBD", "TODO", "decide later". Every section concrete and actionable.
+
+      **Self-Review** (from brainstorming discipline) — before finalizing, check:
+      1. **Placeholder scan**: Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
+      2. **Internal consistency**: Do any sections contradict? Does scope match Impact?
+      3. **Scope check**: Is this focused enough for ONE change, or needs decomposition? Flag over-scoped proposals.
+      4. **Ambiguity check**: Could any requirement be interpreted two different ways? Pick one and make it explicit.
+      5. **Decision traceability**: Does Decision reference explore.md findings and explain why alternatives were rejected?
+
+      Fix issues inline. No need to re-review — just fix and move on.
+
+      Keep it concise (1-2 pages). Focus on the "why" and "what" — not the "how" (that is design.md).
     requires:
       - explore
 

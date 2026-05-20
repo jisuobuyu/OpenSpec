@@ -241,7 +241,7 @@ cd your-project
 openspec init
 ```
 
-默认生成 **strict profile** + **specpower-driven schema**——14 个命令 + 14 个技能定义，TDD 强制执行。
+默认生成 **strict profile** + **specpower-driven schema**——14 个命令 + 14 个 OpenSpec 工作流技能 + 4 个捆绑 Superpowers 技能（subagent, systematic-debugging, test-driven-dev, using-git-worktrees），TDD 强制执行。
 
 ### 5.2 其他 profile
 
@@ -528,14 +528,14 @@ openspec update --force
 **检查**：
 ```bash
 # 检查 tasks.md 中是否包含 TDD 子步骤
-cat openspec/changes/<name>/tasks.md | grep -E "RED:|GREEN:|REFACTOR:|SIMPLIFY:"
+cat openspec/changes/<name>/tasks.md | grep -E "RED:|Verify RED:|GREEN:|Verify GREEN:|REFACTOR:|SIMPLIFY:"
 
 # 或使用合规性检查
 openspec check --change <name>
 ```
 
 **解决**：
-- 确保 tasks.md 中每个 task 包含 4 个 TDD 子步骤（RED/GREEN/REFACTOR/SIMPLIFY）
+- 确保 tasks.md 中每个 task 包含 6 个 TDD 子步骤（RED/Verify RED/GREEN/Verify GREEN/REFACTOR/SIMPLIFY）
 - 使用 `openspec check --change <name>` 扫描缺失的子步骤
 
 ### Q5: `openspec status --deps` 报告循环依赖
