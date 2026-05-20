@@ -140,16 +140,16 @@ describe('instruction-loader', () => {
       const instructions = generateInstructions(context, 'explore');
 
       expect(instructions.changeName).toBe('my-change');
-      expect(instructions.artifactId).toBe('proposal');
+      expect(instructions.artifactId).toBe('explore');
       expect(instructions.schemaName).toBe('specpower-driven');
-      expect(instructions.outputPath).toBe('proposal.md');
+      expect(instructions.outputPath).toBe('explore.md');
     });
 
     it('should include template content', () => {
       const context = loadChangeContext(tempDir, 'my-change');
       const instructions = generateInstructions(context, 'explore');
 
-      expect(instructions.template).toContain('## Why');
+      expect(instructions.template).toContain('## Exploration');
     });
 
     it('should show dependencies with completion status', () => {
@@ -177,9 +177,8 @@ describe('instruction-loader', () => {
       const context = loadChangeContext(tempDir, 'my-change');
       const instructions = generateInstructions(context, 'explore');
 
-      // proposal unlocks specs and design
-      expect(instructions.unlocks).toContain('specs');
-      expect(instructions.unlocks).toContain('design');
+      // explore unlocks proposal
+      expect(instructions.unlocks).toContain('proposal');
     });
 
     it('should have empty dependencies for root artifact', () => {
@@ -409,7 +408,7 @@ rules:
 
         expect(instructions.context).toBeUndefined();
         expect(instructions.rules).toBeUndefined();
-        expect(instructions.template).toContain('## Why');
+        expect(instructions.template).toContain('## Exploration');
       });
     });
 
@@ -526,9 +525,14 @@ rules:
       expect(status.schemaName).toBe('specpower-driven');
       expect(status.isComplete).toBe(false);
 
-      // proposal has no deps, should be ready
+      // explore has no deps, should be ready
+      const explore = status.artifacts.find(a => a.id === 'explore');
+      expect(explore?.status).toBe('ready');
+
+      // proposal depends on explore, should be blocked
       const proposal = status.artifacts.find(a => a.id === 'proposal');
-      expect(proposal?.status).toBe('ready');
+      expect(proposal?.status).toBe('blocked');
+      expect(proposal?.missingDeps).toContain('explore');
 
       // specs depends on proposal, should be blocked
       const specs = status.artifacts.find(a => a.id === 'specs');
