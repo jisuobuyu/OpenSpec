@@ -109,23 +109,45 @@ artifacts:
       **IMPORTANT: Follow the template below exactly.** The apply phase parses
       checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
 
-      ## TDD Level Annotations
+      ## TDD Sub-Steps (embedded in every task)
 
-      Each task may specify a TDD level:
-      - `[TDD]` — Full RED→GREEN→REFACTOR cycle with verification after each step
-      - `[TDD: Lite]` — Write tests first, then implement (skip refactor step; pure renames skip tests)
-      - `[TDD: Skip]` — Direct implementation without test-first ordering
+      Every task MUST have all 6 embedded TDD sub-steps. The apply phase
+      executes them in strict order. Missing sub-steps are flagged by the
+      compliance check (`openspec check --change <name>`):
+
+      ```
+      - [ ] RED: Write one minimal failing test for <specific behavior>
+      - [ ] Verify RED: Run test, confirm it fails correctly (feature missing, not typo)
+      - [ ] GREEN: Write minimum code to pass the test
+      - [ ] Verify GREEN: Run test, confirm pass + no regressions
+      - [ ] REFACTOR: Clean up code, keep tests green
+      - [ ] SIMPLIFY: Review changed files for clarity, consistency, dead code
+      ```
 
       ## Spec Reference Annotations
 
-      Each task may reference a spec requirement:
-      - `[Spec: REQ-xxx]` — Link task to a specific requirement for precise context injection during apply
+      Reference spec requirements for context injection during apply:
+      - `[Spec: REQ-xxx]` — Links task to a specific requirement. The apply phase
+        extracts the requirement block (description + scenarios) as pre-context.
+      - Multiple: `[Spec: REQ-001, REQ-003]` — injects all referenced requirements.
 
-      Guidelines:
-      - Group related tasks under ## numbered headings
-      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
-      - Tasks should be small enough to complete in one session
-      - Order tasks by dependency (what must be done first?)
+      ## Task Granularity (writing-plans discipline)
+
+      - **Bite-sized**: Each task completable in one session (one clear deliverable)
+      - **Exact paths**: List files each task will Create / Modify / Test
+      - **Order by dependency**: What must be done first?
+      - **No placeholders**: Never "TBD", "TODO", "implement later", "add error handling",
+        "handle edge cases", "Similar to Task N". Be specific.
+      - Each task MUST use checkbox format: `- [ ] X.Y Concrete description`
+      - Group related tasks under `## X. Group Name` headings
+
+      ## Self-Review (before finalizing tasks.md)
+
+      1. **Spec coverage**: Can each spec requirement trace to at least one task?
+      2. **Design coverage**: Can each design File Structure entry trace to a task?
+      3. **Placeholder scan**: Search for TBD/TODO/vague generalities. Fix them.
+      4. **TDD completeness**: Does every task have all 6 sub-steps?
+      5. **Numbering**: Are task IDs sequential and hierarchical (X.Y)?
 
       Reference specs for what needs to be built, design for how to build it.
       Each task should be verifiable — you know when it's done.
