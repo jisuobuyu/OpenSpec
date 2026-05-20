@@ -2,8 +2,9 @@
  * Skill Template Workflow Modules
  *
  * Apply workflow — the orchestration core of the OpenSpec x Superpowers fusion.
- * This is a thin orchestration layer: it tells the AI WHEN to call WHICH skill,
- * but does not embed TDD/Simplify instructions directly.
+ * TDD and simplify are embedded directly in task structure (not external skills),
+ * so they cannot be skipped. Subagent-driven-development remains a Skill call
+ * because it requires worktree isolation.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
 
@@ -13,7 +14,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
     description: 'Implement tasks from an OpenSpec change. Use when the user wants to start implementing, continue implementation, or work through tasks.',
     instructions: `Implement tasks from an OpenSpec change.
 
-**You are the OpenSpec apply outer-loop controller.** Your job is to process tasks one at a time, calling Superpowers skills as needed. Do NOT autonomously decide to proceed to the next task — return to this controller after each task completes.
+**You are the OpenSpec apply outer-loop controller.** Your job is to process tasks one at a time. Each task has TDD sub-steps embedded directly — follow them in order. Do NOT autonomously decide to proceed to the next task — return to this controller after each task completes.
 
 **Input**: Optionally specify a change name. If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
@@ -33,7 +34,6 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    Read \`openspec/config.yaml\` and extract the \`discipline\` section. Cache these values for the entire apply session — do NOT re-read config mid-session. This prevents hot-config drift.
 
    Key settings and their effects:
-   - \`discipline.level\`: \`core\` (no skill calls), \`enhanced\` (skill calls with graceful degradation), \`strict\` (skill calls, error if missing)
    - \`discipline.level\`: \`core\` / \`enhanced\` / \`strict\` — controls behavior when skills are unavailable
    - \`discipline.subagent.mode\`: \`per-task\` — subagent-driven-development is mandatory for every task
 
@@ -89,7 +89,7 @@ export function getApplyChangeSkillTemplate(): SkillTemplate {
    Display:
    - Schema and discipline level
    - Progress: "N/M tasks complete"
-   - Remaining tasks with their TDD levels and spec references
+   - Remaining tasks with their Spec references
    - Dynamic instruction from CLI
 
 **The Outer Loop**
@@ -100,10 +100,9 @@ Process tasks ONE AT A TIME. For each pending task, follow this three-phase stru
 
 ### Phase A: Pre-context
 
-**A1. TDD is mandatory**
+**A1. TDD is embedded in the task**
 
-Every task MUST have \`[TDD]\` — Full RED→GREEN→REFACTOR cycle.
-If a task is missing this annotation, add it before proceeding.
+Each task has RED → GREEN → REFACTOR → SIMPLIFY sub-steps built into the task line. TDD cannot be skipped because the sub-steps are part of the task itself — not an external skill call.
 
 **A2. Parse Spec reference annotation**
 
@@ -114,38 +113,43 @@ Scan the task line for \`[Spec: REQ-xxx]\` annotations:
 
 **A3. Subagent-driven development**
 
-Every task MUST use \`Skill({skill: "subagent-driven-development"})\` — subagent is mandatory for all tasks.
+Every task MUST use \`Skill({skill: "subagent-driven-development"})\` — subagent isolation is mandatory for all tasks. This is the ONE external skill call because it requires worktree isolation which cannot be inlined.
 
 ---
 
-### Phase B: Skill Execution
+### Phase B: Task Execution
 
-**CRITICAL — you MUST announce every skill invocation before calling it.**
-Use this exact format so the user can see what is happening:
+**B1. Follow TDD sub-steps in order**
+
+Work through each task's embedded sub-steps:
 
 \`\`\`
-[Skill] test-driven-development → Full TDD (RED → Verify RED → GREEN → Verify GREEN → REFACTOR)
-[Skill] simplify → refining files: src/auth/login.ts, src/auth/login.test.ts
-[Skill] subagent-driven-development → isolating complex task (7 files, cross-module)
+- [ ] RED: Write a failing test that validates the expected behavior
+- [ ] GREEN: Write the minimum code to make the test pass
+- [ ] REFACTOR: Clean up the code while keeping all tests green
+- [ ] SIMPLIFY: Review changed files for clarity, consistency, and dead code
 \`\`\`
 
-TDD is mandatory for every task:
+For each sub-step:
+1. Do the work described
+2. Verify the result (test fails for RED, test passes for GREEN, all pass for REFACTOR/SIMPLIFY)
+3. Mark the sub-checkbox: \`- [ ]\` → \`- [x]\`
 
-**B1. If discipline.level is \`core\`:**
-- Still call \`Skill({skill: "test-driven-development"})\` — TDD is mandatory regardless of discipline level
-- The discipline level only affects behavior when skills are unavailable
+**TDD is NOT optional.** Every task MUST go through all four sub-steps. No shortcuts.
 
-**B2. If discipline.level is \`enhanced\` or \`strict\`:**
+**B2. Announce subagent invocation**
 
-| Condition | Action | Announce |
-|-----------|--------|----------|
-| Every task | \`Skill({skill: "test-driven-development"})\` | \`[Skill] test-driven-development → TDD (RED→GREEN→REFACTOR)\` |
+Before calling subagent, announce:
 
-**B3. Skill availability check (before calling any skill):**
+\`\`\`
+[Skill] subagent-driven-development → isolating task (N files, <module>)
+\`\`\`
 
-Check if the skill directory exists at \`~/.claude/skills/<skill-name>/SKILL.md\` or equivalent:
-- **enhanced**: If skill is missing, degrade gracefully — use a built-in simplified version and note: "[Skill check] <skill-name> ✗ (降级为内置 Lite TDD)"
-- **strict**: If skill is missing, error: "[Skill check] <skill-name> ✗ — 请安装后重试"
+**B3. Skill availability check (before calling subagent):**
+
+Check if the skill directory exists at \`~/.claude/skills/subagent-driven-development/SKILL.md\` or equivalent:
+- **enhanced**: If skill is missing, degrade gracefully — proceed without isolation, note: "[Skill check] subagent-driven-development ✗ (降级为本地执行)"
+- **strict**: If skill is missing, error: "[Skill check] subagent-driven-development ✗ — 请安装后重试"
 
 ---
 
@@ -153,47 +157,41 @@ Check if the skill directory exists at \`~/.claude/skills/<skill-name>/SKILL.md\
 
 After the task implementation completes:
 
-**C0. SKILL COMPLIANCE CHECK** — run this BEFORE marking task complete.
+**C0. SUB-STEP COMPLIANCE CHECK** — run this BEFORE marking task complete.
 
-Verify that all required skills were actually invoked during Phase B:
+Verify that ALL four TDD sub-steps are checked:
 
-| Check | Rule |
-|-------|------|
-| Task has \`[TDD]\` → was \`Skill({skill: "test-driven-development"})\` called? | Required |
-| Task completed → was \`Skill({skill: "simplify"})\` called? | Required |
-
-How to verify:
-- Scan the conversation messages from the current Phase B execution
-- Check for \`[Skill]\` announcement markers you output earlier
-- Check for actual Skill tool invocations
-
-If a required skill was NOT called:
 \`\`\`
-⚠ Skill compliance failure:
-   Task 1.2 has [TDD] but test-driven-development was not invoked.
+  - [x] RED: Write failing test
+  - [x] GREEN: Write minimal code to pass
+  - [x] REFACTOR: Clean up code, keep tests green
+  - [x] SIMPLIFY: Review changed files for clarity
+\`\`\`
+
+If any sub-step is NOT checked:
+\`\`\`
+⚠ Sub-step compliance failure:
+   Task 1.2: RED sub-step not completed.
 
    Options:
-   [1] Retry — redo task with Skill({skill: "test-driven-development"})
-   [2] Explain — provide reason why skill was not needed
+   [1] Retry — redo the missing sub-step
+   [2] Explain — provide reason why sub-step was not needed
    [3] Override — mark task done anyway (will be noted in review)
 \`\`\`
 
-If user selects [1], go back to Phase B with the skill. If [2] or [3], note the exception and continue.
+If user selects [1], go back to the missing sub-step. If [2] or [3], note the exception and continue.
 
 **C1. Update task checkbox**
 
 In \`tasks.md\`, change \`- [ ]\` to \`- [x]\` for the completed task.
 
-**C2. Trigger simplify**
+**C2. Commit task work**
 
-If the discipline level is \`enhanced\` or \`strict\`:
-- Announce: \`[Skill] simplify → refining files: <file-list>\`
-- Invoke: \`Skill({skill: "simplify"})\`
+Create a dedicated commit for the task:
 
-Pass the file whitelist (only files changed in this task) and create a dedicated commit:
 \`\`\`
 git add <changed-files>
-git commit -m "simplify(<task-id>): refine code from task <task-id>"
+git commit -m "feat(<task-id>): <task-description>"
 \`\`\`
 
 **C3. Update last_checkpoint**
@@ -242,9 +240,9 @@ What would you like to do?
 **Guardrails**
 - You are the outer-loop CONTROLLER — process ONE task at a time, then return here
 - Snapshot discipline config at start and use it consistently for the entire change
-- Always parse TDD level and Spec reference before each task
-- Call Skill() based on TDD level, not unconditionally
-- Post-checkpoint: checkbox → simplify → checkpoint → next task
+- Follow TDD sub-steps in order: RED → GREEN → REFACTOR → SIMPLIFY
+- Subagent isolation is mandatory for every task
+- Post-checkpoint: verify sub-steps → checkbox → commit → checkpoint → next task
 - Pause on errors, blockers, or unclear requirements — do not guess
 - Keep code changes minimal and scoped to each task`,
     license: 'MIT',
@@ -261,7 +259,7 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
     tags: ['workflow', 'artifacts', 'experimental'],
     content: `Implement tasks from an OpenSpec change.
 
-**You are the OpenSpec apply outer-loop controller.** Process tasks one at a time, calling Superpowers skills as directed. Do NOT autonomously proceed to the next task — return to the controller after each one.
+**You are the OpenSpec apply outer-loop controller.** Process tasks one at a time. Each task has TDD sub-steps embedded directly — follow them in order. Do NOT autonomously proceed to the next task.
 
 **Input**: Optionally specify a change name (e.g., \`/opsx:apply add-auth\`). If omitted, infer from context or prompt.
 
@@ -279,25 +277,25 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 
 6. **Detect session recovery** — check for incomplete prior session; offer resume/discard/skip options
 
-7. **Show progress** — schema, discipline level, N/M tasks, remaining tasks with TDD/Spec annotations
+7. **Show progress** — schema, discipline level, N/M tasks, remaining tasks with Spec annotations
 
 **The Outer Loop** — process ONE task at a time through three phases:
 
 ### Pre-context
-- **TDD is mandatory**: every task MUST have \`[TDD]\` — add it if missing
+- **TDD is embedded**: each task has RED → GREEN → REFACTOR → SIMPLIFY sub-steps in the task body. Follow them in order — no skipping.
 - **Parse Spec reference**: \`[Spec: REQ-xxx]\` → extract requirement block for precise context injection; no ref → full spec summary
-- **Subagent**: every task MUST use \`Skill({skill: "subagent-driven-development"})\`
+- **Subagent**: every task MUST use \`Skill({skill: "subagent-driven-development"})\` for worktree isolation
 
-### Skill Execution
-- **Announce before every skill**: \`[Skill] <skill-name> → <what it does>\`
-- Every task → announce + \`Skill({skill: "test-driven-development"})\`
-- **Skill check**: enhanced → degrade gracefully if missing; strict → error
+### Task Execution
+- Follow embedded TDD sub-steps in order: RED (failing test) → GREEN (minimal code) → REFACTOR (clean up) → SIMPLIFY (refine)
+- Mark each sub-checkbox \`- [x]\` after completing
+- Announce subagent: \`[Skill] subagent-driven-development → isolating task\`
+- Skill check: enhanced → degrade gracefully if missing; strict → error
 
 ### Post-checkpoint
-- **C0 Skill compliance check**: verify \`Skill({skill: "test-driven-development"})\` was actually called; if not → alert user (Retry/Explain/Override)
+- **C0 Sub-step compliance**: verify all four TDD sub-steps are \`[x]\`; if not → Retry/Explain/Override
 - Update \`tasks.md\` checkbox: \`- [ ]\` → \`- [x]\`
-- Announce: \`[Skill] simplify → refining files: <list>\`
-- Trigger \`Skill({skill: "simplify"})\` on changed files, commit as \`simplify(<task-id>)\`
+- Commit work as \`feat(<task-id>): <description>\`
 - Update \`.openspec.yaml\` → \`last_checkpoint: "<task-id>"\`
 - Read next task, return to outer loop
 
@@ -306,7 +304,8 @@ export function getOpsxApplyCommandTemplate(): CommandTemplate {
 **Guardrails**
 - You are the outer-loop CONTROLLER — one task at a time
 - Snapshot config at start, use consistently
-- Parse TDD + Spec annotations before each task
-- Post-checkpoint: checkbox → simplify → checkpoint → next`,
+- Follow TDD sub-steps: RED → GREEN → REFACTOR → SIMPLIFY
+- Subagent isolation mandatory per task
+- Post-checkpoint: verify sub-steps → checkbox → commit → checkpoint → next`,
   };
 }

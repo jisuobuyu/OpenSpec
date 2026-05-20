@@ -1,55 +1,67 @@
 /**
- * Unit tests for compliance check core analysis logic (TDD mandatory).
+ * Unit tests for compliance check analysis logic (embedded TDD sub-steps).
  */
 
 import { describe, it, expect } from 'vitest';
 import { analyzeTaskCompliance } from '../../src/commands/workflow/compliance-check.js';
 
+const FULL_SUB_STEPS = [
+  '- [ ] 1.1 Implement login',
+  '  - [ ] RED: Write failing test',
+  '  - [ ] GREEN: Write minimal code to pass',
+  '  - [ ] REFACTOR: Clean up code',
+  '  - [ ] SIMPLIFY: Review changed files',
+];
+
+const MISSING_SUB_STEPS = [
+  '- [ ] 1.1 Some task',
+  '  - [ ] RED: Write failing test',
+];
+
 describe('analyzeTaskCompliance', () => {
-  const makeTasks = (descriptions: string[]) =>
-    descriptions.map((desc, i) => ({ id: `${i + 1}`, description: desc }));
-
-  it('[TDD] → pass, skill expected', () => {
-    const tasks = makeTasks(['Implement login']);
-    const result = analyzeTaskCompliance(tasks, ['- [ ] 1 [TDD] Implement login']);
-    expect(result[0].hasTdd).toBe(true);
+  it('all sub-steps → pass', () => {
+    const tasks = [{ id: '1.1', description: 'Implement login' }];
+    const result = analyzeTaskCompliance(tasks, FULL_SUB_STEPS);
+    expect(result[0].hasSubSteps).toBe(true);
     expect(result[0].severity).toBe('pass');
-    expect(result[0].expectedSkill).toBe('test-driven-development');
+    expect(result[0].missingSubSteps).toEqual([]);
   });
 
-  it('multiple [TDD] tasks → all pass', () => {
-    const tasks = makeTasks(['A', 'B', 'C']);
-    const result = analyzeTaskCompliance(tasks, [
-      '- [ ] 1 [TDD] A',
-      '- [ ] 2 [TDD] B',
-      '- [ ] 3 [TDD] C',
-    ]);
-    expect(result).toHaveLength(3);
-    expect(result.every((r) => r.severity === 'pass')).toBe(true);
-  });
-
-  it('no annotation → warn', () => {
-    const tasks = makeTasks(['Some task']);
-    const result = analyzeTaskCompliance(tasks, ['- [ ] 1 Some task']);
-    expect(result[0].hasTdd).toBe(false);
+  it('missing sub-steps → warn', () => {
+    const tasks = [{ id: '1.1', description: 'Some task' }];
+    const result = analyzeTaskCompliance(tasks, MISSING_SUB_STEPS);
+    expect(result[0].hasSubSteps).toBe(false);
     expect(result[0].severity).toBe('warn');
-    expect(result[0].expectedSkill).toBe('test-driven-development');
-    expect(result[0].message).toContain('MISSING [TDD]');
+    expect(result[0].missingSubSteps).toEqual(['GREEN', 'REFACTOR', 'SIMPLIFY']);
+    expect(result[0].message).toContain('MISSING TDD sub-steps');
   });
 
-  it('mixed: TDD tasks pass, others warn', () => {
-    const tasks = makeTasks(['Implement login', 'Update docs', 'Add dashboard']);
+  it('multiple tasks: mixed compliance', () => {
+    const tasks = [
+      { id: '1.1', description: 'Implement login' },
+      { id: '1.2', description: 'Update docs' },
+      { id: '1.3', description: 'Add dashboard' },
+    ];
     const rawLines = [
-      '- [ ] 1 [TDD] Implement login',
-      '- [ ] 2 Update docs',
-      '- [ ] 3 Add dashboard',
+      '- [ ] 1.1 Implement login',
+      '  - [ ] RED: Test login',
+      '  - [ ] GREEN: Code login',
+      '  - [ ] REFACTOR: Clean login',
+      '  - [ ] SIMPLIFY: Review login',
+      '- [ ] 1.2 Update docs',
+      '  - [ ] RED: Test docs',
+      '- [ ] 1.3 Add dashboard',
+      '  - [ ] RED: Test dashboard',
+      '  - [ ] GREEN: Code dashboard',
+      '  - [ ] REFACTOR: Clean dashboard',
+      '  - [ ] SIMPLIFY: Review dashboard',
     ];
     const result = analyzeTaskCompliance(tasks, rawLines);
 
     expect(result).toHaveLength(3);
     expect(result[0].severity).toBe('pass');
     expect(result[1].severity).toBe('warn');
-    expect(result[2].severity).toBe('warn');
+    expect(result[2].severity).toBe('pass');
   });
 
   it('handles empty tasks array', () => {
@@ -57,25 +69,24 @@ describe('analyzeTaskCompliance', () => {
     expect(result).toHaveLength(0);
   });
 
-  it('preserves task description in output', () => {
-    const tasks = makeTasks(['Implement login with OAuth']);
-    const result = analyzeTaskCompliance(tasks, ['- [ ] 1 [TDD] Implement login with OAuth']);
-    expect(result[0].description).toBe('Implement login with OAuth');
-  });
-
-  it('preserves task id in output', () => {
-    const tasks = [{ id: '2.1', description: 'Create model' }];
-    const result = analyzeTaskCompliance(tasks, ['- [ ] 2.1 [TDD] Create model']);
+  it('preserves task id and description', () => {
+    const tasks = [{ id: '2.1', description: 'Create user model' }];
+    const result = analyzeTaskCompliance(tasks, FULL_SUB_STEPS);
     expect(result[0].taskId).toBe('2.1');
+    expect(result[0].description).toBe('Create user model');
   });
 
-  it('all tasks require skill', () => {
-    const tasks = makeTasks(['A', 'B', 'C']);
-    const result = analyzeTaskCompliance(tasks, [
-      '- [ ] 1 [TDD] A',
-      '- [ ] 2 B',
-      '- [ ] 3 [TDD] C',
-    ]);
-    expect(result.every((r) => r.expectedSkill === 'test-driven-development')).toBe(true);
+  it('all tasks with missing sub-steps → all warn', () => {
+    const tasks = [
+      { id: '1.1', description: 'A' },
+      { id: '1.2', description: 'B' },
+    ];
+    const rawLines = [
+      '- [ ] 1.1 A',
+      '- [ ] 1.2 B',
+    ];
+    const result = analyzeTaskCompliance(tasks, rawLines);
+    expect(result).toHaveLength(2);
+    expect(result.every((r) => r.severity === 'warn')).toBe(true);
   });
 });

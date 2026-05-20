@@ -1,5 +1,5 @@
 /**
- * Tests for openspec check --compliance command.
+ * Tests for openspec check --change command (embedded TDD sub-steps).
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -10,6 +10,11 @@ import { randomUUID } from 'crypto';
 import { execSync } from 'child_process';
 
 const CLI = path.resolve(process.cwd(), 'dist/cli/index.js');
+
+const FULL_SUB_STEPS = `- [ ] RED: Write failing test
+  - [ ] GREEN: Write minimal code to pass
+  - [ ] REFACTOR: Clean up code
+  - [ ] SIMPLIFY: Review changed files`;
 
 describe('CLI check --change', () => {
   let testDir: string;
@@ -23,7 +28,7 @@ describe('CLI check --change', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it('should detect [TDD] tasks as passing', async () => {
+  it('should detect tasks with full TDD sub-steps as passing', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
       'schema: specpower-driven\ndiscipline:\n  level: strict\n'
@@ -32,7 +37,8 @@ describe('CLI check --change', () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
       `## 1. Core
-- [ ] 1.1 [TDD] Implement login endpoint
+- [ ] 1.1 Implement login endpoint
+  ${FULL_SUB_STEPS}
 - [ ] 1.2 Update README
 - [ ] 1.3 Implement dashboard
 `
@@ -45,13 +51,12 @@ describe('CLI check --change', () => {
 
     expect(output).toContain('Compliance Check: test-change');
     expect(output).toContain('Discipline: strict');
-    expect(output).toContain('TDD: mandatory');
-    expect(output).toContain('[TDD]');
-    expect(output).toContain('test-driven-development');
-    expect(output).toContain('MISSING [TDD]');
+    expect(output).toContain('TDD: embedded');
+    expect(output).toContain('TDD sub-steps');
+    expect(output).toContain('MISSING TDD sub-steps');
   });
 
-  it('should show TDD mandatory even with no config', async () => {
+  it('should show TDD embedded even with no config', async () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'config.yaml'),
       'schema: specpower-driven\n'
@@ -60,7 +65,8 @@ describe('CLI check --change', () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
       `## 1. Core
-- [ ] 1.1 [TDD] Implement login
+- [ ] 1.1 Implement login
+  ${FULL_SUB_STEPS}
 `
     );
 
@@ -70,7 +76,7 @@ describe('CLI check --change', () => {
     );
 
     expect(output).toContain('Discipline: strict');
-    expect(output).toContain('TDD: mandatory');
+    expect(output).toContain('TDD: embedded');
   });
 
   it('should output valid JSON', async () => {
@@ -81,9 +87,11 @@ describe('CLI check --change', () => {
     await fs.writeFile(
       path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
       `## 1. Core
-- [ ] 1.1 [TDD] Implement login
-- [ ] 1.2 Add tests (missing TDD)
-- [ ] 1.3 [TDD] Update docs
+- [ ] 1.1 Implement login
+  ${FULL_SUB_STEPS}
+- [ ] 1.2 Add tests (missing sub-steps)
+- [ ] 1.3 Update docs
+  ${FULL_SUB_STEPS}
 `
     );
 
@@ -98,18 +106,15 @@ describe('CLI check --change', () => {
     expect(report.summary.requireSkill).toBe(3);
     expect(report.summary.total).toBe(3);
 
-    // Full tasks have expectedSkill
-    expect(report.tasks.every((t: any) => t.expectedSkill === 'test-driven-development')).toBe(true);
+    // Task 1.1 and 1.3 pass, 1.2 warns
+    const fullTasks = report.tasks.filter((t: any) => t.hasSubSteps === true);
+    expect(fullTasks).toHaveLength(2);
+    expect(fullTasks.every((t: any) => t.severity === 'pass')).toBe(true);
 
-    // Full tasks are pass, missing TDD are warn
-    const fullTask = report.tasks.find((t: any) => t.hasTdd === true);
-    expect(fullTask.severity).toBe('pass');
-
-    const missingTask = report.tasks.find((t: any) => t.hasTdd === false);
-    expect(missingTask.severity).toBe('warn');
-
-    // JSON should NOT have tddDefault
-    expect(report.tddDefault).toBeUndefined();
+    const missingTasks = report.tasks.filter((t: any) => t.hasSubSteps === false);
+    expect(missingTasks).toHaveLength(1);
+    expect(missingTasks[0].severity).toBe('warn');
+    expect(missingTasks[0].missingSubSteps).toEqual(['GREEN', 'REFACTOR', 'SIMPLIFY']);
   });
 
   it('should error when --change is missing', () => {

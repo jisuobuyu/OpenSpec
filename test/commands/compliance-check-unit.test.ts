@@ -1,32 +1,78 @@
 import { describe, it, expect } from 'vitest';
-import { hasTddAnnotation } from '../../src/commands/workflow/compliance-check.js';
+import { checkTaskSubSteps } from '../../src/commands/workflow/compliance-check.js';
 
-describe('hasTddAnnotation', () => {
-  it('detects [TDD] annotation', () => {
-    expect(hasTddAnnotation('- [ ] 1.1 [TDD] Implement login')).toBe(true);
+describe('checkTaskSubSteps', () => {
+  it('detects all four sub-steps present', () => {
+    const rawLines = [
+      '- [ ] 1.1 Implement login',
+      '  - [ ] RED: Write failing test',
+      '  - [ ] GREEN: Write minimal code to pass',
+      '  - [ ] REFACTOR: Clean up code',
+      '  - [ ] SIMPLIFY: Review changed files',
+    ];
+    const result = checkTaskSubSteps('1.1', rawLines);
+    expect(result.hasAll).toBe(true);
+    expect(result.missing).toEqual([]);
   });
 
-  it('returns false when no TDD annotation present', () => {
-    expect(hasTddAnnotation('- [ ] 1.4 Implement dashboard')).toBe(false);
+  it('detects missing sub-steps', () => {
+    const rawLines = [
+      '- [ ] 1.1 Implement login',
+      '  - [ ] RED: Write failing test',
+    ];
+    const result = checkTaskSubSteps('1.1', rawLines);
+    expect(result.hasAll).toBe(false);
+    expect(result.missing).toEqual(['GREEN', 'REFACTOR', 'SIMPLIFY']);
   });
 
-  it('is case-insensitive', () => {
-    expect(hasTddAnnotation('- [ ] 1.1 [tdd] Implement login')).toBe(true);
+  it('detects when some sub-steps are checked', () => {
+    const rawLines = [
+      '- [ ] 1.1 Implement login',
+      '  - [x] RED: Write failing test',
+      '  - [x] GREEN: Write minimal code',
+      '  - [ ] REFACTOR: Clean up code',
+      '  - [ ] SIMPLIFY: Review files',
+    ];
+    const result = checkTaskSubSteps('1.1', rawLines);
+    expect(result.hasAll).toBe(true);
   });
 
-  it('handles extra whitespace around brackets', () => {
-    expect(hasTddAnnotation('- [ ] 1.1  [TDD]  Implement login')).toBe(true);
+  it('returns all missing when task not found', () => {
+    const rawLines = ['- [ ] 2.1 Other task'];
+    const result = checkTaskSubSteps('1.1', rawLines);
+    expect(result.hasAll).toBe(false);
+    expect(result.missing).toEqual(['RED', 'GREEN', 'REFACTOR', 'SIMPLIFY']);
   });
 
-  it('returns false for empty string', () => {
-    expect(hasTddAnnotation('')).toBe(false);
+  it('handles empty raw lines', () => {
+    const result = checkTaskSubSteps('1.1', []);
+    expect(result.hasAll).toBe(false);
   });
 
-  it('detects annotation when task is already completed', () => {
-    expect(hasTddAnnotation('- [x] 1.1 [TDD] Implement login')).toBe(true);
+  it('stops scanning at next task line', () => {
+    const rawLines = [
+      '- [ ] 1.1 First task',
+      '  - [ ] RED: Test first task',
+      '  - [ ] GREEN: Code first task',
+      '  - [ ] REFACTOR: Clean first task',
+      '  - [ ] SIMPLIFY: Review first task',
+      '- [ ] 1.2 Second task',
+      '  - [ ] RED: Test second',
+    ];
+    const result = checkTaskSubSteps('1.1', rawLines);
+    expect(result.hasAll).toBe(true);
+    expect(result.missing).toEqual([]);
   });
 
-  it('returns false for TDD in description text only', () => {
-    expect(hasTddAnnotation('- [ ] 1.1 Discuss TDD approach for testing')).toBe(false);
+  it('detects sub-steps with extra whitespace', () => {
+    const rawLines = [
+      '- [ ] 1.1 Task',
+      '    - [ ] RED: Test',
+      '    - [ ] GREEN: Code',
+      '    - [ ] REFACTOR: Clean',
+      '    - [ ] SIMPLIFY: Review',
+    ];
+    const result = checkTaskSubSteps('1.1', rawLines);
+    expect(result.hasAll).toBe(true);
   });
 });

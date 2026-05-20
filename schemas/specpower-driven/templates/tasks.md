@@ -1,11 +1,12 @@
 ## TDD is Mandatory
 
-Every task MUST include `[TDD]` — the RED→GREEN→REFACTOR cycle:
-  1. RED: Write a failing test
-  2. Verify RED: Confirm the test fails for the expected reason
-  3. GREEN: Write minimal code to make the test pass
-  4. Verify GREEN: Confirm all tests pass
-  5. REFACTOR: Improve code structure while keeping tests green
+Every task embeds the RED→GREEN→REFACTOR cycle directly as sub-steps. Follow each
+sub-step in order before marking the task complete.
+
+  - [ ] RED: Write a failing test that validates the expected behavior
+  - [ ] GREEN: Write the minimum code to make the test pass
+  - [ ] REFACTOR: Clean up the code while keeping all tests green
+  - [ ] SIMPLIFY: Review changed files for clarity, consistency, and dead code
 
 ## Spec Reference Annotations
 
@@ -17,11 +18,26 @@ Each task may reference a spec requirement for precise context injection during 
 
 ## 1. <!-- Task Group Name -->
 
-- [ ] 1.1 [TDD] [Spec: REQ-xxx] <!-- Task description -->
-- [ ] 1.2 [TDD] <!-- Task description -->
-- [ ] 1.3 [TDD] <!-- Task description -->
+- [ ] 1.1 [Spec: REQ-xxx] <!-- Task description -->
+  - [ ] RED: <!-- Write failing test for this task -->
+  - [ ] GREEN: <!-- Write minimal code to pass test -->
+  - [ ] REFACTOR: <!-- Clean up code, keep tests green -->
+  - [ ] SIMPLIFY: <!-- Review changed files for clarity and consistency -->
+- [ ] 1.2 <!-- Task description -->
+  - [ ] RED: <!-- Write failing test for this task -->
+  - [ ] GREEN: <!-- Write minimal code to pass test -->
+  - [ ] REFACTOR: <!-- Clean up code, keep tests green -->
+  - [ ] SIMPLIFY: <!-- Review changed files for clarity and consistency -->
 
 ## 2. <!-- Task Group Name -->
 
-- [ ] 2.1 [TDD] <!-- Task description -->
-- [ ] 2.2 [TDD] <!-- Task description -->
+- [ ] 2.1 <!-- Task description -->
+  - [ ] RED: <!-- Write failing test for this task -->
+  - [ ] GREEN: <!-- Write minimal code to pass test -->
+  - [ ] REFACTOR: <!-- Clean up code, keep tests green -->
+  - [ ] SIMPLIFY: <!-- Review changed files for clarity and consistency -->
+- [ ] 2.2 <!-- Task description -->
+  - [ ] RED: <!-- Write failing test for this task -->
+  - [ ] GREEN: <!-- Write minimal code to pass test -->
+  - [ ] REFACTOR: <!-- Clean up code, keep tests green -->
+  - [ ] SIMPLIFY: <!-- Review changed files for clarity and consistency -->

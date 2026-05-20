@@ -41,10 +41,12 @@ export interface SkillCheckReport {
 
 // ── Required skills per discipline context ────────────────────────
 
-/** Skills always required for enhanced/strict profiles */
+/**
+ * Skills always required for enhanced/strict profiles.
+ * TDD and simplify are embedded directly in task structure — not external skills.
+ * Only verification-before-completion is needed here.
+ */
 const ALWAYS_REQUIRED = [
-  'test-driven-development',
-  'simplify',
   'verification-before-completion',
 ];
 

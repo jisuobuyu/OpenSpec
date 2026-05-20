@@ -1,10 +1,9 @@
 /**
  * Compliance Check Command
  *
- * Static analysis: checks tasks.md TDD annotations against discipline config.
- * Reports whether each task's [TDD: X] annotation is consistent with the
- * configured discipline level, and flags tasks that should trigger skill
- * invocations but might be missed.
+ * Static analysis: checks tasks.md for embedded TDD sub-steps (RED, GREEN, REFACTOR, SIMPLIFY).
+ * TDD is embedded directly in task structure — no external skill dependency.
+ * Reports whether each task has all four required sub-steps.
  */
 
 import { promises as fs } from 'fs';
@@ -22,8 +21,8 @@ export interface ComplianceCheckOptions {
 interface TaskCompliance {
   taskId: string;
   description: string;
-  hasTdd: boolean;
-  expectedSkill: string;
+  hasSubSteps: boolean;
+  missingSubSteps: string[];
   severity: 'pass' | 'warn';
   message: string;
 }
@@ -39,32 +38,69 @@ export interface ComplianceReport {
   };
 }
 
-export function hasTddAnnotation(line: string): boolean {
-  return /\[TDD\]/i.test(line);
+const REQUIRED_SUB_STEPS = ['RED', 'GREEN', 'REFACTOR', 'SIMPLIFY'];
+
+/**
+ * Check that a task has all required embedded TDD sub-steps.
+ *
+ * Sub-steps are indented checkboxes under the task line:
+ *   - [ ] RED: ...
+ *   - [ ] GREEN: ...
+ *   - [ ] REFACTOR: ...
+ *   - [ ] SIMPLIFY: ...
+ */
+export function checkTaskSubSteps(
+  taskId: string,
+  rawLines: string[],
+): { hasAll: boolean; missing: string[] } {
+  // Find the task line index
+  const taskLineIndex = rawLines.findIndex((line) => {
+    const match = line.match(/^- \[[ x]\] (\d+\.\d+)\b/);
+    return match && match[1] === taskId;
+  });
+
+  if (taskLineIndex === -1) {
+    return { hasAll: false, missing: REQUIRED_SUB_STEPS };
+  }
+
+  // Scan subsequent indented lines (up to next task or end) for sub-steps
+  const found = new Set<string>();
+  for (let i = taskLineIndex + 1; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    // Stop at next task (non-indented or new task number)
+    if (/^- \[[ x]\] \d+\.\d+/.test(line)) break;
+    // Check for sub-step markers
+    for (const step of REQUIRED_SUB_STEPS) {
+      if (line.includes(`${step}:`)) {
+        found.add(step);
+      }
+    }
+  }
+
+  const missing = REQUIRED_SUB_STEPS.filter((s) => !found.has(s));
+  return { hasAll: missing.length === 0, missing };
 }
 
 /**
- * Pure function: analyze task compliance. TDD is mandatory — every task
- * must have [TDD] annotation and call test-driven-development skill.
+ * Analyzes task compliance: checks that each task has embedded TDD sub-steps.
+ * TDD is mandatory — every task must have RED, GREEN, REFACTOR, SIMPLIFY sub-items.
  */
 export function analyzeTaskCompliance(
   tasks: Array<{ id: string; description: string }>,
   rawLines: string[],
 ): TaskCompliance[] {
-  return tasks.map((task, i) => {
-    const rawLine = rawLines[i] || '';
-    const hasTdd = hasTddAnnotation(rawLine);
-    const expectedSkill = 'test-driven-development';
-    const severity = hasTdd ? 'pass' : 'warn';
-    const message = hasTdd
-      ? `[TDD] → Skill("test-driven-development") expected.`
-      : `MISSING [TDD] annotation → TDD is mandatory for all tasks. Add [TDD] to this task.`;
+  return tasks.map((task) => {
+    const { hasAll, missing } = checkTaskSubSteps(task.id, rawLines);
+    const severity = hasAll ? 'pass' : 'warn';
+    const message = hasAll
+      ? 'TDD sub-steps: RED → GREEN → REFACTOR → SIMPLIFY ✓'
+      : `MISSING TDD sub-steps: ${missing.join(', ')}. Add these sub-items under task ${task.id}.`;
 
     return {
       taskId: task.id,
       description: task.description,
-      hasTdd,
-      expectedSkill,
+      hasSubSteps: hasAll,
+      missingSubSteps: missing,
       severity,
       message,
     };
@@ -110,10 +146,8 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
       return;
     }
 
-    // Re-parse raw lines to get TDD annotations (parseTasks strips them).
-    // Must use the SAME regex as parseTasks to ensure index alignment.
-    const taskLineRegex = /^- \[([ x])\] (\d+\.\d+)\s*(.*)$/;
-    const rawLines = tasksContent.split('\n').filter((l) => taskLineRegex.test(l));
+    // Get raw lines for sub-step analysis (parseTasks strips sub-items)
+    const rawLines = tasksContent.split('\n');
 
     const taskCompliances = analyzeTaskCompliance(tasks, rawLines);
 
@@ -137,23 +171,26 @@ export async function complianceCheckCommand(options: ComplianceCheckOptions): P
 
     // Text output
     console.log(chalk.bold(`\nCompliance Check: ${options.change}`));
-    console.log(chalk.gray(`Discipline: ${disciplineLevel} | TDD: mandatory\n`));
+    console.log(chalk.gray(`Discipline: ${disciplineLevel} | TDD: embedded (sub-steps required)\n`));
 
     for (const tc of taskCompliances) {
-      const icon = tc.severity === 'warn' ? chalk.yellow('⚠')
+      const icon = tc.severity === 'warn'
+        ? chalk.yellow('⚠')
         : chalk.green('✓');
-      const skill = chalk.yellow(` [→ ${tc.expectedSkill}]`);
 
-      console.log(`  ${icon} ${tc.taskId.padEnd(5)} ${tc.message}${skill}`);
+      console.log(`  ${icon} ${tc.taskId.padEnd(5)} ${tc.message}`);
     }
 
     console.log();
-    console.log(chalk.bold(`  Summary: ${summary.requireSkill} task(s) require skill, ${summary.warn} need verification`));
+    console.log(chalk.bold(`  Summary: ${summary.requireSkill} task(s), ${summary.warn} need TDD sub-steps`));
 
     if (summary.warn > 0) {
       console.log();
-      console.log(chalk.yellow('  ⚠ Use the C0 compliance check in /opsx:apply to verify'));
-      console.log(chalk.yellow('     skills were actually invoked before marking tasks complete.'));
+      console.log(chalk.yellow('  ⚠ Add the missing sub-steps under each task in tasks.md:'));
+      console.log(chalk.yellow('       - [ ] RED: Write failing test'));
+      console.log(chalk.yellow('       - [ ] GREEN: Write minimal code to pass'));
+      console.log(chalk.yellow('       - [ ] REFACTOR: Clean up code'));
+      console.log(chalk.yellow('       - [ ] SIMPLIFY: Review changed files'));
     }
     console.log();
   } catch (error) {
