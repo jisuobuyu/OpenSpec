@@ -1,0 +1,37 @@
+{
+  "name": "openspec",
+  "version": "1.3.1",
+  "description": "AI-native spec-driven development with mandatory TDD and subagent-driven workflows",
+  "author": {
+    "name": "OpenSpec Contributors"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/jisuobuyu/OpenSpec",
+  "repository": "https://github.com/jisuobuyu/OpenSpec",
+  "keywords": [
+    "openspec",
+    "specs",
+    "tdd",
+    "spec-driven",
+    "development",
+    "superpowers",
+    "workflow"
+  ],
+  "commands": [".claude/commands/opsx/"],
+  "skills": [
+    ".claude/skills/openspec-explore/",
+    ".claude/skills/openspec-new-change/",
+    ".claude/skills/openspec-continue-change/",
+    ".claude/skills/openspec-apply-change/",
+    ".claude/skills/openspec-ff-change/",
+    ".claude/skills/openspec-archive-change/",
+    ".claude/skills/openspec-sync-specs/",
+    ".claude/skills/openspec-propose/",
+    ".claude/skills/openspec-verify-change/",
+    ".claude/skills/openspec-review/",
+    ".claude/skills/openspec-simplify/",
+    ".claude/skills/openspec-abort-change/",
+    ".claude/skills/openspec-rewind-change/",
+    ".claude/skills/openspec-unarchive-change/"
+  ]
+}
