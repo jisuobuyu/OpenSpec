@@ -1,5 +1,15 @@
 # @fission-ai/openspec
 
+## 1.3.2
+
+### Patch Changes
+
+- ### Bug Fixes
+
+  - **Workflow template encoding** — Replaced all emoji characters with ASCII equivalents in workflow templates for better cross-platform compatibility
+  - **Archive commit template** — Removed Co-Authored-By trailer from archive commit messages to keep them clean
+  - **Apply workflow** — Fixed subagent hard gate enforcement, immediate checkbox synchronization, deferred commit handling, and archive commit after move operations
+
 ## 1.3.1
 
 ### Patch Changes
