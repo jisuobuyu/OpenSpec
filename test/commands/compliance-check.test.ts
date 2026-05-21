@@ -102,4 +102,70 @@ ${FULL_SIX}
       });
     }).toThrow();
   });
+
+  it('should show all 6 missing sub-steps when none exist', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      'schema: specpower-driven\ndiscipline:\n  level: strict\n'
+    );
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
+      `## 1. Core
+- [ ] 1.1 Task with no sub-steps
+`
+    );
+
+    const output = execSync(
+      `node "${CLI}" check --change test-change`,
+      { cwd: testDir, encoding: 'utf-8' }
+    );
+
+    expect(output).toContain('MISSING TDD sub-steps');
+    expect(output).toContain('RED');
+    expect(output).toContain('Verify RED');
+    expect(output).toContain('GREEN');
+    expect(output).toContain('Verify GREEN');
+    expect(output).toContain('REFACTOR');
+    expect(output).toContain('SIMPLIFY');
+  });
+
+  it('should show helpful message when no tasks.md', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      'schema: specpower-driven\n'
+    );
+
+    expect(() => {
+      execSync(`node "${CLI}" check --change test-change`, {
+        cwd: testDir, encoding: 'utf-8', stdio: 'pipe',
+      });
+    }).toThrow(/No tasks\.md/);
+  });
+
+  it('should pass when all tasks have all 6 sub-steps', async () => {
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'config.yaml'),
+      'schema: specpower-driven\ndiscipline:\n  level: strict\n'
+    );
+    await fs.writeFile(
+      path.join(testDir, 'openspec', 'changes', 'test-change', 'tasks.md'),
+      `## 1. Core
+- [ ] 1.1 First task
+${FULL_SIX}
+- [ ] 1.2 Second task
+${FULL_SIX}
+`
+    );
+
+    const output = execSync(
+      `node "${CLI}" check --change test-change --json`,
+      { cwd: testDir, encoding: 'utf-8' }
+    );
+
+    const report = JSON.parse(output);
+    expect(report.summary.total).toBe(2);
+    expect(report.summary.warn).toBe(0);
+    expect(report.tasks.every((t: any) => t.hasSubSteps === true)).toBe(true);
+    expect(report.tasks.every((t: any) => t.severity === 'pass')).toBe(true);
+  });
 });

@@ -51,10 +51,10 @@ I'll walk you through a complete change cycle—from idea to implementation—us
 
 **What we'll do:**
 1. Pick a small, real task in your codebase
-2. Explore the problem briefly
-3. Create a change (the container for our work)
-4. Build the artifacts: proposal → specs → design → tasks
-5. Implement the tasks
+2. Create a change (the container for our work)
+3. Explore the problem (mandatory before proposal)
+4. Build the artifacts: proposal → specs → design → tasks (6-step TDD embedded)
+5. Implement the tasks (TDD enforced per task)
 6. Archive the completed change
 
 **Time:** ~15-20 minutes
@@ -139,44 +139,13 @@ Let the user override if they insist—this is a soft guardrail.
 
 ---
 
-## Phase 3: Explore Demo
-
-Once a task is selected, briefly demonstrate explore mode:
-
-\`\`\`
-Before we create a change, let me quickly show you **explore mode**—it's how you think through problems before committing to a direction.
-\`\`\`
-
-Spend 1-2 minutes investigating the relevant code:
-- Read the file(s) involved
-- Draw a quick ASCII diagram if it helps
-- Note any considerations
-
-\`\`\`
-## Quick Exploration
-
-[Your brief analysis—what you found, any considerations]
-
-┌─────────────────────────────────────────┐
-│   [Optional: ASCII diagram if helpful]  │
-└─────────────────────────────────────────┘
-
-Explore mode (\`/opsx:explore\`) is for this kind of thinking—investigating before implementing. You can use it anytime you need to think through a problem.
-
-Now let's create a change to hold our work.
-\`\`\`
-
-**PAUSE** - Wait for user acknowledgment before proceeding.
-
----
-
-## Phase 4: Create the Change
+## Phase 3: Create the Change
 
 **EXPLAIN:**
 \`\`\`
 ## Creating a Change
 
-A "change" in OpenSpec is a container for all the thinking and planning around a piece of work. It lives in \`openspec/changes/<name>/\` and holds your artifacts—proposal, specs, design, tasks.
+A "change" in OpenSpec is a container for all the thinking and planning around a piece of work. It lives in \`openspec/changes/<name>/\` and holds your artifacts—explore.md, proposal, specs, design, tasks.
 
 Let me create one for our task.
 \`\`\`
@@ -190,17 +159,39 @@ openspec new change "<derived-name>"
 \`\`\`
 Created: \`openspec/changes/<name>/\`
 
-The folder structure:
-\`\`\`
-openspec/changes/<name>/
-├── proposal.md    ← Why we're doing this (empty, we'll fill it)
-├── design.md      ← How we'll build it (empty)
-├── specs/         ← Detailed requirements (empty)
-└── tasks.md       ← Implementation checklist (empty)
+The folder starts with just a \`.openspec.yaml\` metadata file. We'll add artifacts next — first explore, then proposal, specs, design, and tasks.
 \`\`\`
 
-Now let's fill in the first artifact—the proposal.
+---
+
+## Phase 4: Explore Demo
+
+Once the change exists, demonstrate explore mode — the mandatory first step before creating any proposal:
+
 \`\`\`
+Now let me show you **explore mode** — it's the mandatory first step before we can create a proposal. It's how you investigate the problem, compare options, and document your thinking.
+\`\`\`
+
+Spend 1-2 minutes investigating the relevant code:
+- Read the file(s) involved
+- Note key insights and options
+- Draw a quick ASCII diagram if it helps
+
+\`\`\`
+## Quick Exploration
+
+[Your brief analysis—what you found, any considerations]
+
+┌─────────────────────────────────────────┐
+│   [Optional: ASCII diagram if helpful]  │
+└─────────────────────────────────────────┘
+
+Explore mode (\`/opsx:explore\`) creates \`explore.md\` in the change — this is the required prerequisite for proposal. The proposal will reference these findings when making decisions.
+
+Now let's create the proposal.
+\`\`\`
+
+**PAUSE** - Wait for user acknowledgment before proceeding.
 
 ---
 
@@ -210,7 +201,7 @@ Now let's fill in the first artifact—the proposal.
 \`\`\`
 ## The Proposal
 
-The proposal captures **why** we're making this change and **what** it involves at a high level. It's the "elevator pitch" for the work.
+The proposal captures **why** we're making this change, **what** approach we chose, and **what** it involves at a high level. It builds on the explore findings to make a concrete decision.
 
 I'll draft one based on our task.
 \`\`\`
@@ -230,13 +221,22 @@ Here's a draft proposal:
 
 [Bullet points of what will be different]
 
+## Non-Goals
+
+[What's explicitly OUT of scope — prevents scope creep]
+
+## Decision
+
+[Why this approach? Summary of the key trade-off from explore.
+ Reference alternatives considered and why they were rejected.]
+
 ## Capabilities
 
 ### New Capabilities
-- \`<capability-name>\`: [brief description]
+- \`<capability-name>\`: [what this covers — behavior, scope, key scenarios]
 
 ### Modified Capabilities
-<!-- If modifying existing behavior -->
+<!-- Only if spec-level requirements change -->
 
 ## Impact
 
@@ -362,30 +362,39 @@ Save to \`openspec/changes/<name>/design.md\`.
 \`\`\`
 ## Tasks
 
-Finally, we break the work into implementation tasks—checkboxes that drive the apply phase.
-
-These should be small, clear, and in logical order.
+Now we break the work into implementation tasks. Each task embeds the full TDD cycle as sub-steps — this is mandatory and enforced by the apply workflow.
 \`\`\`
 
 **DO:** Generate tasks based on specs and design:
 
 \`\`\`
-Here are the implementation tasks:
+Here are the implementation tasks (each with embedded TDD sub-steps):
 
 ---
 
 ## 1. [Category or file]
 
 - [ ] 1.1 [Specific task]
-- [ ] 1.2 [Specific task]
+  - [ ] RED: Write one failing test for <behavior>
+  - [ ] Verify RED: Run test, confirm it fails correctly
+  - [ ] GREEN: Write minimum code to pass
+  - [ ] Verify GREEN: Run test, confirm pass + no regressions
+  - [ ] REFACTOR: Clean up, keep tests green
+  - [ ] SIMPLIFY: Review changed files for clarity
 
-## 2. Verify
-
-- [ ] 2.1 [Verification step]
+- [ ] 1.2 [Another task]
+  - [ ] RED: Write one failing test for <behavior>
+  - [ ] Verify RED: Run test, confirm it fails correctly
+  - [ ] GREEN: Write minimum code to pass
+  - [ ] Verify GREEN: Run test, confirm pass + no regressions
+  - [ ] REFACTOR: Clean up, keep tests green
+  - [ ] SIMPLIFY: Review changed files for clarity
 
 ---
 
-Each checkbox becomes a unit of work in the apply phase. Ready to implement?
+**The Iron Law**: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST. TDD is enforced — the 6 sub-steps cannot be skipped. Each step has a checkbox that gets checked off during apply.
+
+Ready to implement?
 \`\`\`
 
 **PAUSE** - Wait for user to confirm they're ready to implement.
@@ -400,18 +409,19 @@ Save to \`openspec/changes/<name>/tasks.md\`.
 \`\`\`
 ## Implementation
 
-Now we implement each task, checking them off as we go. I'll announce each one and occasionally note how the specs/design informed the approach.
+Now we implement each task following the embedded TDD cycle. The apply workflow acts as an outer-loop controller — process one task at a time through RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY.
 \`\`\`
 
 **DO:** For each task:
 
 1. Announce: "Working on task N: [description]"
-2. Implement the change in the codebase
+2. Follow the 6 TDD sub-steps in order (RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY)
 3. Reference specs/design naturally: "The spec says X, so I'm doing Y"
-4. Mark complete in tasks.md: \`- [ ]\` → \`- [x]\`
-5. Brief status: "✓ Task N complete"
+4. Mark each sub-step checkbox \`- [x]\` as you complete it
+5. After all 6 sub-steps done: C0 check → mark task complete → commit → next task
+6. Brief status: "✓ Task N complete"
 
-Keep narration light—don't over-explain every line of code.
+Keep narration light—don't over-explain every line of code. But do mention the key TDD checkpoints.
 
 After all tasks:
 
@@ -419,8 +429,8 @@ After all tasks:
 ## Implementation Complete
 
 All tasks done:
-- [x] Task 1
-- [x] Task 2
+- [x] Task 1 (6/6 TDD sub-steps ✓)
+- [x] Task 2 (6/6 TDD sub-steps ✓)
 - [x] ...
 
 The change is implemented! One more step—let's archive it.
@@ -460,13 +470,13 @@ The change is now part of your project's history. The code is in your codebase, 
 
 You just completed a full OpenSpec cycle:
 
-1. **Explore** - Thought through the problem
-2. **New** - Created a change container
-3. **Proposal** - Captured WHY
+1. **New** - Created a change container
+2. **Explore** - Investigated the problem (mandatory before proposal)
+3. **Proposal** - Captured WHY + decision
 4. **Specs** - Defined WHAT in detail
-5. **Design** - Decided HOW
-6. **Tasks** - Broke it into steps
-7. **Apply** - Implemented the work
+5. **Design** - Decided HOW + file structure
+6. **Tasks** - Broke into 6-step TDD checklist
+7. **Apply** - Implemented with TDD enforced per task
 8. **Archive** - Preserved the record
 
 This same rhythm works for any size change—a small fix or a major feature.
@@ -477,12 +487,13 @@ This same rhythm works for any size change—a small fix or a major feature.
 
 **Core workflow:**
 
- | Command           | What it does                               |
- |-------------------|--------------------------------------------|
- | \`/opsx:propose\` | Create a change and generate all artifacts |
- | \`/opsx:explore\` | Think through problems before/during work  |
- | \`/opsx:apply\`   | Implement tasks from a change              |
- | \`/opsx:archive\` | Archive a completed change                 |
+ | Command           | What it does                                    |
+ |-------------------|-------------------------------------------------|
+ | \`/opsx:explore\` | Investigate problems (mandatory before propose) |
+ | \`/opsx:propose\` | Create a change and generate all artifacts      |
+ | \`/opsx:apply\`   | Implement tasks with TDD enforced               |
+ | \`/opsx:verify\`  | Verify implementation matches artifacts         |
+ | \`/opsx:archive\` | Archive a completed change                      |
 
 **Additional commands:**
 
@@ -491,7 +502,8 @@ This same rhythm works for any size change—a small fix or a major feature.
  | \`/opsx:new\`      | Start a new change, step through artifacts one at a time |
  | \`/opsx:continue\` | Continue working on an existing change                   |
  | \`/opsx:ff\`       | Fast-forward: create all artifacts at once               |
- | \`/opsx:verify\`   | Verify implementation matches artifacts                  |
+ | \`/opsx:review\`   | Code review with complexity-adaptive depth               |
+ | \`/opsx:sync\`     | Sync delta specs to main specs                           |
 
 ---
 
@@ -529,12 +541,13 @@ If the user says they just want to see the commands or skip the tutorial:
 
 **Core workflow:**
 
- | Command                  | What it does                               |
- |--------------------------|--------------------------------------------|
- | \`/opsx:propose <name>\` | Create a change and generate all artifacts |
- | \`/opsx:explore\`        | Think through problems (no code changes)   |
- | \`/opsx:apply <name>\`   | Implement tasks                            |
- | \`/opsx:archive <name>\` | Archive when done                          |
+ | Command                  | What it does                                    |
+ |--------------------------|-------------------------------------------------|
+ | \`/opsx:explore\`        | Investigate problems (mandatory before propose) |
+ | \`/opsx:propose <name>\` | Create a change and generate all artifacts      |
+ | \`/opsx:apply <name>\`   | Implement tasks with TDD enforced               |
+ | \`/opsx:verify <name>\`  | Verify implementation                           |
+ | \`/opsx:archive <name>\` | Archive when done                               |
 
 **Additional commands:**
 
@@ -543,9 +556,10 @@ If the user says they just want to see the commands or skip the tutorial:
  | \`/opsx:new <name>\`      | Start a new change, step by step    |
  | \`/opsx:continue <name>\` | Continue an existing change         |
  | \`/opsx:ff <name>\`       | Fast-forward: all artifacts at once |
- | \`/opsx:verify <name>\`   | Verify implementation               |
+ | \`/opsx:review <name>\`   | Code review                         |
+ | \`/opsx:sync <name>\`     | Sync specs to main                  |
 
-Try \`/opsx:propose\` to start your first change.
+Try \`/opsx:explore\` to start, then \`/opsx:propose\` to create your first change.
 \`\`\`
 
 Exit gracefully.

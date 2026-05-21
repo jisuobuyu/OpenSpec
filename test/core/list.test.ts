@@ -57,7 +57,7 @@ describe('ListCommand', () => {
       // Create tasks.md with some tasks
       await fs.writeFile(
         path.join(changesDir, 'my-change', 'tasks.md'),
-        '- [x] Task 1\n- [ ] Task 2\n'
+        '- [x] 1.1 Task 1\n- [ ] 1.2 Task 2\n'
       );
 
       const listCommand = new ListCommand();
@@ -75,11 +75,11 @@ describe('ListCommand', () => {
       await fs.writeFile(
         path.join(changesDir, 'test-change', 'tasks.md'),
         `# Tasks
-- [x] Completed task 1
-- [x] Completed task 2
-- [ ] Incomplete task 1
-- [ ] Incomplete task 2
-- [ ] Incomplete task 3
+- [x] 1.1 Completed task 1
+- [x] 1.2 Completed task 2
+- [ ] 1.3 Incomplete task 1
+- [ ] 1.4 Incomplete task 2
+- [ ] 1.5 Incomplete task 3
 Regular text that should be ignored
 `
       );
@@ -96,7 +96,7 @@ Regular text that should be ignored
       
       await fs.writeFile(
         path.join(changesDir, 'completed-change', 'tasks.md'),
-        '- [x] Task 1\n- [x] Task 2\n- [x] Task 3\n'
+        '- [x] 1.1 Task 1\n- [x] 1.2 Task 2\n- [x] 1.3 Task 3\n'
       );
 
       const listCommand = new ListCommand();
@@ -140,14 +140,14 @@ Regular text that should be ignored
       await fs.mkdir(path.join(changesDir, 'completed'), { recursive: true });
       await fs.writeFile(
         path.join(changesDir, 'completed', 'tasks.md'),
-        '- [x] Task 1\n- [x] Task 2\n'
+        '- [x] 1.1 Task 1\n- [x] 1.2 Task 2\n'
       );
 
       // Partial change
       await fs.mkdir(path.join(changesDir, 'partial'), { recursive: true });
       await fs.writeFile(
         path.join(changesDir, 'partial', 'tasks.md'),
-        '- [x] Done\n- [ ] Not done\n- [ ] Also not done\n'
+        '- [x] 1.1 Done\n- [ ] 1.2 Not done\n- [ ] 1.3 Also not done\n'
       );
 
       // No tasks

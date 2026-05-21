@@ -59,7 +59,7 @@ describe('ArchiveCommand', () => {
       await fs.mkdir(changeDir, { recursive: true });
       
       // Create tasks.md with completed tasks
-      const tasksContent = '- [x] Task 1\n- [x] Task 2';
+      const tasksContent = '- [x] 1.1 Task 1\n- [x] 1.2 Task 2';
       await fs.writeFile(path.join(changeDir, 'tasks.md'), tasksContent);
       
       // Execute archive with --yes flag
@@ -82,7 +82,7 @@ describe('ArchiveCommand', () => {
       await fs.mkdir(changeDir, { recursive: true });
       
       // Create tasks.md with incomplete tasks
-      const tasksContent = '- [x] Task 1\n- [ ] Task 2\n- [ ] Task 3';
+      const tasksContent = '- [x] 1.1 Task 1\n- [ ] 1.2 Task 2\n- [ ] 1.3 Task 3';
       await fs.writeFile(path.join(changeDir, 'tasks.md'), tasksContent);
       
       // Execute archive with --yes flag
@@ -362,7 +362,7 @@ The system will log all events.
 - **WHEN** an event occurs
 - **THEN** it is captured`;
       await fs.writeFile(path.join(changeSpecDir, 'spec.md'), deltaSpec);
-      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1\n');
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] 1.1 Task 1\n');
 
       const deltaSpy = vi.spyOn(Validator.prototype, 'validateChangeDeltaSpecs');
       const specContentSpy = vi.spyOn(Validator.prototype, 'validateSpecContent');
@@ -823,7 +823,7 @@ E1 updated`);
       await fs.mkdir(changeDir, { recursive: true });
       
       // Create tasks.md with incomplete tasks
-      const tasksContent = '- [ ] Task 1';
+      const tasksContent = '- [ ] 1.1 Task 1';
       await fs.writeFile(path.join(changeDir, 'tasks.md'), tasksContent);
       
       // Mock confirm to return true (proceed)
@@ -848,7 +848,7 @@ E1 updated`);
       await fs.mkdir(changeDir, { recursive: true });
       
       // Create tasks.md with incomplete tasks
-      const tasksContent = '- [ ] Task 1';
+      const tasksContent = '- [ ] 1.1 Task 1';
       await fs.writeFile(path.join(changeDir, 'tasks.md'), tasksContent);
       
       // Mock confirm to return false (cancel) for validation skip

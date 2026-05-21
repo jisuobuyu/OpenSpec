@@ -1,8 +1,10 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const TASK_PATTERN = /^[-*]\s+\[[\sx]\]/i;
-const COMPLETED_TASK_PATTERN = /^[-*]\s+\[x\]/i;
+// Only match task lines with numeric IDs (e.g., "1.1", "2.3"), NOT sub-step
+// checkboxes like "RED:", "Verify RED:", "GREEN:", etc.
+const TASK_PATTERN = /^[-*]\s+\[[\sx]\]\s+\d+\.\d+/i;
+const COMPLETED_TASK_PATTERN = /^[-*]\s+\[x\]\s+\d+\.\d+/i;
 
 export interface TaskProgress {
   total: number;

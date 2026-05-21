@@ -77,23 +77,32 @@ describe('InitCommand', () => {
       expect(content).toContain('schema: specpower-driven');
     });
 
-    it('should create core profile skills for Claude Code by default', async () => {
+    it('should create strict profile skills for Claude Code by default (14 OpenSpec + 4 Superpowers)', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
 
-      // Core profile: propose, explore, apply, sync, archive
-      const coreSkillNames = [
+      // Strict profile: all 14 workflows
+      const allSkillNames = [
         'openspec-propose',
         'openspec-explore',
         'openspec-apply-change',
         'openspec-sync-specs',
         'openspec-archive-change',
+        'openspec-new-change',
+        'openspec-continue-change',
+        'openspec-ff-change',
+        'openspec-verify-change',
+        'openspec-review',
+        'openspec-simplify',
+        'openspec-abort-change',
+        'openspec-rewind-change',
+        'openspec-unarchive-change',
       ];
 
-      for (const skillName of coreSkillNames) {
+      for (const skillName of allSkillNames) {
         const skillFile = path.join(testDir, '.claude', 'skills', skillName, 'SKILL.md');
-        expect(await fileExists(skillFile)).toBe(true);
+        expect(await fileExists(skillFile), `${skillName} should exist`).toBe(true);
 
         const content = await fs.readFile(skillFile, 'utf-8');
         expect(content).toContain('---');
@@ -101,52 +110,46 @@ describe('InitCommand', () => {
         expect(content).toContain('description:');
       }
 
-      // Non-core skills should NOT be created
-      const nonCoreSkillNames = [
-        'openspec-new-change',
-        'openspec-continue-change',
-        'openspec-ff-change',
-        'openspec-bulk-archive-change',
-        'openspec-verify-change',
+      // Bundled Superpowers skills should also be installed
+      const bundledSkills = [
+        'subagent-driven-development',
+        'systematic-debugging',
+        'test-driven-development',
+        'using-git-worktrees',
       ];
 
-      for (const skillName of nonCoreSkillNames) {
+      for (const skillName of bundledSkills) {
         const skillFile = path.join(testDir, '.claude', 'skills', skillName, 'SKILL.md');
-        expect(await fileExists(skillFile)).toBe(false);
+        expect(await fileExists(skillFile), `${skillName} should be bundled`).toBe(true);
       }
     });
 
-    it('should create core profile commands for Claude Code by default', async () => {
+    it('should create strict profile commands for Claude Code by default (all 14)', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 
       await initCommand.execute(testDir);
 
-      // Core profile: propose, explore, apply, sync, archive
-      const coreCommandNames = [
+      // Strict profile: all 14 commands
+      const allCommandNames = [
         'opsx/propose.md',
         'opsx/explore.md',
         'opsx/apply.md',
         'opsx/sync.md',
         'opsx/archive.md',
-      ];
-
-      for (const cmdName of coreCommandNames) {
-        const cmdFile = path.join(testDir, '.claude', 'commands', cmdName);
-        expect(await fileExists(cmdFile)).toBe(true);
-      }
-
-      // Non-core commands should NOT be created
-      const nonCoreCommandNames = [
         'opsx/new.md',
         'opsx/continue.md',
         'opsx/ff.md',
-        'opsx/bulk-archive.md',
         'opsx/verify.md',
+        'opsx/review.md',
+        'opsx/simplify.md',
+        'opsx/abort.md',
+        'opsx/rewind.md',
+        'opsx/unarchive.md',
       ];
 
-      for (const cmdName of nonCoreCommandNames) {
+      for (const cmdName of allCommandNames) {
         const cmdFile = path.join(testDir, '.claude', 'commands', cmdName);
-        expect(await fileExists(cmdFile)).toBe(false);
+        expect(await fileExists(cmdFile), `${cmdName} should exist`).toBe(true);
       }
     });
 

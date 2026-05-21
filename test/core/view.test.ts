@@ -43,7 +43,7 @@ describe('ViewCommand', () => {
     await fs.mkdir(path.join(changesDir, 'completed-change'), { recursive: true });
     await fs.writeFile(
       path.join(changesDir, 'completed-change', 'tasks.md'),
-      '- [x] Done task\n'
+      '- [x] 1.1 Done task\n'
     );
 
     const viewCommand = new ViewCommand();
@@ -85,25 +85,25 @@ describe('ViewCommand', () => {
     await fs.mkdir(path.join(changesDir, 'gamma-change'), { recursive: true });
     await fs.writeFile(
       path.join(changesDir, 'gamma-change', 'tasks.md'),
-      '- [x] Done\n- [x] Also done\n- [ ] Not done\n'
+      '- [x] 1.1 Done\n- [x] 1.2 Also done\n- [ ] 1.3 Not done\n'
     );
 
     await fs.mkdir(path.join(changesDir, 'beta-change'), { recursive: true });
     await fs.writeFile(
       path.join(changesDir, 'beta-change', 'tasks.md'),
-      '- [x] Task 1\n- [ ] Task 2\n'
+      '- [x] 1.1 Task 1\n- [ ] 1.2 Task 2\n'
     );
 
     await fs.mkdir(path.join(changesDir, 'delta-change'), { recursive: true });
     await fs.writeFile(
       path.join(changesDir, 'delta-change', 'tasks.md'),
-      '- [x] Task 1\n- [ ] Task 2\n'
+      '- [x] 1.1 Task 1\n- [ ] 1.2 Task 2\n'
     );
 
     await fs.mkdir(path.join(changesDir, 'alpha-change'), { recursive: true });
     await fs.writeFile(
       path.join(changesDir, 'alpha-change', 'tasks.md'),
-      '- [ ] Task 1\n- [ ] Task 2\n'
+      '- [ ] 1.1 Task 1\n- [ ] 1.2 Task 2\n'
     );
 
     const viewCommand = new ViewCommand();
@@ -124,6 +124,93 @@ describe('ViewCommand', () => {
       'delta-change',
       'gamma-change'
     ]);
+  });
+
+  it('displays SP tag for specpower-driven schema changes', async () => {
+    const changesDir = path.join(tempDir, 'openspec', 'changes');
+    await fs.mkdir(changesDir, { recursive: true });
+    await fs.mkdir(path.join(changesDir, 'spec-change'), { recursive: true });
+    await fs.writeFile(path.join(changesDir, 'spec-change', 'tasks.md'), '- [ ] 1.1 Task 1\n');
+    await fs.mkdir(path.join(changesDir, 'spec-change', '.openspec.yaml').replace('.openspec.yaml', ''), { recursive: true });
+    // Write .openspec.yaml with schema
+    await fs.writeFile(
+      path.join(changesDir, 'spec-change', '.openspec.yaml'),
+      'schema: specpower-driven\n'
+    );
+
+    const viewCommand = new ViewCommand();
+    await viewCommand.execute(tempDir);
+
+    const output = logOutput.map(stripAnsi).join('\n');
+    // spec-change should appear in Active with the SP tag
+    const specLine = logOutput.map(stripAnsi).find(l => l.includes('spec-change'));
+    expect(specLine).toBeDefined();
+  });
+
+  it('displays 探 tag when explore.md exists', async () => {
+    const changesDir = path.join(tempDir, 'openspec', 'changes');
+    await fs.mkdir(changesDir, { recursive: true });
+    await fs.mkdir(path.join(changesDir, 'explored-change'), { recursive: true });
+    await fs.writeFile(path.join(changesDir, 'explored-change', 'tasks.md'), '- [ ] 1.1 Task\n');
+    await fs.writeFile(path.join(changesDir, 'explored-change', 'explore.md'), '# Exploration\n');
+
+    const viewCommand = new ViewCommand();
+    await viewCommand.execute(tempDir);
+
+    const output = logOutput.map(stripAnsi).join('\n');
+    expect(output).toContain('explored-change');
+  });
+
+  it('displays 审 tag when review.md exists', async () => {
+    const changesDir = path.join(tempDir, 'openspec', 'changes');
+    await fs.mkdir(changesDir, { recursive: true });
+    await fs.mkdir(path.join(changesDir, 'reviewed-change'), { recursive: true });
+    await fs.writeFile(path.join(changesDir, 'reviewed-change', 'tasks.md'), '- [ ] 1.1 Task\n');
+    await fs.writeFile(path.join(changesDir, 'reviewed-change', 'review.md'), '# Review\n');
+
+    const viewCommand = new ViewCommand();
+    await viewCommand.execute(tempDir);
+
+    const output = logOutput.map(stripAnsi).join('\n');
+    expect(output).toContain('reviewed-change');
+  });
+
+  it('handles change with no .openspec.yaml gracefully', async () => {
+    const changesDir = path.join(tempDir, 'openspec', 'changes');
+    await fs.mkdir(changesDir, { recursive: true });
+    await fs.mkdir(path.join(changesDir, 'no-meta'), { recursive: true });
+    await fs.writeFile(path.join(changesDir, 'no-meta', 'tasks.md'), '- [ ] 1.1 Task\n');
+
+    const viewCommand = new ViewCommand();
+    // Should not throw
+    await expect(viewCommand.execute(tempDir)).resolves.toBeUndefined();
+
+    const output = logOutput.map(stripAnsi).join('\n');
+    expect(output).toContain('no-meta');
+  });
+
+  it('handles corrupted tasks.md gracefully', async () => {
+    const changesDir = path.join(tempDir, 'openspec', 'changes');
+    await fs.mkdir(changesDir, { recursive: true });
+    await fs.mkdir(path.join(changesDir, 'corrupt-tasks'), { recursive: true });
+    // Write garbage
+    await fs.writeFile(path.join(changesDir, 'corrupt-tasks', 'tasks.md'), '\x00\x01\x02');
+
+    const viewCommand = new ViewCommand();
+    // Should not crash
+    await expect(viewCommand.execute(tempDir)).resolves.toBeUndefined();
+  });
+
+  it('should exclude archive directory from change listing', async () => {
+    const changesDir = path.join(tempDir, 'openspec', 'changes');
+    await fs.mkdir(path.join(changesDir, 'archive', 'old-change'), { recursive: true });
+    await fs.writeFile(path.join(changesDir, 'archive', 'old-change', 'tasks.md'), '- [x] Done\n');
+
+    const viewCommand = new ViewCommand();
+    await viewCommand.execute(tempDir);
+
+    const output = logOutput.map(stripAnsi).join('\n');
+    expect(output).not.toContain('old-change');
   });
 });
 

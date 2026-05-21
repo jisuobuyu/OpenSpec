@@ -1214,6 +1214,9 @@ preferred_opener:
       'workspace',
       'agent',
       'editor',
+      'prepare-only',
+      'json',
+      'change',
       'no-interactive',
     ]);
   });

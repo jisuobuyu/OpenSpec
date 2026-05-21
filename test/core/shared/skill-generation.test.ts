@@ -194,6 +194,79 @@ describe('skill-generation', () => {
     });
   });
 
+  describe('generated content validation', () => {
+    it('apply-change: should embed 6 TDD sub-steps', () => {
+      const templates = getSkillTemplates();
+      const entry = templates.find(t => t.dirName === 'openspec-apply-change');
+      expect(entry).toBeDefined();
+      const content = generateSkillContent(entry!.template, '0.0.0');
+      expect(content).toContain('RED');
+      expect(content).toContain('Verify RED');
+      expect(content).toContain('GREEN');
+      expect(content).toContain('Verify GREEN');
+      expect(content).toContain('REFACTOR');
+      expect(content).toContain('SIMPLIFY');
+    });
+
+    it('apply-change: should contain Iron Law', () => {
+      const templates = getSkillTemplates();
+      const entry = templates.find(t => t.dirName === 'openspec-apply-change');
+      const content = generateSkillContent(entry!.template, '0.0.0');
+      expect(content).toContain('NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST');
+    });
+
+    it('apply-change: should define Layer 1 (TDD) and Layer 2 (subagent)', () => {
+      const templates = getSkillTemplates();
+      const entry = templates.find(t => t.dirName === 'openspec-apply-change');
+      const content = generateSkillContent(entry!.template, '0.0.0');
+      expect(content).toContain('Layer 1');
+      expect(content).toContain('Layer 2');
+      expect(content).toContain('SUBAGENT');
+    });
+
+    it('apply-change: should include B2-fallback local execution path', () => {
+      const templates = getSkillTemplates();
+      const entry = templates.find(t => t.dirName === 'openspec-apply-change');
+      const content = generateSkillContent(entry!.template, '0.0.0');
+      expect(content).toContain('B2-fallback');
+      expect(content).toContain('降级为本地执行');
+    });
+
+    it('apply-change: should reference systematic-debugging', () => {
+      const templates = getSkillTemplates();
+      const entry = templates.find(t => t.dirName === 'openspec-apply-change');
+      const content = generateSkillContent(entry!.template, '0.0.0');
+      expect(content).toContain('systematic-debugging/root-cause-tracing.md');
+      expect(content).toContain('systematic-debugging/defense-in-depth.md');
+      expect(content).toContain('systematic-debugging/condition-based-waiting.md');
+    });
+
+    it('apply-change: should check project and user skill paths', () => {
+      const templates = getSkillTemplates();
+      const entry = templates.find(t => t.dirName === 'openspec-apply-change');
+      const content = generateSkillContent(entry!.template, '0.0.0');
+      expect(content).toContain('.claude/skills/');
+      expect(content).toContain('~/.claude/skills/');
+    });
+
+    it('apply-change: should include C0 sub-step compliance check', () => {
+      const templates = getSkillTemplates();
+      const entry = templates.find(t => t.dirName === 'openspec-apply-change');
+      const content = generateSkillContent(entry!.template, '0.0.0');
+      expect(content).toContain('SUB-STEP COMPLIANCE CHECK');
+      expect(content).toContain('Retry');
+      expect(content).toContain('Explain');
+      expect(content).toContain('Override');
+    });
+
+    it('apply-change: should mention subagent-driven-development skill', () => {
+      const templates = getSkillTemplates();
+      const entry = templates.find(t => t.dirName === 'openspec-apply-change');
+      const content = generateSkillContent(entry!.template, '0.0.0');
+      expect(content).toContain('subagent-driven-development');
+    });
+  });
+
   describe('generateSkillContent', () => {
     it('should generate valid YAML frontmatter', () => {
       const template = {

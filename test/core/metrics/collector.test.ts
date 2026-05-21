@@ -134,4 +134,40 @@ describe('metrics-collector', () => {
     const store = { version: 1 as const, snapshots: [] };
     expect(getLatestForChange(store, 'unknown')).toBeNull();
   });
+
+  it('should handle partial indicators (only specCoverage provided)', async () => {
+    await recordMetrics(testDir, 'partial-change', {
+      specCoverage: 75,
+    });
+
+    const store = await getMetrics(testDir);
+    expect(store.snapshots).toHaveLength(1);
+    expect(store.snapshots[0].indicators.specCoverage).toBe(75);
+    // Unset fields default to 0
+    expect(store.snapshots[0].indicators.flowEfficiency).toBe(0);
+    expect(store.snapshots[0].indicators.defectEscapeRate).toBe(0);
+  });
+
+  it('should handle multiple recordings for the same change', async () => {
+    await recordMetrics(testDir, 'same-change', { specCoverage: 50 });
+    await recordMetrics(testDir, 'same-change', { specCoverage: 90 });
+
+    const store = await getMetrics(testDir);
+    expect(store.snapshots).toHaveLength(2);
+    // Latest should be 90
+    const latest = getLatestForChange(store, 'same-change');
+    expect(latest!.indicators.specCoverage).toBe(90);
+  });
+
+  it('should handle recording with empty indicators gracefully', async () => {
+    await recordMetrics(testDir, 'empty-change', {});
+
+    const store = await getMetrics(testDir);
+    expect(store.snapshots).toHaveLength(1);
+    // All defaults
+    const ind = store.snapshots[0].indicators;
+    expect(ind.specCoverage).toBe(0);
+    expect(ind.flowEfficiency).toBe(0);
+    expect(ind.defectEscapeRate).toBe(0);
+  });
 });

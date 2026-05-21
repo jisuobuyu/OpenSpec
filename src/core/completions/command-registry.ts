@@ -44,6 +44,15 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         description: 'Configure AI tools non-interactively (e.g., "all", "none", or comma-separated tool IDs)',
         takesValue: true,
       },
+      {
+        name: 'force',
+        description: 'Auto-cleanup legacy files without prompting',
+      },
+      {
+        name: 'profile',
+        description: 'Override global config profile (core or custom)',
+        takesValue: true,
+      },
     ],
   },
   {
@@ -51,11 +60,16 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     description: 'Update OpenSpec instruction files',
     acceptsPositional: true,
     positionalType: 'path',
-    flags: [],
+    flags: [
+      {
+        name: 'force',
+        description: 'Force update even when tools are up to date',
+      },
+    ],
   },
   {
     name: 'list',
-    description: 'List items (changes by default, or specs with --specs)',
+    description: 'List items (changes by default). Use --specs to list specs.',
     flags: [
       {
         name: 'specs',
@@ -65,12 +79,26 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'changes',
         description: 'List changes explicitly (default)',
       },
+      {
+        name: 'sort',
+        description: 'Sort order: "recent" (default) or "name"',
+        takesValue: true,
+        values: ['recent', 'name'],
+      },
+      COMMON_FLAGS.json,
     ],
   },
   {
     name: 'view',
     description: 'Display an interactive dashboard of specs and changes',
     flags: [],
+  },
+  {
+    name: 'metrics',
+    description: 'Display engineering discipline metrics',
+    flags: [
+      COMMON_FLAGS.json,
+    ],
   },
   {
     name: 'validate',
@@ -153,6 +181,30 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'no-validate',
         description: 'Skip validation (not recommended)',
       },
+    ],
+  },
+  {
+    name: 'verify',
+    description: 'Run 6-dimension consistency audit on a change (code-driven, results reproducible)',
+    flags: [
+      {
+        name: 'change',
+        description: 'Change name to audit (required)',
+        takesValue: true,
+      },
+      COMMON_FLAGS.json,
+    ],
+  },
+  {
+    name: 'check',
+    description: 'Check skill compliance — verify task TDD annotations against discipline config',
+    flags: [
+      {
+        name: 'change',
+        description: 'Change name to check (required)',
+        takesValue: true,
+      },
+      COMMON_FLAGS.json,
     ],
   },
   {
@@ -285,6 +337,19 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
             name: 'editor',
             description: 'Open the workspace in VS Code editor mode',
           },
+          {
+            name: 'prepare-only',
+            description: 'Preview context/query output (reserved for future use)',
+          },
+          {
+            name: 'json',
+            description: 'Machine-readable context (reserved for future use)',
+          },
+          {
+            name: 'change',
+            description: 'Change-scoped open (reserved for future workspace change planning)',
+            takesValue: true,
+          },
           COMMON_FLAGS.noInteractive,
         ],
       },
@@ -309,7 +374,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     subcommands: [
       {
         name: 'show',
-        description: 'Show a change proposal',
+        description: 'Show a change proposal in JSON or markdown format',
         acceptsPositional: true,
         positionalType: 'change-id',
         flags: [
@@ -351,12 +416,12 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
   },
   {
     name: 'spec',
-    description: 'Manage OpenSpec specifications',
+    description: 'Manage and view OpenSpec specifications',
     flags: [],
     subcommands: [
       {
         name: 'show',
-        description: 'Show a specification',
+        description: 'Display a specific specification',
         acceptsPositional: true,
         positionalType: 'spec-id',
         flags: [
@@ -520,8 +585,90 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     ],
   },
   {
+    name: 'status',
+    description: 'Display artifact completion status for a change',
+    flags: [
+      {
+        name: 'change',
+        description: 'Change name to show status for',
+        takesValue: true,
+      },
+      {
+        name: 'deps',
+        description: 'Show dependency tree for all active changes',
+      },
+      {
+        name: 'schema',
+        description: 'Schema override (auto-detected from config.yaml)',
+        takesValue: true,
+      },
+      COMMON_FLAGS.json,
+    ],
+  },
+  {
+    name: 'instructions',
+    description: 'Output enriched instructions for creating an artifact or applying tasks',
+    acceptsPositional: true,
+    flags: [
+      {
+        name: 'change',
+        description: 'Change name',
+        takesValue: true,
+      },
+      {
+        name: 'schema',
+        description: 'Schema override (auto-detected from config.yaml)',
+        takesValue: true,
+      },
+      COMMON_FLAGS.json,
+    ],
+  },
+  {
+    name: 'templates',
+    description: 'Show resolved template paths for all artifacts in a schema',
+    flags: [
+      {
+        name: 'schema',
+        description: 'Schema to use',
+        takesValue: true,
+      },
+      COMMON_FLAGS.json,
+    ],
+  },
+  {
+    name: 'schemas',
+    description: 'List available workflow schemas with descriptions',
+    flags: [
+      COMMON_FLAGS.json,
+    ],
+  },
+  {
+    name: 'new',
+    description: 'Create new items',
+    flags: [],
+    subcommands: [
+      {
+        name: 'change',
+        description: 'Create a new change directory',
+        acceptsPositional: true,
+        flags: [
+          {
+            name: 'description',
+            description: 'Description to add to README.md',
+            takesValue: true,
+          },
+          {
+            name: 'schema',
+            description: 'Workflow schema to use',
+            takesValue: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
     name: 'schema',
-    description: 'Manage workflow schemas',
+    description: 'Manage workflow schemas [experimental]',
     flags: [],
     subcommands: [
       {
@@ -554,7 +701,17 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
         name: 'fork',
         description: 'Copy an existing schema to project for customization',
         acceptsPositional: true,
-        positionalType: 'schema-name',
+        positionals: [
+          {
+            name: 'source',
+            type: 'schema-name',
+          },
+          {
+            name: 'name',
+            type: 'schema-name',
+            optional: true,
+          },
+        ],
         flags: [
           COMMON_FLAGS.json,
           {

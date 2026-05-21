@@ -140,7 +140,7 @@ describe('global-config', () => {
 
       const config = getGlobalConfig();
 
-      expect(config).toEqual({ featureFlags: {}, profile: 'core', delivery: 'both' });
+      expect(config).toEqual({ featureFlags: {}, profile: 'strict', delivery: 'both' });
     });
 
     it('should not create directory when reading non-existent config', () => {
@@ -177,7 +177,7 @@ describe('global-config', () => {
 
       const config = getGlobalConfig();
 
-      expect(config).toEqual({ featureFlags: {}, profile: 'core', delivery: 'both' });
+      expect(config).toEqual({ featureFlags: {}, profile: 'strict', delivery: 'both' });
     });
 
     it('should log warning for invalid JSON', () => {
@@ -244,7 +244,7 @@ describe('global-config', () => {
 
         const config = getGlobalConfig();
 
-        expect(config.profile).toBe('core');
+        expect(config.profile).toBe('strict');
         expect(config.delivery).toBe('both');
         expect(config.workflows).toBeUndefined();
         expect(config.featureFlags?.existingFlag).toBe(true);
@@ -295,7 +295,7 @@ describe('global-config', () => {
         fs.mkdirSync(configDir, { recursive: true });
         fs.writeFileSync(configPath, JSON.stringify({
           featureFlags: {},
-          profile: 'core',
+          profile: 'strict',
           delivery: 'both'
         }));
 
