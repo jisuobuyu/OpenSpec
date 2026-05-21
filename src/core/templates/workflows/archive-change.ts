@@ -152,10 +152,10 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    **Change:** <change-name>
    **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-   **Specs:** ✓ Synced (or "No delta specs" or "Sync skipped")
-   **Review:** ✓ Completed (or "Skipped" or "N/A - simple change")
+   **Specs:** [x] Synced (or "No delta specs" or "Sync skipped")
+   **Review:** [x] Completed (or "Skipped" or "N/A - simple change")
    **Worktree:** Cleaned up (or "N/A")
-   **Verification:** ✓ Environment preserved (or "Skipped")
+   **Verification:** [x] Environment preserved (or "Skipped")
 
    All tasks complete. Change archived successfully.
    \`\`\`
@@ -166,8 +166,8 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 \`\`\`
 ## Archive Complete
 
-**Change:** <name> → openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced | **Review:** ✓ | **Worktree:** ✓
+**Change:** <name> -> openspec/changes/archive/YYYY-MM-DD-<name>/
+**Specs:** [x] Synced | **Review:** [x] | **Worktree:** [x]
 All done.
 \`\`\`
 
@@ -225,7 +225,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 2. **Check artifact & task completion** — warn if incomplete, confirm before proceeding
 
-3. **Pre-archive verify** — three-way gate: not-run → offer verify; failed → BLOCK, must fix and re-verify; passed → proceed
+3. **Pre-archive verify** — three-way gate: not-run -> offer verify; failed -> BLOCK, must fix and re-verify; passed -> proceed
 
 4. **Pre-archive review** — if \`review.md\` doesn't exist and change is not simple, offer to run \`/opsx:review\` before archiving
 
@@ -235,7 +235,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 7. **Pre-commit validation** — run \`openspec instructions apply --json\`, check \`progress.remaining\`. If > 0, block with unmarked task count
 
-8. **Archive** — \`mkdir -p openspec/changes/archive\` → \`mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>\`
+8. **Archive** — \`mkdir -p openspec/changes/archive\` -> \`mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>\`
 
 9. **Create final commit** — \`git add -A && git commit -m "feat(<change-name>): <proposal summary>"\` with Changes list, Verify status, Review status. Single commit captures both implementation and archive rename
 
