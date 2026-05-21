@@ -221,12 +221,13 @@ function parseTasksFile(content: string): TaskItem[] {
   let taskIndex = 0;
 
   for (const line of lines) {
-    // Match checkbox patterns: - [ ] or - [x] or - [X]
-    const checkboxMatch = line.match(/^[-*]\s*\[([ xX])\]\s*(.+)\s*$/);
-    if (checkboxMatch) {
+    // Match task checkboxes: - [ ] X.Y description
+    // Requires numeric task ID like 1.1, 2.3 to exclude TDD sub-step checkboxes
+    const taskMatch = line.match(/^[-*]\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)/);
+    if (taskMatch) {
       taskIndex++;
-      const done = checkboxMatch[1].toLowerCase() === 'x';
-      const description = checkboxMatch[2].trim();
+      const done = taskMatch[1].toLowerCase() === 'x';
+      const description = taskMatch[3].trim();
       tasks.push({
         id: `${taskIndex}`,
         description,

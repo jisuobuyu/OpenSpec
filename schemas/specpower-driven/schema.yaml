@@ -197,21 +197,29 @@ apply:
   tracks: tasks.md
   instruction: |
     You are the OpenSpec apply outer-loop controller. Process tasks one at a time.
+    Each task has 6 TDD sub-steps embedded directly in tasks.md — follow them in strict order.
 
-    Before each task:
-    1. Read the task's TDD level annotation
-    2. Read the task's Spec reference annotation (if any)
-    3. Extract the corresponding requirement block for precise context injection
+    Two-Layer Execution Model
+    Layer 1 (TDD CYCLE — NON-NEGOTIABLE): 6 embedded sub-steps executed in strict order.
+      RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY.
+      The sub-steps are embedded in tasks.md. No external skill call needed for TDD.
+    Layer 2 (SUBAGENT ISOLATION — EXECUTION MODE): Wraps Layer 1 in isolated worktree.
+      Skill({skill: "subagent-driven-development"}) — model by complexity.
+      Skill path: .claude/skills/subagent-driven-development/SKILL.md (project) or
+      ~/.claude/skills/subagent-driven-development/SKILL.md (user).
+      Unavailable → degrades in enhanced mode, halts in strict mode.
 
-    During each task:
-    - `[TDD]` → Invoke `Skill({skill: "test-driven-development"})`
-    - `[TDD: Lite]` → Invoke skill with "skip refactor step" exception
-    - `[TDD: Skip]` → Direct implementation
+    Per-Task Execution
+    1. Announce: "Working on task X.Y: [description]"
+    2. Read Spec annotations ([Spec: REQ-xxx]) for precise context injection
+    3. Dispatch: Skill({skill: "subagent-driven-development"}) OR local with full TDD discipline
+    4. Follow 6 sub-steps in strict order: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY
+    5. C0 Sub-Step Compliance: verify all 6 sub-steps are [x] before proceeding. If not → Retry/Explain/Override
+    6. Post-checkpoint: mark task checkbox → git commit → next task
+    7. Brief status: "✓ Task X.Y complete"
 
-    After each task (post-checkpoint):
-    - Update the task checkbox in tasks.md
-    - Invoke `Skill({skill: "simplify"})` on changed files
-    - Read the next task and continue
+    The Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
+    If you wrote code before the test, delete it. Start over. No exceptions.
 
     Snapshot config.yaml discipline settings at apply start and use consistently
     for the entire change (prevents hot-config drift).
