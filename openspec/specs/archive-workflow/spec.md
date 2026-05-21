@@ -42,8 +42,6 @@ The archive workflow SHALL create a single git commit after the archive director
   Verify: <Layer 1 status>
           <Layer 2 status>
   Review: <review status>
-
-  Co-Authored-By: Claude <noreply@anthropic.com>
   ```
 
 #### Scenario: Archive with warnings — commit includes warning flags

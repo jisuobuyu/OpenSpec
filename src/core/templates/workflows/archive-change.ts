@@ -135,7 +135,6 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    \`\`\`
 
    Parse \`tasks.md\` to build the Changes list. Read verify output for status lines.
-   Include \`Co-Authored-By: Claude <noreply@anthropic.com>\` if applicable.
 
 11. **Clean up worktree (if applicable)**
 
