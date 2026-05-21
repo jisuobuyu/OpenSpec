@@ -204,19 +204,22 @@ apply:
       RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY.
       The sub-steps are embedded in tasks.md. No external skill call needed for TDD.
     Layer 2 (SUBAGENT ISOLATION — EXECUTION MODE): Wraps Layer 1 in isolated worktree.
-      Skill({skill: "subagent-driven-development"}) — model by complexity.
-      Skill path: .claude/skills/subagent-driven-development/SKILL.md (project) or
-      ~/.claude/skills/subagent-driven-development/SKILL.md (user).
-      Unavailable → degrades in enhanced mode, halts in strict mode.
+      Skill({skill: "subagent-driven-development"}) — MANDATORY when skill file exists.
+      HARD GATE: check .claude/skills/subagent-driven-development/SKILL.md (project) and
+      ~/.claude/skills/subagent-driven-development/SKILL.md (user) before any implementation.
+      DO NOT execute locally unless skill is genuinely missing.
+      Unavailable → hard stop in enhanced mode; halts in strict mode.
 
     Per-Task Execution
     1. Announce: "Working on task X.Y: [description]"
     2. Read Spec annotations ([Spec: REQ-xxx]) for precise context injection
-    3. Dispatch: Skill({skill: "subagent-driven-development"}) OR local with full TDD discipline
+    3. Dispatch: Skill({skill: "subagent-driven-development"}) — hard gate enforcement
     4. Follow 6 sub-steps in strict order: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY
     5. C0 Sub-Step Compliance: verify all 6 sub-steps are [x] before proceeding. If not → Retry/Explain/Override
-    6. Post-checkpoint: mark task checkbox → git commit → next task
+    6. Post-checkpoint: mark task checkbox immediately → update checkpoint → STOP, wait for confirmation → next task
     7. Brief status: "✓ Task X.Y complete"
+
+    NO git commits during apply. Commits happen only at archive time after verification.
 
     The Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST.
     If you wrote code before the test, delete it. Start over. No exceptions.
@@ -254,10 +257,12 @@ verify:
 archive:
   requires: [tasks]
   instruction: |
-    Finalize the change.
+    Finalize the change after verification passes.
 
-    1. If verify has not been run, run it first
+    1. Verify gate: not-run → offer verify; failed → BLOCK, must fix and re-verify; passed → proceed
     2. Merge delta specs into main specs
-    3. Clean up worktree (if applicable)
-    4. Run conflict detection for parallel changes
-    5. Move change directory to archive/
+    3. Pre-commit validation: run openspec instructions apply --json, check progress.remaining. If > 0, block with error listing unmarked tasks
+    4. Move change directory to archive/ (move FIRST, then commit — single commit captures both implementation and archive rename)
+    5. Create final git commit with structured message (Changes list, Verify status, Review status)
+    6. Clean up worktree (if applicable)
+    7. Run conflict detection for parallel changes

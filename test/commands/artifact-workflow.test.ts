@@ -73,7 +73,7 @@ describe('artifact-workflow CLI commands', () => {
     }
 
     if (artifacts.includes('tasks')) {
-      await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [ ] Task 1');
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '## Tasks\n- [ ] 1.1 Task 1');
     }
 
     return changeDir;
@@ -507,7 +507,7 @@ apply:
       // Overwrite tasks with all completed
       await fs.writeFile(
         path.join(changeDir, 'tasks.md'),
-        '## Tasks\n- [x] Task 1\n- [x] Task 2'
+        '## Tasks\n- [x] 1.1 Task 1\n- [x] 1.2 Task 2'
       );
 
       const result = await runCLI(['instructions', 'apply', '--change', 'done-apply'], {

@@ -46,7 +46,14 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    > [1] Run verify and then archive (Recommended)
    > [2] Skip verification and archive now
 
-   If user chooses option 1, invoke \`/opsx:verify <name>\` (or equivalent verification steps) before continuing.
+   If user chooses option 1, invoke \`/opsx:verify <name>\` before continuing.
+
+   **If verification was run and FAILED**, BLOCK the archive:
+   > "Verification failed. Fix issues and re-verify before archiving."
+
+   Do NOT proceed to archive until verification passes. This is a HARD BLOCK.
+
+   **If verification PASSED**, proceed to the next step.
 
 5. **Pre-archive review (if not already done)**
 
@@ -82,7 +89,19 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    If user chooses sync, invoke \`/opsx:sync <name>\` or perform the spec merge directly.
 
-8. **Perform the archive**
+8. **Pre-commit validation**
+
+   Verify all tasks are marked before proceeding:
+
+   \`\`\`bash
+   openspec instructions apply --change "<name>" --json
+   \`\`\`
+
+   Check \`progress.remaining\`:
+   - If \`> 0\`: STOP with error — "\`<N>\` task(s) still unmarked in tasks.md. Mark them first before archive."
+   - If \`=== 0\`: proceed.
+
+9. **Perform the archive**
 
    \`\`\`bash
    mkdir -p openspec/changes/archive
@@ -98,7 +117,27 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    \`\`\`
 
-9. **Clean up worktree (if applicable)**
+10. **Create final commit**
+
+   The archive move is done but not yet committed. This single commit captures both implementation changes AND the archive move:
+
+   \`\`\`bash
+   git add -A
+   git commit -m "feat(<change-name>): <proposal summary>
+
+   Changes:
+   - <task-id>: <task description>
+   - <task-id>: <task description>
+
+   Verify: <Layer 1 status>
+           <Layer 2 status>
+   Review: <review status>"
+   \`\`\`
+
+   Parse \`tasks.md\` to build the Changes list. Read verify output for status lines.
+   Include \`Co-Authored-By: Claude <noreply@anthropic.com>\` if applicable.
+
+11. **Clean up worktree (if applicable)**
 
    If a git worktree was used for this change:
    \`\`\`bash
@@ -107,7 +146,7 @@ export function getArchiveChangeSkillTemplate(): SkillTemplate {
 
    Delete the associated branch if it was created for this change.
 
-10. **Display summary**
+12. **Display summary**
 
    \`\`\`
    ## Archive Complete
@@ -187,7 +226,7 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 2. **Check artifact & task completion** — warn if incomplete, confirm before proceeding
 
-3. **Pre-archive verify** — if verification hasn't been run, offer to run \`/opsx:verify\` before archiving
+3. **Pre-archive verify** — three-way gate: not-run → offer verify; failed → BLOCK, must fix and re-verify; passed → proceed
 
 4. **Pre-archive review** — if \`review.md\` doesn't exist and change is not simple, offer to run \`/opsx:review\` before archiving
 
@@ -195,14 +234,18 @@ export function getOpsxArchiveCommandTemplate(): CommandTemplate {
 
 6. **Sync delta specs** — merge delta specs into main specs, or skip with warning
 
-7. **Archive** — \`mkdir -p openspec/changes/archive\` → \`mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>\`
+7. **Pre-commit validation** — run \`openspec instructions apply --json\`, check \`progress.remaining\`. If > 0, block with unmarked task count
 
-8. **Clean up worktree** — \`git worktree remove\` if applicable
+8. **Archive** — \`mkdir -p openspec/changes/archive\` → \`mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>\`
 
-9. **Display summary** — archive location, spec sync status, review status, worktree cleanup, warnings
+9. **Create final commit** — \`git add -A && git commit -m "feat(<change-name>): <proposal summary>"\` with Changes list, Verify status, Review status. Single commit captures both implementation and archive rename
+
+10. **Clean up worktree** — \`git worktree remove\` if applicable
+
+11. **Display summary** — archive location, spec sync status, review status, worktree cleanup, warnings
 
 **Guardrails**
-- Offer verify before archiving (don't skip silently)
+- Offer verify before archiving — mandatory if not run; block if verify failed
 - Offer review before archiving (simple changes exempt)
 - Warn on incomplete tasks/artifacts but don't block
 - Sync delta specs as part of archive flow

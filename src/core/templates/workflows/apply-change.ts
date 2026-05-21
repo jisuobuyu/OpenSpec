@@ -72,21 +72,22 @@ If you wrote code before the test, delete it. Start over. No exceptions. Don't k
 
    Read \`tasks.md\` and check for:
    - Completed tasks: \`- [x]\` checkboxes
-   - In-progress tasks: look for modified but uncommitted code via \`git diff --name-only\`
+   - In-progress tasks: read \`last_checkpoint\` from \`.openspec.yaml\` and check \`tasks.md\` for the first task without \`- [x]\`
 
    If a previous apply session was interrupted, display:
    \`\`\`
    ## Session Recovery
 
    Previous apply did not complete normally.
-   ✅ 1.1 ... (committed)
-   ⚠ 1.2 ... (modified, not committed)
-   [ ] 1.3 ...
+	   Last checkpoint: <last_checkpoint>
+   ✅ 1.1 ... (checked in tasks.md)
+   ⚠ 1.2 ... (next task to resume)
+   
 
    Options:
-   [1] Resume — commit in-progress work and continue
-   [2] Discard — revert uncommitted changes and redo task 1.2
-   [3] Skip — keep changes, mark 1.2 done, continue from 1.3
+   [1] Resume — continue from the next unchecked task
+   [2] Restart — reset the undone task's sub-steps and start fresh
+   [3] Skip — mark the undone task as done and continue from the next one
    \`\`\`
 
    If no recovery needed, show current progress and proceed.
@@ -174,33 +175,49 @@ After each sub-step completes, mark its checkbox: \`- [ ]\` → \`- [x]\`.
 
 **This is the contract. Subagent or not — these 6 steps always execute in full.**
 
-**B2. Execution wrapper (执行增强)**
+**B2. Subagent Dispatch (MANDATORY — NOT OPTIONAL)**
 
-Call \`Skill({skill: "subagent-driven-development"})\` — this skill wraps the TDD cycle in an isolated subagent. It:
+BEFORE any implementation work, verify the skill file exists at one of these paths:
+- Project level: \`.claude/skills/subagent-driven-development/SKILL.md\`
+- User level: \`~/.claude/skills/subagent-driven-development/SKILL.md\`
 
+**HARD GATE**: If the skill EXISTS (at either path), you MUST call:
+
+\`\`\`
+Skill({skill: "subagent-driven-development"})
+\`\`\`
+
+This skill wraps the TDD cycle in an isolated subagent. It:
 - Creates a git worktree for isolation
-- Dispatches an implementer subagent that FOLLOWS THE TDD SUB-STEPS above
+- Dispatches an implementer subagent that FOLLOWS THE TDD SUB-STEPS from B1
 - Runs two-stage review (spec compliance → code quality) after implementation
 - Returns the result
 
-**The subagent's job is to execute B1's TDD cycle inside isolation.** It does not replace or shorten the TDD cycle. Pass the full task text including all 6 sub-steps to the subagent.
+Pass the full task text including all 6 sub-steps to the subagent.
 
-Announce: \`[Skill] subagent-driven-development → task 1.1 (model, N files)\`
+**WHY THIS IS NOT OPTIONAL:**
+- No subagent = no worktree isolation
+- No subagent = no independent spec compliance review
+- No subagent = no independent code quality review
+- The final archive commit carries the assurance of these reviews. Without subagent dispatch, that assurance is void.
 
-**If the subagent skill is available:**
-- Verify the skill exists — check both project-level (\`.claude/skills/subagent-driven-development/SKILL.md\`) and user-level (\`~/.claude/skills/subagent-driven-development/SKILL.md\`).
-- Dispatch via \`Skill({skill: "subagent-driven-development"})\` — handles TDD + review + debugging internally.
-- **After the skill returns**, verify the task result. Blocked or incomplete → pause, escalate to user.
+The outer-loop controller's role is to DISPATCH, not to implement. Implementation happens INSIDE the subagent.
+
+Announce: \`[Skill] subagent-driven-development → task X.Y (model, N files)\`
+
+**After the skill returns**, verify the task result. Blocked or incomplete → pause, escalate to user.
+
+DO NOT execute the task locally unless the skill file genuinely does not exist at either path.
 
 **If the subagent skill is unavailable (降级路径):**
 
 - **strict**: Error — "[Skill check] subagent-driven-development ✗ — 请安装 subagent 技能后重试". Halt. Do not proceed without subagent in strict mode. Run \`openspec init --tools claude\` to install bundled skills, or manually copy to \`.claude/skills/subagent-driven-development/\`.
 
-- **enhanced**: Degrade — "[Skill check] subagent-driven-development ✗ (降级为本地执行)". Execute the full TDD cycle locally AND apply the following discipline manually:
+- **enhanced**: Hard stop first — "[Skill check] subagent-driven-development ✗ — subagent skill not found". Report the missing skill to the user with clear instructions to install it before proceeding. Only if the user explicitly confirms they cannot or will not install the skill, execute the task locally with the following subagent-equivalent discipline:
 
   **B2-fallback. Local execution with subagent-equivalent discipline**
 
-  When executing without subagent, you take on the subagent's responsibilities:
+  When executing without subagent (user confirmed unavailable), you take on the subagent's responsibilities:
 
   1. **B1 TDD cycle** — execute all 6 sub-steps in full. No shortcuts.
 
@@ -266,24 +283,24 @@ If any sub-step is NOT checked:
 
 If user selects [1], go back to the missing sub-step. If [2] or [3], note the exception.
 
-**C1. Update task checkbox**
+**C1. Mark task complete — DO IT NOW**
 
-In \`tasks.md\`, change \`- [ ]\` to \`- [x]\` for the completed task.
+IMMEDIATELY after C0 passes, use the Edit tool to update \`tasks.md\`:
+\`- [ ] X.Y ...\` → \`- [x] X.Y ...\`
 
-**C2. Commit task work**
+Do NOT defer this. Do NOT batch with other tasks.
+The checkbox is the single source of truth for progress.
+If the session ends, the checkbox is how recovery knows what's done.
 
-Create a dedicated commit for the task:
+After marking, announce: "✓ Task X.Y complete (N/M done)"
 
-\`\`\`
-git add <changed-files>
-git commit -m "feat(<task-id>): <task-description>"
-\`\`\`
+Then STOP. Report progress. Wait for user confirmation before next task.
 
-**C3. Update last_checkpoint**
+**C2. Update last_checkpoint**
 
 Update \`.openspec.yaml\` with \`last_checkpoint: "<task-id>"\`.
 
-**C4. Read next task**
+**C3. Read next task**
 
 Return to the top of the outer loop. Read the next pending task from \`tasks.md\`.
 Do NOT autonomously decide which task to do — always go back through the loop.
@@ -350,8 +367,8 @@ What would you like to do?
 - Snapshot discipline config at start and use it consistently for the entire change
 - Follow TDD sub-steps in strict order: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY
 - The Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
-- Subagent: mandatory per task via \`Skill({skill: "subagent-driven-development"})\` — model by complexity. Check \`.claude/skills/\` (project) and \`~/.claude/skills/\` (user). Unavailable → enhanced degrades, strict halts.
-- Post-checkpoint: verify sub-steps → checkbox → commit → checkpoint → next task
+- Subagent: mandatory per task via \`Skill({skill: "subagent-driven-development"})\` — HARD GATE. Verify skill file exists before each task. DO NOT skip this gate. \`.claude/skills/\` (project) and \`~/.claude/skills/\` (user). Unavailable → hard stop; only local if user explicitly refuses
+- Post-checkpoint: verify sub-steps → checkbox → checkpoint → next task. NO git commits during apply
 - Pause on errors, blockers, or unclear requirements — do not guess
 - Keep code changes minimal and scoped to each task`,
     license: 'MIT',
@@ -401,15 +418,14 @@ Code before test? Delete it. Start over.
 ### Task Execution
 - Follow embedded TDD sub-steps in strict order:
   - RED: Write one failing test → Verify RED: Watch it fail correctly → GREEN: Minimal code → Verify GREEN: Watch it pass → REFACTOR: Clean up → SIMPLIFY: Review files
-- Subagent: \`Skill({skill: "subagent-driven-development"})\` — isolate + review. Skill location: \`.claude/skills/\` or \`~/.claude/skills/\`
-- Subagent unavailable (enhanced): local fallback — TDD + spec check + debugging discipline + quality review
-- Subagent unavailable (strict): error, halt
+- Subagent: \`Skill({skill: "subagent-driven-development"})\` — MANDATORY when skill file exists. HARD GATE: verify skill at \`.claude/skills/\` or \`~/.claude/skills/\` before any implementation. DO NOT execute locally unless skill is genuinely missing
+- Subagent unavailable: hard stop first, instruct user to install skill. Only if user explicitly refuses to install: enhanced → local TDD + spec check + debugging + quality review; strict → halt with error
 
 ### Post-checkpoint
 - **C0 Sub-step compliance**: verify all 6 TDD sub-steps are \`[x]\`; if not → Retry/Explain/Override
-- Update \`tasks.md\` checkbox: \`- [ ]\` → \`- [x]\`
-- Commit work as \`feat(<task-id>): <description>\`
+- Update \`tasks.md\` checkbox: \`- [ ]\` → \`- [x]\` — DO IT NOW, do NOT defer
 - Update \`.openspec.yaml\` → \`last_checkpoint: "<task-id>"\`
+- NO git commit during apply — commits happen only at archive time
 - Read next task, return to outer loop
 
 **Completion**: All tasks done → suggest \`/opsx:verify\` and \`/opsx:archive\`
@@ -419,6 +435,7 @@ Code before test? Delete it. Start over.
 - Snapshot config at start, use consistently
 - Follow TDD sub-steps: RED → Verify RED → GREEN → Verify GREEN → REFACTOR → SIMPLIFY
 - Iron Law: NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
-- Subagent: mandatory per task, model by complexity, executes TDD internally`,
+- Subagent: mandatory per task — HARD GATE via \`Skill({skill: "subagent-driven-development"})\`. Verify skill file before implementation. DO NOT skip this gate
+- NO git commits during apply — commits happen only at archive time`,
   };
 }

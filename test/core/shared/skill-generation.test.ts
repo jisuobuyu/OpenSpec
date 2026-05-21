@@ -229,7 +229,7 @@ describe('skill-generation', () => {
       const entry = templates.find(t => t.dirName === 'openspec-apply-change');
       const content = generateSkillContent(entry!.template, '0.0.0');
       expect(content).toContain('B2-fallback');
-      expect(content).toContain('降级为本地执行');
+      expect(content).toContain('Hard stop first');
     });
 
     it('apply-change: should reference systematic-debugging', () => {
